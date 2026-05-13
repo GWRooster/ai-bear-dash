@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DASH 2 — HEAT MAP & SEVERITY INDEX</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #16161f;
+    --border: #2a2a3e;
+    --text-primary: #ffffff;
+    --text-secondary: #c8c8e0;
+    --text-dim: #9090b0;
+    --green: #00d4a0;
+    --green-dim: rgba(0,212,160,0.12);
+    --green-mid: rgba(0,212,160,0.25);
+    --amber: #f5a623;
+    --amber-dim: rgba(245,166,35,0.12);
+    --amber-mid: rgba(245,166,35,0.3);
+    --red: #ff4060;
+    --red-dim: rgba(255,64,96,0.12);
+    --red-mid: rgba(255,64,96,0.3);
+    --blue: #4a9eff;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --font-body: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 15px;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-left { display: flex; align-items: baseline; gap: 16px; }
+  .dash-id { font-family: var(--font-display); font-size: 28px; letter-spacing: 3px; }
+  .dash-sub { font-family: var(--font-mono); font-size: 16px; color: var(--text-secondary); letter-spacing: 2px; text-transform: uppercase; }
+
+  .header-right { display: flex; align-items: center; gap: 24px; }
+
+  .last-updated { font-family: var(--font-mono); font-size: 15px; color: var(--text-dim); letter-spacing: 1px; }
+
+  .health-btn {
+    font-family: var(--font-mono); font-size: 15px; letter-spacing: 2px;
+    padding: 6px 12px; border: 1px solid var(--border); background: transparent;
+    color: var(--text-secondary); cursor: pointer; text-transform: uppercase; transition: all 0.2s;
+  }
+  .health-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+  /* NAV */
+  .nav-bar { display: flex; padding: 0 28px; border-bottom: 1px solid var(--border); background: var(--bg); }
+  .nav-link {
+    font-family: var(--font-mono); font-size: 15px; letter-spacing: 2px; text-transform: uppercase;
+    padding: 10px 20px; color: var(--text-dim); text-decoration: none;
+    border-bottom: 2px solid transparent; transition: all 0.2s;
+  }
+  .nav-link:hover { color: var(--text-secondary); }
+  .nav-link.active { color: var(--text-primary); border-bottom-color: var(--blue); }
+
+  /* MAIN */
+  .main { padding: 28px; max-width: 1400px; margin: 0 auto; }
+
+  /* SEVERITY GAUGE — TOP HERO */
+  .severity-hero {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 32px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .severity-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 100%, rgba(245,166,35,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    transition: background 0.5s;
+  }
+
+  .severity-hero.green-bg::before { background: radial-gradient(ellipse at 50% 100%, rgba(0,212,160,0.06) 0%, transparent 70%); }
+  .severity-hero.red-bg::before { background: radial-gradient(ellipse at 50% 100%, rgba(255,64,96,0.08) 0%, transparent 70%); }
+
+  .hero-layout {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 40px;
+  }
+
+  .hero-left { display: flex; flex-direction: column; gap: 16px; }
+  .hero-right { display: flex; flex-direction: column; gap: 12px; }
+
+  .hero-label {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  /* GAUGE */
+  .gauge-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .gauge-wrap {
+    position: relative;
+    width: 200px;
+    height: 110px;
+  }
+
+  .gauge-svg { width: 100%; height: 100%; }
+
+  .gauge-score-display {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+  }
+
+  .gauge-number {
+    font-family: var(--font-display);
+    font-size: 52px;
+    line-height: 1;
+    transition: color 0.5s;
+  }
+
+  .gauge-number.green { color: var(--green); }
+  .gauge-number.amber { color: var(--amber); }
+  .gauge-number.red { color: var(--red); }
+
+  .gauge-sub {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-align: center;
+  }
+
+  .gauge-status-text {
+    font-family: var(--font-display);
+    font-size: 16px;
+    letter-spacing: 3px;
+    text-align: center;
+    transition: color 0.5s;
+  }
+
+  .gauge-status-text.green { color: var(--green); }
+  .gauge-status-text.amber { color: var(--amber); }
+  .gauge-status-text.red { color: var(--red); }
+
+  /* THRESHOLD BARS */
+  .threshold-bar-container {
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .threshold-track {
+    height: 8px;
+    background: var(--border);
+    border-radius: 1px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+
+  .threshold-fill {
+    height: 100%;
+    border-radius: 1px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1), background 0.5s;
+  }
+
+  .threshold-markers {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 16px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    position: relative;
+  }
+
+  .t-marker {
+    position: absolute;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    transform: translateX(-50%);
+  }
+
+  .t-marker-tick {
+    width: 1px;
+    height: 10px;
+    background: var(--text-dim);
+  }
+
+  .t-marker-label {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  /* TRANCHE STATUS MINI */
+  .tranche-mini {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .tranche-mini-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 15px;
+  }
+
+  .tranche-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+
+  .tranche-indicator.triggered {
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+    border-color: var(--amber);
+  }
+
+  .tranche-indicator.full {
+    background: var(--red);
+    box-shadow: 0 0 6px var(--red);
+    border-color: var(--red);
+  }
+
+  .tranche-mini-label { color: var(--text-secondary); }
+  .tranche-mini-amount { color: var(--text-dim); margin-left: auto; }
+
+  /* SIGNAL COUNT DISPLAY */
+  .signal-counts {
+    display: flex;
+    gap: 12px;
+  }
+
+  .count-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    min-width: 60px;
+  }
+
+  .count-number {
+    font-family: var(--font-display);
+    font-size: 28px;
+    line-height: 1;
+  }
+
+  .count-number.green { color: var(--green); }
+  .count-number.amber { color: var(--amber); }
+  .count-number.red { color: var(--red); }
+  .count-number.dim { color: var(--text-dim); }
+
+  .count-label {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* HEAT MAP GRID */
+  .heatmap-section {
+    margin-bottom: 20px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    border-left: 2px solid var(--text-dim);
+    padding-left: 8px;
+  }
+
+  .heat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .heat-cell {
+    aspect-ratio: 1.4;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 14px 14px 10px;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .heat-cell::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .heat-cell:hover::after { opacity: 1; background: rgba(255,255,255,0.02); }
+
+  .heat-cell.green { background: var(--green-dim); border-color: rgba(0,212,160,0.2); }
+  .heat-cell.amber { background: var(--amber-dim); border-color: rgba(245,166,35,0.2); }
+  .heat-cell.red { background: var(--red-dim); border-color: rgba(255,64,96,0.2); animation: cell-pulse 3s infinite; }
+
+  @keyframes cell-pulse {
+    0%, 100% { box-shadow: inset 0 0 0 0 rgba(255,64,96,0); }
+    50% { box-shadow: inset 0 0 20px 0 rgba(255,64,96,0.08); }
+  }
+
+  .heat-cell-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .heat-sig-id {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+  }
+
+  .heat-rag {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .green .heat-rag { background: var(--green); box-shadow: 0 0 4px var(--green); }
+  .amber .heat-rag { background: var(--amber); box-shadow: 0 0 4px var(--amber); }
+  .red .heat-rag { background: var(--red); box-shadow: 0 0 6px var(--red); }
+
+  .heat-name {
+    font-family: var(--font-display);
+    font-size: 16px;
+    letter-spacing: 1px;
+    line-height: 1.1;
+    color: var(--text-primary);
+  }
+
+  .heat-score-bar {
+    margin-top: 8px;
+  }
+
+  .heat-score-track {
+    height: 2px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 1px;
+    overflow: hidden;
+    margin-bottom: 4px;
+  }
+
+  .heat-score-fill {
+    height: 100%;
+    border-radius: 1px;
+    transition: width 0.6s ease;
+  }
+
+  .green .heat-score-fill { background: var(--green); }
+  .amber .heat-score-fill { background: var(--amber); }
+  .red .heat-score-fill { background: var(--red); }
+
+  .heat-score-num {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    color: var(--text-dim);
+    text-align: right;
+    letter-spacing: 1px;
+  }
+
+  .heat-direction {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    margin-top: 2px;
+  }
+
+  .direction-up { color: var(--red); }
+  .direction-dn { color: var(--green); }
+  .direction-flat { color: var(--text-dim); }
+
+  /* BOTTOM ROW */
+  .bottom-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .stat-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px 18px;
+  }
+
+  .stat-panel-title {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    font-family: var(--font-mono);
+    font-size: 15px;
+  }
+
+  .stat-row-label { color: #b0b8d0; }
+  .stat-row-val { color: var(--text-secondary); }
+  .stat-row-val.hot { color: var(--amber); }
+  .stat-row-val.critical { color: var(--red); }
+  .stat-row-val.cool { color: var(--green); }
+
+  /* TREND SPARKLINE */
+  .sparkline-container { display: flex; flex-direction: column; gap: 10px; }
+
+  .spark-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    color: var(--text-dim);
+  }
+
+  .spark-label { width: 80px; flex-shrink: 0; }
+
+  .spark-track {
+    flex: 1;
+    height: 24px;
+    position: relative;
+    background: rgba(255,255,255,0.02);
+  }
+
+  .spark-svg { width: 100%; height: 100%; }
+
+  .spark-val { width: 30px; text-align: right; color: var(--text-secondary); }
+
+  /* SCAN LINES */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 1200px) {
+    .heat-grid { grid-template-columns: repeat(2, 1fr); }
+    .hero-layout { grid-template-columns: 1fr; gap: 20px; }
+    .bottom-row { grid-template-columns: 1fr 1fr; }
+    .main { padding: 16px; }
+  }
+
+  @media (max-width: 768px) {
+    .heat-grid { grid-template-columns: repeat(2, 1fr); }
+    .bottom-row { grid-template-columns: 1fr; }
+    .header { flex-wrap: wrap; gap: 12px; }
+    .gauge-wrap { width: 160px; height: 88px; }
+    .gauge-number { font-size: 40px; }
+    .signal-counts { flex-wrap: wrap; }
+    .nav-link { padding: 8px 12px; font-size: 15px; }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .heat-cell { animation: fadeIn 0.3s ease forwards; }
+  .heat-cell:nth-child(1) { animation-delay: 0.05s; }
+  .heat-cell:nth-child(2) { animation-delay: 0.08s; }
+  .heat-cell:nth-child(3) { animation-delay: 0.11s; }
+  .heat-cell:nth-child(4) { animation-delay: 0.14s; }
+  .heat-cell:nth-child(5) { animation-delay: 0.17s; }
+  .heat-cell:nth-child(6) { animation-delay: 0.20s; }
+  .heat-cell:nth-child(7) { animation-delay: 0.23s; }
+  .heat-cell:nth-child(8) { animation-delay: 0.26s; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <div class="dash-id">DASH 02</div>
+    <div class="dash-sub">HEAT MAP & SEVERITY INDEX — AI CLOSED LOOP BEAR CASE</div>
+  </div>
+  <div class="header-right">
+    <div class="last-updated" id="lastUpdated">LOADING...</div>
+    <button class="health-btn" onclick="alert('Open Google Sheet → CONFIG tab to manage sources.')">⬡ HEALTH</button>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav class="nav-bar">
+  <a href="dash1_cascade.html" class="nav-link">CASCADE VIEW</a>
+  <a href="#" class="nav-link active">HEAT MAP</a>
+  <a href="dash3_decision.html" class="nav-link">DECISION ENGINE</a>
+  <a href="dash_summary.html" class="nav-link">SUMMARY</a>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- SEVERITY HERO -->
+  <div class="severity-hero amber-bg" id="severityHero">
+    <div class="hero-layout">
+
+      <!-- LEFT: Signal counts -->
+      <div class="hero-left">
+        <div class="hero-label">SIGNAL STATUS DISTRIBUTION</div>
+        <div class="signal-counts">
+          <div class="count-box">
+            <div class="count-number green" id="countGreen">6</div>
+            <div class="count-label">GREEN</div>
+          </div>
+          <div class="count-box">
+            <div class="count-number amber" id="countAmber">2</div>
+            <div class="count-label">AMBER</div>
+          </div>
+          <div class="count-box">
+            <div class="count-number red" id="countRed">0</div>
+            <div class="count-label">RED</div>
+          </div>
+          <div class="count-box">
+            <div class="count-number dim">8</div>
+            <div class="count-label">TOTAL</div>
+          </div>
+        </div>
+
+        <div style="margin-top:8px;">
+          <div class="hero-label" style="margin-bottom:10px;">COMPOSITE SCORE TREND (SIMULATED)</div>
+          <div class="spark-track" style="width:100%; height:36px;">
+            <svg class="spark-svg" id="trendSpark" viewBox="0 0 200 36" preserveAspectRatio="none"></svg>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:7px; color:var(--text-dim); margin-top:4px; letter-spacing:1px;">
+            <span>-8 WKS</span><span>-6</span><span>-4</span><span>-2</span><span>NOW</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CENTER: GAUGE -->
+      <div class="gauge-container">
+        <div class="hero-label">COMPOSITE SEVERITY</div>
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 200 110" fill="none">
+            <!-- Track -->
+            <path d="M20 100 A80 80 0 0 1 180 100" stroke="#1e1e2e" stroke-width="12" fill="none" stroke-linecap="round"/>
+            <!-- Zones -->
+            <path d="M20 100 A80 80 0 0 1 60 35" stroke="rgba(0,212,160,0.3)" stroke-width="12" fill="none" stroke-linecap="butt"/>
+            <path d="M60 35 A80 80 0 0 1 140 35" stroke="rgba(245,166,35,0.3)" stroke-width="12" fill="none" stroke-linecap="butt"/>
+            <path d="M140 35 A80 80 0 0 1 180 100" stroke="rgba(255,64,96,0.3)" stroke-width="12" fill="none" stroke-linecap="butt"/>
+            <!-- Active fill -->
+            <path d="M20 100 A80 80 0 0 1 180 100" stroke="transparent" stroke-width="12" fill="none" id="gaugeFillBg"/>
+            <path d="M20 100 A80 80 0 0 1 100 20" stroke="#f5a623" stroke-width="12" fill="none" stroke-linecap="round" id="gaugeFill" opacity="0.9"/>
+            <!-- Zone labels -->
+            <text x="14" y="118" font-family="monospace" font-size="7" fill="#3a3a52">0</text>
+            <text x="92" y="10" font-family="monospace" font-size="7" fill="#3a3a52">50</text>
+            <text x="178" y="118" font-family="monospace" font-size="7" fill="#3a3a52">100</text>
+          </svg>
+          <div class="gauge-score-display">
+            <div class="gauge-number amber" id="gaugeNumber">—</div>
+          </div>
+        </div>
+        <div class="gauge-sub">/ 100 SEVERITY</div>
+        <div class="gauge-status-text amber" id="gaugeStatus">EARLY WATCH</div>
+      </div>
+
+      <!-- RIGHT: Threshold bars + tranche -->
+      <div class="hero-right">
+        <div class="hero-label">THRESHOLD PROXIMITY</div>
+        <div class="threshold-bar-container">
+          <div style="margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span style="font-family:var(--font-mono); font-size:8px; color: var(--amber);">TRANCHE A TRIGGER</span>
+              <span style="font-family:var(--font-mono); font-size:8px; color: var(--text-dim);">25</span>
+            </div>
+            <div class="threshold-track">
+              <div class="threshold-fill" id="thresh-a" style="width:0%; background: var(--green);"></div>
+            </div>
+          </div>
+          <div style="margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span style="font-family:var(--font-mono); font-size:8px; color: var(--text-dim);">TRANCHE B TRIGGER</span>
+              <span style="font-family:var(--font-mono); font-size:8px; color: var(--text-dim);">40</span>
+            </div>
+            <div class="threshold-track">
+              <div class="threshold-fill" id="thresh-b" style="width:0%; background: var(--text-dim);"></div>
+            </div>
+          </div>
+          <div style="margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span style="font-family:var(--font-mono); font-size:8px; color: var(--text-dim);">TRANCHE C TRIGGER</span>
+              <span style="font-family:var(--font-mono); font-size:8px; color: var(--text-dim);">60</span>
+            </div>
+            <div class="threshold-track">
+              <div class="threshold-fill" id="thresh-c" style="width:0%; background: var(--text-dim);"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span style="font-family:var(--font-mono); font-size:8px; color: var(--text-dim);">TRANCHE D — FULL DEFENSE</span>
+              <span style="font-family:var(--font-mono); font-size:8px; color: var(--text-dim);">80</span>
+            </div>
+            <div class="threshold-track">
+              <div class="threshold-fill" id="thresh-d" style="width:0%; background: var(--text-dim);"></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <div class="hero-label" style="margin-bottom:8px;">TRANCHE ACTIVATION STATUS</div>
+          <div class="tranche-mini">
+            <div class="tranche-mini-row">
+              <div class="tranche-indicator triggered" id="ti-a"></div>
+              <span class="tranche-mini-label">TRANCHE A — $100K</span>
+              <span class="tranche-mini-amount" id="ta-status">TRIGGERED</span>
+            </div>
+            <div class="tranche-mini-row">
+              <div class="tranche-indicator" id="ti-b"></div>
+              <span class="tranche-mini-label">TRANCHE B — $100K</span>
+              <span class="tranche-mini-amount" id="tb-status">WATCHING</span>
+            </div>
+            <div class="tranche-mini-row">
+              <div class="tranche-indicator" id="ti-c"></div>
+              <span class="tranche-mini-label">TRANCHE C — $100K</span>
+              <span class="tranche-mini-amount" id="tc-status">WATCHING</span>
+            </div>
+            <div class="tranche-mini-row">
+              <div class="tranche-indicator" id="ti-d"></div>
+              <span class="tranche-mini-label">TRANCHE D — $100K</span>
+              <span class="tranche-mini-amount" id="td-status">WATCHING</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- HEAT MAP GRID -->
+  <div class="heatmap-section">
+    <div class="section-header">
+      <div class="section-title">8-SIGNAL HEAT MAP — ALL SIGNALS SIMULTANEOUS VIEW</div>
+      <div style="font-family:var(--font-mono); font-size:8px; color:var(--text-dim); letter-spacing:1px;">CLICK ANY CELL → CASCADE VIEW DETAIL</div>
+    </div>
+
+    <div class="heat-grid" id="heatGrid">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- BOTTOM STATS -->
+  <div class="bottom-row">
+
+    <div class="stat-panel">
+      <div class="stat-panel-title">WEEKLY SCORE MOVEMENT</div>
+      <div class="sparkline-container" id="weeklyStats">
+        <div class="spark-row">
+          <div class="spark-label">SIG 01 NVDA</div>
+          <div class="spark-track"><svg class="spark-svg" viewBox="0 0 100 24" id="s1-spark"></svg></div>
+          <div class="spark-val amber">35</div>
+        </div>
+        <div class="spark-row">
+          <div class="spark-label">SIG 02 OPENAI</div>
+          <div class="spark-track"><svg class="spark-svg" viewBox="0 0 100 24" id="s2-spark"></svg></div>
+          <div class="spark-val" style="color:var(--green)">15</div>
+        </div>
+        <div class="spark-row">
+          <div class="spark-label">SIG 03 DEBT</div>
+          <div class="spark-track"><svg class="spark-svg" viewBox="0 0 100 24" id="s3-spark"></svg></div>
+          <div class="spark-val" style="color:var(--green)">10</div>
+        </div>
+        <div class="spark-row">
+          <div class="spark-label">SIG 04 FCF</div>
+          <div class="spark-track"><svg class="spark-svg" viewBox="0 0 100 24" id="s4-spark"></svg></div>
+          <div class="spark-val" style="color:var(--green)">12</div>
+        </div>
+        <div class="spark-row">
+          <div class="spark-label">SIG 05 CAPEX</div>
+          <div class="spark-track"><svg class="spark-svg" viewBox="0 0 100 24" id="s5-spark"></svg></div>
+          <div class="spark-val amber">30</div>
+        </div>
+        <div class="spark-row">
+          <div class="spark-label">SIG 06 CLOUD</div>
+          <div class="spark-track"><svg class="spark-svg" viewBox="0 0 100 24" id="s6-spark"></svg></div>
+          <div class="spark-val" style="color:var(--green)">10</div>
+        </div>
+        <div class="spark-row">
+          <div class="spark-label">SIG 07 ROI</div>
+          <div class="spark-track"><svg class="spark-svg" viewBox="0 0 100 24" id="s7-spark"></svg></div>
+          <div class="spark-val" style="color:var(--green)">8</div>
+        </div>
+        <div class="spark-row">
+          <div class="spark-label">SIG 08 INFRA</div>
+          <div class="spark-track"><svg class="spark-svg" viewBox="0 0 100 24" id="s8-spark"></svg></div>
+          <div class="spark-val" style="color:var(--green)">5</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-panel">
+      <div class="stat-panel-title">KEY METRICS SNAPSHOT</div>
+      <div class="stat-row"><span class="stat-row-label">BIG 4 COMBINED FCF (TTM)</span><span class="stat-row-val">~$400B</span></div>
+      <div class="stat-row"><span class="stat-row-label">HYPERSCALER CAPEX 2026</span><span class="stat-row-val hot">~$700B</span></div>
+      <div class="stat-row"><span class="stat-row-label">REVENUE GAP TO $2T TARGET</span><span class="stat-row-val hot">~$800B</span></div>
+      <div class="stat-row"><span class="stat-row-label">ENTERPRISE ROI POSITIVE</span><span class="stat-row-val hot">29%</span></div>
+      <div class="stat-row"><span class="stat-row-label">FIRM-LEVEL AI ADOPTION</span><span class="stat-row-val">18%</span></div>
+      <div class="stat-row"><span class="stat-row-label">AZURE YOY GROWTH</span><span class="stat-row-val cool">62%</span></div>
+      <div class="stat-row"><span class="stat-row-label">OPENAI 2026 REV TARGET</span><span class="stat-row-val">$20–26B</span></div>
+      <div class="stat-row"><span class="stat-row-label">FUND MGR BUBBLE CONCERN</span><span class="stat-row-val hot">53%</span></div>
+    </div>
+
+    <div class="stat-panel">
+      <div class="stat-panel-title">COMPOSITE HISTORY</div>
+      <div class="stat-row"><span class="stat-row-label">CURRENT</span><span class="stat-row-val hot" id="hist-now">—</span></div>
+      <div class="stat-row"><span class="stat-row-label">1 WEEK AGO</span><span class="stat-row-val">—</span></div>
+      <div class="stat-row"><span class="stat-row-label">1 MONTH AGO</span><span class="stat-row-val">—</span></div>
+      <div class="stat-row"><span class="stat-row-label">DIRECTION</span><span class="stat-row-val hot">↑ RISING</span></div>
+      <div class="stat-row"><span class="stat-row-label">WK CHANGE</span><span class="stat-row-val hot">+3 PTS</span></div>
+      <div class="stat-row"><span class="stat-row-label">TRANCHE A TRIGGER AT</span><span class="stat-row-val">25</span></div>
+      <div class="stat-row"><span class="stat-row-label">DISTANCE TO TRANCHE A</span><span class="stat-row-val hot" id="dist-a">—</span></div>
+      <div class="stat-row"><span class="stat-row-label">MAG 7 EXPOSURE PROTECTED</span><span class="stat-row-val cool">$0 / $400K</span></div>
+    </div>
+
+  </div>
+
+</main>
+
+<script>
+const SIGNALS = [
+  { id: 1, name: 'NVDA GUIDANCE',       tier: 'UPSTREAM',    state: 'amber', score: 35, direction: 'up',   desc: 'Data center order signals from NVDA earnings' },
+  { id: 2, name: 'OPENAI REVENUE',      tier: 'UPSTREAM',    state: 'green', score: 15, direction: 'flat', desc: 'Revenue vs $1.4T commitment structure' },
+  { id: 3, name: 'DEBT ISSUANCE',       tier: 'UPSTREAM',    state: 'green', score: 10, direction: 'up',   desc: 'IG spread widening & bond volume acceleration' },
+  { id: 4, name: 'FCF COMPRESSION',     tier: 'MID-STREAM',  state: 'green', score: 12, direction: 'up',   desc: 'Big 4 combined FCF vs capex rate' },
+  { id: 5, name: 'CAPEX / REVENUE',     tier: 'MID-STREAM',  state: 'amber', score: 30, direction: 'up',   desc: 'Multiple compression risk — asset-light premium eroding' },
+  { id: 6, name: 'CLOUD DECEL',         tier: 'DOWNSTREAM',  state: 'green', score: 10, direction: 'dn',   desc: 'Azure / AWS / GCP sequential growth rates' },
+  { id: 7, name: 'ENTERPRISE ROI',      tier: 'DOWNSTREAM',  state: 'green', score: 8,  direction: 'flat', desc: 'Demand-side: BTOS adoption & ROI conversion' },
+  { id: 8, name: 'INFRA DEBT STRESS',   tier: 'DOWNSTREAM',  state: 'green', score: 5,  direction: 'flat', desc: 'REIT / private credit / utility contagion risk' },
+];
+
+const TRANCHE_THRESHOLDS = { a: 25, b: 40, c: 60, d: 80 };
+
+function computeComposite() {
+  return Math.round(SIGNALS.reduce((a, s) => a + s.score, 0) / SIGNALS.length);
+}
+
+function getColorClass(score) {
+  return score < 25 ? 'green' : score < 50 ? 'amber' : 'red';
+}
+
+function dirArrow(d) {
+  if (d === 'up') return '<span class="direction-up">↑ RISING</span>';
+  if (d === 'dn') return '<span class="direction-dn">↓ FALLING</span>';
+  return '<span class="direction-flat">— STABLE</span>';
+}
+
+function buildHeatGrid() {
+  const grid = document.getElementById('heatGrid');
+  grid.innerHTML = SIGNALS.map(s => `
+    <div class="heat-cell ${s.state}" onclick="window.location='dash1_cascade.html'">
+      <div class="heat-cell-top">
+        <div class="heat-sig-id">SIG 0${s.id} — ${s.tier}</div>
+        <div class="heat-rag"></div>
+      </div>
+      <div class="heat-name">${s.name}</div>
+      <div style="font-family:var(--font-mono); font-size:7px; color:var(--text-dim); margin-top:4px; line-height:1.4;">${s.desc}</div>
+      <div class="heat-score-bar">
+        <div class="heat-score-track">
+          <div class="heat-score-fill" style="width:${s.score}%"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>${dirArrow(s.direction)}</div>
+          <div class="heat-score-num">${s.score} / 100</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function buildSparkline(svgId, dataPoints, color) {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+  const max = Math.max(...dataPoints, 1);
+  const w = 100, h = 24, n = dataPoints.length;
+  const pts = dataPoints.map((v, i) => {
+    const x = (i / (n - 1)) * w;
+    const y = h - (v / max) * (h - 2) - 1;
+    return `${x},${y}`;
+  }).join(' ');
+  svg.innerHTML = `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>`;
+}
+
+function buildTrendSparkline() {
+  const svg = document.getElementById('trendSpark');
+  const data = [16, 17, 19, 18, 20, 21, 23, 22];
+  const max = 40, h = 36, w = 200, n = data.length;
+  const pts = data.map((v, i) => {
+    const x = (i / (n - 1)) * w;
+    const y = h - (v / max) * (h - 4) - 2;
+    return `${x},${y}`;
+  }).join(' ');
+  const last = data[data.length - 1];
+  const lx = w, ly = h - (last / max) * (h - 4) - 2;
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="tg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#f5a623" stop-opacity="0.3"/>
+        <stop offset="100%" stop-color="#f5a623" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <polyline points="${pts} ${lx},${h} 0,${h}" fill="url(#tg)" stroke="none"/>
+    <polyline points="${pts}" fill="none" stroke="#f5a623" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${lx}" cy="${ly}" r="2.5" fill="#f5a623"/>
+    <line x1="62.5" y1="0" x2="62.5" y2="${h}" stroke="#3a3a52" stroke-width="0.5" stroke-dasharray="2,2"/>
+    <text x="1" y="34" font-family="monospace" font-size="6" fill="#3a3a52">SCORE 25 →</text>
+  `;
+}
+
+function updateThresholdBars(score) {
+  const bars = [
+    { id: 'thresh-a', threshold: 25 },
+    { id: 'thresh-b', threshold: 40 },
+    { id: 'thresh-c', threshold: 60 },
+    { id: 'thresh-d', threshold: 80 },
+  ];
+  bars.forEach(b => {
+    const el = document.getElementById(b.id);
+    if (!el) return;
+    const pct = Math.min((score / b.threshold) * 100, 100);
+    el.style.width = pct + '%';
+    const c = score >= b.threshold ? 'var(--red)' : score >= b.threshold * 0.75 ? 'var(--amber)' : 'var(--green)';
+    el.style.background = c;
+  });
+}
+
+function updateTrancheStatus(score) {
+  const tranches = [
+    { ind: 'ti-a', stat: 'ta-status', thresh: 25, label: 'TRIGGERED', watchLabel: 'WATCHING' },
+    { ind: 'ti-b', stat: 'tb-status', thresh: 40, label: 'TRIGGERED', watchLabel: 'WATCHING' },
+    { ind: 'ti-c', stat: 'tc-status', thresh: 60, label: 'TRIGGERED', watchLabel: 'WATCHING' },
+    { ind: 'ti-d', stat: 'td-status', thresh: 80, label: 'FULL DEFENSE', watchLabel: 'WATCHING' },
+  ];
+  tranches.forEach(t => {
+    const ind = document.getElementById(t.ind);
+    const stat = document.getElementById(t.stat);
+    if (score >= t.thresh) {
+      ind.className = 'tranche-indicator triggered';
+      stat.textContent = t.label;
+      stat.style.color = 'var(--amber)';
+    } else {
+      ind.className = 'tranche-indicator';
+      stat.textContent = t.watchLabel;
+      stat.style.color = 'var(--text-dim)';
+    }
+  });
+}
+
+function updateGauge(score) {
+  const colorClass = getColorClass(score);
+  document.getElementById('gaugeNumber').className = 'gauge-number ' + colorClass;
+  document.getElementById('gaugeNumber').textContent = score;
+  document.getElementById('gaugeStatus').className = 'gauge-status-text ' + colorClass;
+  const statuses = { green: 'SYSTEM NOMINAL', amber: 'EARLY WATCH', red: 'ACTION REQUIRED' };
+  document.getElementById('gaugeStatus').textContent = statuses[colorClass] || 'EARLY WATCH';
+
+  // Update gauge fill arc
+  const fill = document.getElementById('gaugeFill');
+  const angle = (score / 100) * 180 - 180;
+  const rad = (angle * Math.PI) / 180;
+  const cx = 100, cy = 100, r = 80;
+  const ex = cx + r * Math.cos(rad);
+  const ey = cy + r * Math.sin(rad);
+  const large = score > 50 ? 1 : 0;
+  fill.setAttribute('d', `M20 100 A80 80 0 ${large} 1 ${ex.toFixed(1)} ${ey.toFixed(1)}`);
+  const colors = { green: '#00d4a0', amber: '#f5a623', red: '#ff4060' };
+  fill.setAttribute('stroke', colors[colorClass]);
+
+  document.getElementById('hist-now').textContent = score;
+  const distA = Math.max(0, 25 - score);
+  document.getElementById('dist-a').textContent = distA > 0 ? distA + ' PTS TO GO' : 'TRIGGERED';
+}
+
+function buildSignalSparklines() {
+  const sparkData = {
+    's1-spark': [28, 30, 29, 32, 33, 35, 35, 35],
+    's2-spark': [14, 13, 14, 15, 15, 14, 15, 15],
+    's3-spark': [8,  9,  9,  10, 10, 10, 10, 10],
+    's4-spark': [10, 10, 11, 11, 12, 12, 12, 12],
+    's5-spark': [22, 24, 25, 26, 28, 29, 30, 30],
+    's6-spark': [12, 11, 11, 10, 10, 10, 10, 10],
+    's7-spark': [8,  8,  8,  8,  8,  8,  8,  8 ],
+    's8-spark': [4,  4,  5,  5,  5,  5,  5,  5 ],
+  };
+  const colors = [35, 15, 10, 12, 30, 10, 8, 5].map(v => v >= 50 ? '#ff4060' : v >= 25 ? '#f5a623' : '#00d4a0');
+  Object.entries(sparkData).forEach(([id, data], i) => buildSparkline(id, data, colors[i]));
+}
+
+function updateSignalCounts() {
+  const g = SIGNALS.filter(s => s.state === 'green').length;
+  const a = SIGNALS.filter(s => s.state === 'amber').length;
+  const r = SIGNALS.filter(s => s.state === 'red').length;
+  document.getElementById('countGreen').textContent = g;
+  document.getElementById('countAmber').textContent = a;
+  document.getElementById('countRed').textContent = r;
+}
+
+function init() {
+  const score = computeComposite();
+  buildHeatGrid();
+  updateGauge(score);
+  updateThresholdBars(score);
+  updateTrancheStatus(score);
+  updateSignalCounts();
+  buildTrendSparkline();
+  buildSignalSparklines();
+  const now = new Date();
+  document.getElementById('lastUpdated').textContent = 'UPDATED: ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+<script>
+// ============================================================
+// PHASE 2 — LIVE GOOGLE SHEET DATA FEED
+// CSV URL: https://docs.google.com/spreadsheets/d/e/2PACX-1vQLlAdrK3AEKqZb8t8cttPGcR9zfw4W3LWkCLbrKuh_0VlmsJYyCK4bGmTl8Mk_JwPXxEqTEkGqYqBK/pub?gid=1005822355&single=true&output=csv
+// Refreshes on every dashboard open
+// Falls back to hardcoded values if Sheet unavailable
+// ============================================================
+async function fetchSheetData() {
+  try {
+    const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQLlAdrK3AEKqZb8t8cttPGcR9zfw4W3LWkCLbrKuh_0VlmsJYyCK4bGmTl8Mk_JwPXxEqTEkGqYqBK/pub?gid=1005822355&single=true&output=csv");
+    if (!response.ok) throw new Error("Sheet fetch failed");
+    const text = await response.text();
+    const rows = text.trim().split("\n").map(r => r.split(","));
+    const data = {};
+    rows.forEach(row => {
+      if (row.length >= 2) {
+        const key = row[0].trim().replace(/"/g, '');
+        const val = row[1].trim().replace(/"/g, '');
+        data[key] = val;
+      }
+    });
+    applySheetData(data);
+    const now = new Date();
+    const el = document.getElementById('lastUpdated');
+    if (el) el.textContent = 'LIVE — UPDATED: ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    console.log("Sheet data loaded:", data);
+  } catch(err) {
+    console.warn("Sheet unavailable — using cached values:", err);
+    const el = document.getElementById('lastUpdated');
+    if (el) el.textContent = 'CACHED — SHEET OFFLINE';
+  }
+}
+
+function applySheetData(data) {
+  // COMPOSITE SCORE
+  const score = parseInt(data['COMPOSITE_SCORE']) || null;
+  if (score !== null) {
+    const scoreEl = document.getElementById('compositeScore') || document.getElementById('gaugeNumber') || document.getElementById('bannerScore') || document.getElementById('heroScore');
+    if (scoreEl) {
+      scoreEl.textContent = score;
+      const cc = score < 25 ? 'green' : score < 50 ? 'amber' : 'red';
+      scoreEl.className = scoreEl.className.replace(/green|amber|red/g, '').trim() + ' ' + cc;
+    }
+  }
+
+  // SIGNAL SCORES & RAG STATES — map to card IDs
+  const sigMap = {
+    'SIG01': 'card-6',
+    'SIG02': 'card-1',
+    'SIG03': 'card-5',
+    'SIG04': 'card-2',
+    'SIG05': 'card-7',
+    'SIG06': 'card-3',
+    'SIG07': 'card-4',
+    'SIG08': 'card-8',
+  };
+
+  Object.entries(sigMap).forEach(([sig, cardId]) => {
+    const rag = data[sig + '_RAG'];
+    const metric = data[sig + '_METRIC'];
+    const card = document.getElementById(cardId);
+    if (card && rag) {
+      card.className = 'signal-card ' + rag.toLowerCase();
+    }
+    // Update metric display if element exists
+    const metricEls = {
+      'SIG01': 'nvda-dcgrowth',
+      'SIG02': 'openai-rev',
+      'SIG03': 'hy-spread',
+      'SIG04': 'fcf-combined',
+      'SIG05': 'capex-pct',
+      'SIG06': 'azure-growth',
+      'SIG07': 'roi-pct',
+      'SIG08': 'dc-spread',
+    };
+    const elId = metricEls[sig];
+    if (elId && metric) {
+      const el = document.getElementById(elId);
+      if (el) el.textContent = metric;
+    }
+  });
+
+  // TRANCHE STATUS
+  const trancheMap = {
+    'TRANCHE_A': ['ti-a', 'ta-status'],
+    'TRANCHE_B': ['ti-b', 'tb-status'],
+    'TRANCHE_C': ['ti-c', 'tc-status'],
+    'TRANCHE_D': ['ti-d', 'td-status'],
+  };
+
+  Object.entries(trancheMap).forEach(([key, [indId, statId]]) => {
+    const val = data[key];
+    if (!val) return;
+    const triggered = val.includes('TRIGGERED');
+    const ind = document.getElementById(indId);
+    const stat = document.getElementById(statId);
+    if (ind) ind.className = 'tranche-indicator' + (triggered ? ' triggered' : '');
+    if (stat) {
+      stat.textContent = triggered ? 'TRIGGERED' : 'WATCHING';
+      stat.style.color = triggered ? 'var(--amber)' : 'var(--text-dim)';
+    }
+  });
+}
+
+// Run on load — after existing init()
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(fetchSheetData, 500);
+});
+</script>
+</body>
+</html>
