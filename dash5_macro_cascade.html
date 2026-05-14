@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DASH 5 — MACRO CASCADE SIGNAL MONITOR</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #16161f;
+    --surface2: #0e0e16;
+    --border: #2a2a3e;
+    --text-primary: #ffffff;
+    --text-secondary: #c8c8e0;
+    --text-dim: #9090b0;
+    --green: #00d4a0;
+    --green-dim: rgba(0,212,160,0.1);
+    --amber: #f5a623;
+    --amber-dim: rgba(245,166,35,0.1);
+    --red: #ff4060;
+    --red-dim: rgba(255,64,96,0.1);
+    --yellow: #f9e040;
+    --yellow-dim: rgba(249,224,64,0.1);
+    --blue: #4a9eff;
+    --blue-dim: rgba(74,158,255,0.1);
+    --purple: #a78bfa;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --font-body: 'IBM Plex Sans', sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text-primary); font-family:var(--font-body); font-size:15px; min-height:100vh; }
+  body::after { content:''; position:fixed; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px); pointer-events:none; z-index:999; }
+
+  .header { display:flex; align-items:center; justify-content:space-between; padding:16px 28px; border-bottom:1px solid var(--border); background:var(--surface); position:sticky; top:0; z-index:100; }
+  .header-left { display:flex; align-items:baseline; gap:16px; }
+  .dash-id { font-family:var(--font-display); font-size:28px; letter-spacing:3px; }
+  .dash-sub { font-family:var(--font-mono); font-size:11px; color:var(--text-secondary); letter-spacing:2px; text-transform:uppercase; }
+  .header-right { display:flex; align-items:center; gap:16px; }
+  .composite-pill { display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--border); padding:8px 16px; }
+  .composite-label { font-family:var(--font-mono); font-size:9px; color:var(--text-secondary); letter-spacing:2px; }
+  .composite-score { font-family:var(--font-display); font-size:32px; line-height:1; transition:color 0.5s; }
+  .composite-score.green { color:var(--green); }
+  .composite-score.amber { color:var(--amber); }
+  .composite-score.red { color:var(--red); }
+  .last-updated { font-family:var(--font-mono); font-size:9px; color:var(--text-dim); letter-spacing:1px; }
+
+  .nav-bar { display:flex; padding:0 28px; border-bottom:1px solid var(--border); background:var(--bg); overflow-x:auto; }
+  .nav-link { font-family:var(--font-mono); font-size:9px; letter-spacing:2px; text-transform:uppercase; padding:10px 16px; color:var(--text-dim); text-decoration:none; border-bottom:2px solid transparent; transition:all 0.2s; white-space:nowrap; }
+  .nav-link:hover { color:var(--text-secondary); }
+  .nav-link.active { color:var(--text-primary); border-bottom-color:var(--purple); }
+  .nav-link.ai { border-bottom-color:transparent; }
+  .nav-link.ai.active { border-bottom-color:var(--blue); }
+
+  .warning-banner { background:rgba(249,224,64,0.08); border-bottom:1px solid rgba(249,224,64,0.3); padding:10px 28px; font-family:var(--font-mono); font-size:11px; color:var(--yellow); letter-spacing:0.5px; }
+  .warning-banner.fire { background:rgba(255,64,96,0.1); border-color:rgba(255,64,96,0.4); color:var(--red); animation:warn-pulse 2s infinite; }
+  .warning-banner.hidden { display:none; }
+  @keyframes warn-pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
+
+  .main { padding:28px; max-width:1400px; margin:0 auto; }
+
+  .ticker-bar { display:grid; grid-template-columns:repeat(4,1fr); border:1px solid var(--border); margin-bottom:20px; background:var(--surface2); }
+  .ticker-item { padding:14px 20px; border-right:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .ticker-item:last-child { border-right:none; }
+  .ticker-label { font-family:var(--font-mono); font-size:9px; letter-spacing:2px; color:var(--text-dim); text-transform:uppercase; }
+  .ticker-right { text-align:right; }
+  .ticker-value { font-family:var(--font-display); font-size:24px; letter-spacing:1px; }
+  .ticker-sub { font-family:var(--font-mono); font-size:9px; color:var(--text-dim); margin-top:2px; letter-spacing:1px; }
+
+  .cascade-wrapper { display:flex; flex-direction:column; gap:0; }
+  .tier-label { font-family:var(--font-mono); font-size:10px; letter-spacing:3px; color:var(--text-dim); text-transform:uppercase; margin-bottom:8px; border-left:2px solid var(--text-dim); padding-left:8px; }
+
+  .signal-row { display:grid; gap:12px; margin-bottom:0; }
+  .row-3 { grid-template-columns:1fr 1fr 1fr; }
+  .row-2 { grid-template-columns:1fr 1fr; }
+
+  .connector { display:flex; justify-content:center; align-items:center; height:28px; padding:4px 0; gap:4px; }
+  .connector-text { font-family:var(--font-mono); font-size:7px; color:var(--text-dim); letter-spacing:2px; padding:0 12px; }
+
+  .signal-card { background:var(--surface); border:1px solid var(--border); padding:18px 20px; position:relative; transition:all 0.3s; animation:fadeIn 0.4s ease forwards; }
+  .signal-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--text-dim); transition:background 0.3s; }
+  .signal-card.green::before { background:var(--green); }
+  .signal-card.amber::before { background:var(--amber); }
+  .signal-card.red::before { background:var(--red); }
+  .signal-card.yellow::before { background:var(--yellow); }
+  .signal-card.blue::before { background:var(--blue); }
+  .signal-card.green { background:linear-gradient(135deg,var(--surface),var(--green-dim)); border-color:rgba(0,212,160,0.2); }
+  .signal-card.amber { background:linear-gradient(135deg,var(--surface),var(--amber-dim)); border-color:rgba(245,166,35,0.2); }
+  .signal-card.red { background:linear-gradient(135deg,var(--surface),var(--red-dim)); border-color:rgba(255,64,96,0.2); animation:red-pulse 3s infinite; }
+  .signal-card.yellow { background:linear-gradient(135deg,var(--surface),var(--yellow-dim)); border-color:rgba(249,224,64,0.2); }
+  .signal-card.blue { background:linear-gradient(135deg,var(--surface),var(--blue-dim)); border-color:rgba(74,158,255,0.2); }
+  @keyframes red-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,64,96,0);} 50%{box-shadow:0 0 12px 2px rgba(255,64,96,0.15);} }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:translateY(0);} }
+
+  .card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+  .signal-number { font-family:var(--font-display); font-size:11px; color:var(--text-dim); letter-spacing:2px; }
+  .rag-dot { width:10px; height:10px; border-radius:50%; background:var(--text-dim); flex-shrink:0; transition:background 0.3s; }
+  .green .rag-dot { background:var(--green); box-shadow:0 0 6px var(--green); }
+  .amber .rag-dot { background:var(--amber); box-shadow:0 0 6px var(--amber); }
+  .red .rag-dot { background:var(--red); box-shadow:0 0 8px var(--red); }
+  .yellow .rag-dot { background:var(--yellow); box-shadow:0 0 6px var(--yellow); }
+  .blue .rag-dot { background:var(--blue); box-shadow:0 0 4px var(--blue); }
+
+  .signal-name { font-family:var(--font-display); font-size:20px; letter-spacing:1.5px; color:var(--text-primary); margin-bottom:6px; line-height:1.1; }
+  .signal-edu { font-family:var(--font-body); font-size:13px; color:#c0c0d8; line-height:1.6; margin-bottom:10px; font-weight:400; }
+
+  .signal-metrics { display:flex; flex-direction:column; gap:6px; border-top:1px solid var(--border); padding-top:10px; }
+  .metric-row { display:flex; justify-content:space-between; align-items:center; }
+  .metric-label { font-family:var(--font-mono); font-size:10px; color:#b0b8d0; letter-spacing:1px; text-transform:uppercase; }
+  .metric-value { font-family:var(--font-mono); font-size:13px; color:var(--text-secondary); }
+  .metric-value.live { color:var(--text-primary); font-weight:500; font-size:14px; }
+
+  .trigger-line { margin-top:8px; padding:8px 10px; background:rgba(255,255,255,0.03); border-left:2px solid var(--text-dim); font-family:var(--font-mono); font-size:10px; color:var(--text-dim); letter-spacing:0.3px; line-height:1.6; transition:all 0.3s; }
+  .green .trigger-line { border-color:var(--green); color:rgba(0,212,160,0.85); }
+  .amber .trigger-line { border-color:var(--amber); color:rgba(245,166,35,0.9); }
+  .red .trigger-line { border-color:var(--red); color:rgba(255,64,96,0.95); font-weight:500; }
+  .yellow .trigger-line { border-color:var(--yellow); color:rgba(249,224,64,0.9); }
+  .blue .trigger-line { border-color:var(--blue); color:rgba(74,158,255,0.8); }
+
+  /* MANUAL INPUT */
+  .input-section { background:var(--surface); border:1px solid var(--border); padding:20px; margin-top:24px; }
+  .input-section-title { font-family:var(--font-mono); font-size:9px; letter-spacing:3px; color:var(--text-dim); text-transform:uppercase; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+  .input-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; }
+  .input-group { display:flex; flex-direction:column; gap:5px; }
+  .input-label { font-family:var(--font-mono); font-size:9px; letter-spacing:1px; color:var(--text-dim); text-transform:uppercase; }
+  .input-field { background:var(--surface2); border:1px solid var(--border); padding:8px 10px; color:var(--text-primary); font-family:var(--font-mono); font-size:14px; width:100%; outline:none; transition:border-color 0.2s; }
+  .input-field:focus { border-color:var(--amber); }
+  .update-btn { font-family:var(--font-mono); font-size:10px; letter-spacing:2px; padding:8px 20px; background:var(--amber); color:#000; border:none; cursor:pointer; font-weight:500; transition:opacity 0.2s; text-transform:uppercase; }
+  .update-btn:hover { opacity:0.85; }
+
+  .log-section { background:var(--surface2); border:1px solid var(--border); padding:14px 20px; max-height:120px; overflow-y:auto; margin-top:12px; }
+  .log-title { font-family:var(--font-mono); font-size:9px; letter-spacing:3px; color:var(--text-dim); text-transform:uppercase; margin-bottom:8px; }
+  .log-entry { display:flex; gap:12px; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.03); font-family:var(--font-mono); font-size:10px; }
+  .log-time { color:var(--text-dim); min-width:80px; }
+  .log-fire { color:var(--red); }
+  .log-warn { color:var(--yellow); }
+  .log-info { color:var(--text-secondary); }
+
+  ::-webkit-scrollbar { width:4px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--border); }
+
+  @media (max-width:1200px) { .row-3 { grid-template-columns:1fr 1fr; } .row-2 { grid-template-columns:1fr; } .main { padding:16px; } .ticker-bar { grid-template-columns:1fr 1fr; } }
+  @media (max-width:768px) { .row-3,.row-2 { grid-template-columns:1fr; } .header { flex-wrap:wrap; gap:12px; } .ticker-bar { grid-template-columns:1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div class="dash-id">DASH 05</div>
+    <div class="dash-sub">MACRO CASCADE SIGNAL MONITOR — 401K PROTECTION FRAMEWORK</div>
+  </div>
+  <div class="header-right">
+    <div class="composite-pill">
+      <div class="composite-label">MACRO COMPOSITE</div>
+      <div class="composite-score green" id="macroComposite">17</div>
+      <div class="composite-label">/ 100</div>
+    </div>
+    <div class="last-updated" id="lastUpdated">LOADING...</div>
+  </div>
+</header>
+
+<nav class="nav-bar">
+  <a href="dash1_cascade.html" class="nav-link ai">AI CASCADE</a>
+  <a href="dash2_heatmap.html" class="nav-link ai">AI HEAT MAP</a>
+  <a href="dash3_decision.html" class="nav-link">DECISION ENGINE</a>
+  <a href="dash4_macro_heatmap.html" class="nav-link">MACRO HEAT MAP</a>
+  <a href="#" class="nav-link active">MACRO CASCADE</a>
+</nav>
+
+<div class="warning-banner" id="warningBanner">
+  ⚠ WARNING CONDITIONS ACTIVE — 30-yr yield ≥5% · 10-yr approaching 4.80% · 2C bond trigger in watch zone · Monitor daily
+</div>
+
+<main class="main">
+
+  <!-- TICKER -->
+  <div class="ticker-bar">
+    <div class="ticker-item">
+      <div class="ticker-label">S&P 500</div>
+      <div class="ticker-right">
+        <div class="ticker-value" id="tickSPX" style="color:var(--green)">—</div>
+        <div class="ticker-sub" id="tickSPXsrc">Fetching...</div>
+      </div>
+    </div>
+    <div class="ticker-item">
+      <div class="ticker-label">T1 TRIGGER GAP</div>
+      <div class="ticker-right">
+        <div class="ticker-value" id="tickSPXgap" style="color:var(--green)">—</div>
+        <div class="ticker-sub">pts above 50-day MA</div>
+      </div>
+    </div>
+    <div class="ticker-item">
+      <div class="ticker-label">10-YR TREASURY</div>
+      <div class="ticker-right">
+        <div class="ticker-value" id="tickTNX" style="color:var(--yellow)">—</div>
+        <div class="ticker-sub" id="tickTNXsrc">Fetching...</div>
+      </div>
+    </div>
+    <div class="ticker-item">
+      <div class="ticker-label">BOND TRIGGER GAP</div>
+      <div class="ticker-right">
+        <div class="ticker-value" id="tickTNXgap" style="color:var(--yellow)">—</div>
+        <div class="ticker-sub">bps below 4.60% T1 trigger</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cascade-wrapper">
+
+    <!-- TIER 1: MARKET TECHNICAL -->
+    <div class="tier-label">TIER 1 — MARKET TECHNICAL SIGNALS</div>
+    <div class="signal-row row-3">
+
+      <div class="signal-card green" id="card-2a">
+        <div class="card-header"><div class="signal-number">M01 — LABOR</div><div class="rag-dot"></div></div>
+        <div class="signal-name">LABOR MARKET DETERIORATION</div>
+        <div class="signal-edu">The jobs report is the single most reliable leading indicator of consumer spending and corporate revenue. Two consecutive weak prints have historically preceded market corrections of 15%+. Fires when payrolls collapse or unemployment accelerates.</div>
+        <div class="signal-metrics">
+          <div class="metric-row"><div class="metric-label">JOBS ADDED</div><div class="metric-value live" id="m01-jobs">115K</div></div>
+          <div class="metric-row"><div class="metric-label">UNEMPLOYMENT RATE</div><div class="metric-value live" id="m01-unemp">4.3%</div></div>
+          <div class="metric-row"><div class="metric-label">WAGE GROWTH MOM</div><div class="metric-value" id="m01-wage">0.2%</div></div>
+        </div>
+        <div class="trigger-line" id="trig-2a">T1 WATCH: Jobs &lt;75K OR unemployment ≥4.35%. T1 FIRE: Jobs &lt;30K OR unemployment ≥4.4%. Next release: Jun 5 — BLS.gov</div>
+      </div>
+
+      <div class="signal-card yellow" id="card-2b">
+        <div class="card-header"><div class="signal-number">M02 — S&P TECHNICAL</div><div class="rag-dot"></div></div>
+        <div class="signal-name">S&P 500 TECHNICAL BREAKDOWN</div>
+        <div class="signal-edu">The 50-day moving average breach on above-average volume is the institutional early warning signal. It fires before catastrophic losses — not after. A close below the 50-day MA is watched by every major fund manager simultaneously, creating self-reinforcing selling pressure.</div>
+        <div class="signal-metrics">
+          <div class="metric-row"><div class="metric-label">S&P 500 CURRENT</div><div class="metric-value live" id="m02-spx">—</div></div>
+          <div class="metric-row"><div class="metric-label">50-DAY MA</div><div class="metric-value" id="m02-ma50">—</div></div>
+          <div class="metric-row"><div class="metric-label">DISTANCE TO T1</div><div class="metric-value" id="m02-dist">—</div></div>
+        </div>
+        <div class="trigger-line" id="trig-2b">T1 FIRE: Close below 50-day MA on above-average volume. T2 FIRE: Close below 5,800 (~10% correction). T3 FIRE: Close below 5,450 OR death cross confirmed. Feb ATH: 6,147.</div>
+      </div>
+
+      <div class="signal-card amber" id="card-2c">
+        <div class="card-header"><div class="signal-number">M03 — BOND MARKET</div><div class="rag-dot"></div></div>
+        <div class="signal-name">BOND MARKET ACCELERATION</div>
+        <div class="signal-edu">Rising long-term yields directly compress equity valuations by increasing the discount rate applied to future earnings. The 30-yr breaching 5% is a structural warning — it signals the bond market does not believe the Fed has inflation under control, regardless of what equities are doing.</div>
+        <div class="signal-metrics">
+          <div class="metric-row"><div class="metric-label">10-YR YIELD</div><div class="metric-value live" id="m03-tnx">—</div></div>
+          <div class="metric-row"><div class="metric-label">30-YR HIGH (WK)</div><div class="metric-value amber" id="m03-t30">5.02%</div></div>
+          <div class="metric-row"><div class="metric-label">GAP TO T1 (4.60%)</div><div class="metric-value" id="m03-gap">—</div></div>
+        </div>
+        <div class="trigger-line" id="trig-2c">T1 FIRE: 10-yr closes above 4.60%. T2 FIRE: 10-yr closes above 4.80%. ⚠ 30-yr breached 5% intraday May 4 — WARNING ACTIVE. FRED: fred.stlouisfed.org/series/DGS10</div>
+      </div>
+
+    </div>
+
+    <div class="connector"><div style="width:1px;height:100%;background:var(--border)"></div><div class="connector-text">CASCADES TO</div><div style="width:1px;height:100%;background:var(--border)"></div></div>
+
+    <!-- TIER 2: STRUCTURAL CONFIRMATION -->
+    <div class="tier-label">TIER 2 — STRUCTURAL CONFIRMATION SIGNALS</div>
+    <div class="signal-row row-2">
+
+      <div class="signal-card yellow" id="card-3a">
+        <div class="card-header"><div class="signal-number">M04 — PRODUCTIVITY</div><div class="rag-dot"></div></div>
+        <div class="signal-name">BLS PRODUCTIVITY — AI SUPERCYCLE FAIL</div>
+        <div class="signal-edu">The entire AI bull case rests on a productivity supercycle — the idea that AI tools will dramatically increase output per worker. If two consecutive quarters show productivity below 1.5% annualized, the supercycle thesis fails. This directly undermines the revenue justification for $725B in annual AI capex.</div>
+        <div class="signal-metrics">
+          <div class="metric-row"><div class="metric-label">Q1 2026 QOQ ANN.</div><div class="metric-value live" style="color:var(--red)">0.8% ⚠</div></div>
+          <div class="metric-row"><div class="metric-label">Q2 2026 (PENDING)</div><div class="metric-value" id="m04-q2">Pending Aug 7</div></div>
+          <div class="metric-row"><div class="metric-label">LABOR SHARE</div><div class="metric-value" style="color:var(--red)">54.1% — Record low</div></div>
+        </div>
+        <div class="trigger-line" id="trig-3a">YELLOW FLAG ACTIVE: Q1 at 0.8% — 1 of 2 quarters below 1.5%. T3 FIRE: Q2 also below 1.5% (two consecutive). Releases Aug 7 — BLS.gov → Productivity &amp; Costs.</div>
+      </div>
+
+      <div class="signal-card blue" id="card-3b">
+        <div class="card-header"><div class="signal-number">M05 — EARNINGS BREADTH</div><div class="rag-dot"></div></div>
+        <div class="signal-name">NON-MAG7 EARNINGS BREADTH FAILS</div>
+        <div class="signal-edu">If only the Mag 7 are growing earnings while the rest of the S&P 500 stagnates, the market rally is a narrow illusion. Non-Mag7 EPS growth below 8% means the average American company is not benefiting from AI — the productivity story only works for the top seven. Market-wide valuation cannot be sustained on seven companies alone.</div>
+        <div class="signal-metrics">
+          <div class="metric-row"><div class="metric-label">NON-MAG7 EPS GROWTH</div><div class="metric-value live" id="m05-eps">Pending</div></div>
+          <div class="metric-row"><div class="metric-label">DATA SOURCE</div><div class="metric-value" style="font-size:11px;">FactSet Earnings Insight — weekly</div></div>
+          <div class="metric-row"><div class="metric-label">NEXT RELEASE</div><div class="metric-value" id="m05-next">May 16</div></div>
+        </div>
+        <div class="trigger-line" id="trig-3b">PENDING DATA: Update every Friday from factset.com/earnings-insight. T3 FIRE: Non-Mag7 blended EPS growth below 8%.</div>
+      </div>
+
+    </div>
+
+    <div class="connector"><div style="width:1px;height:100%;background:var(--border)"></div><div class="connector-text">CASCADES TO</div><div style="width:1px;height:100%;background:var(--border)"></div></div>
+
+    <!-- TIER 3: DOWNSTREAM CONFIRMATION -->
+    <div class="tier-label">TIER 3 — DOWNSTREAM CONFIRMATION SIGNALS</div>
+    <div class="signal-row row-2">
+
+      <div class="signal-card green" id="card-3c">
+        <div class="card-header"><div class="signal-number">M06 — CHART STRUCTURE</div><div class="rag-dot"></div></div>
+        <div class="signal-name">LOWER HIGH CONFIRMED ON CHART</div>
+        <div class="signal-edu">A lower high pattern confirms the rally has failed. The sequence: rally stalls below the Feb 6,147 ATH → 3–5 consecutive lower closes → S&P breaks back below 5,450 with volume confirmation. This is the technical pattern that precedes sustained bear markets, not temporary corrections.</div>
+        <div class="signal-metrics">
+          <div class="metric-row"><div class="metric-label">FEB ATH REFERENCE</div><div class="metric-value">6,147</div></div>
+          <div class="metric-row"><div class="metric-label">CURRENT S&P</div><div class="metric-value live" id="m06-spx">—</div></div>
+          <div class="metric-row"><div class="metric-label">20-DAY MA</div><div class="metric-value" id="m06-ma20">—</div></div>
+        </div>
+        <div class="trigger-line" id="trig-3c">NOT ACTIVE: Rally must first stall below 6,147 ATH → confirm lower high → then break 5,450 on volume. T3 FIRE: Full sequence confirmed. Enter 20-day MA from TradingView.</div>
+      </div>
+
+      <div class="signal-card amber" id="card-3d">
+        <div class="card-header"><div class="signal-number">M07 — TREASURY CATALYST</div><div class="rag-dot"></div></div>
+        <div class="signal-name">TREASURY / WARSH CATALYST</div>
+        <div class="signal-edu">The Treasury's quarterly refunding announcements set the supply of long-dated bonds hitting the market. If supply increases materially while demand is already stressed (30-yr at 5%), yields spike rapidly. Warsh confirming accelerated QT removes the implicit Fed backstop that equity markets have relied on since 2020.</div>
+        <div class="signal-metrics">
+          <div class="metric-row"><div class="metric-label">AUG REFUNDING DATE</div><div class="metric-value">Aug 5, 2026</div></div>
+          <div class="metric-row"><div class="metric-label">WARSH STATUS</div><div class="metric-value" id="m07-warsh">Pending</div></div>
+          <div class="metric-row"><div class="metric-label">CURRENT Q2 EST.</div><div class="metric-value" style="color:var(--amber)">$189B (+$122B vs Feb)</div></div>
+        </div>
+        <div class="trigger-line" id="trig-3d">WATCH LIST: Aug 5 refunding shows further upward revision OR Warsh confirms accelerated QT at Senate hearings. T3 FIRE: Type "FIRE" in Warsh status input below.</div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- MANUAL INPUT -->
+  <div class="input-section">
+    <div class="input-section-title">
+      <span>⬡ MANUAL DATA ENTRY — All fields editable directly in dashboard</span>
+      <button class="update-btn" onclick="updateSignals()">▶ UPDATE SIGNALS</button>
+    </div>
+    <div class="input-grid">
+      <div class="input-group">
+        <label class="input-label">⬡ Jobs Added (K) · BLS · Next: Jun 5</label>
+        <input class="input-field" id="inp_jobs" type="number" value="115">
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬡ Unemployment Rate % · BLS</label>
+        <input class="input-field" id="inp_unemp" type="number" step="0.1" value="4.3">
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬡ Wage Growth MoM % · BLS</label>
+        <input class="input-field" id="inp_wage" type="number" step="0.1" value="0.2">
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬡ S&P 50-Day MA · TradingView</label>
+        <input class="input-field" id="inp_ma50" type="number" placeholder="e.g. 5620">
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬡ S&P 20-Day MA · TradingView</label>
+        <input class="input-field" id="inp_ma20" type="number" placeholder="e.g. 5580">
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬡ 30-Yr Treasury High This Week %</label>
+        <input class="input-field" id="inp_t30" type="number" step="0.01" value="5.02">
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬡ Non-Mag7 EPS Growth % · FactSet Fridays</label>
+        <input class="input-field" id="inp_breadth" type="number" step="0.1" placeholder="Pending May 16">
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬡ Q2 Productivity QoQ% · BLS Aug 7</label>
+        <input class="input-field" id="inp_prodQ2" type="number" step="0.1" placeholder="Pending Aug 7">
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬡ Warsh Status (type FIRE to trigger M07)</label>
+        <input class="input-field" id="inp_warsh" type="text" value="Pending">
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬤ S&P Override (if auto-fetch fails)</label>
+        <input class="input-field" id="inp_spx_override" type="number" placeholder="Auto-fetched">
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬤ 10-Yr Yield Override % · FRED</label>
+        <input class="input-field" id="inp_tnx_override" type="number" step="0.01" placeholder="Auto-fetched">
+      </div>
+    </div>
+  </div>
+
+  <div class="log-section">
+    <div class="log-title">EVENT LOG</div>
+    <div id="eventLog"></div>
+  </div>
+
+</main>
+
+<script>
+const STATE = { spx:null, tnx:null, spxOk:false, tnxOk:false };
+const eventLog = [];
+
+function addLog(msg, type='info') {
+  const now = new Date();
+  const time = now.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  eventLog.unshift({time,msg,type});
+  document.getElementById('eventLog').innerHTML = eventLog.slice(0,20).map(e=>
+    `<div class="log-entry"><span class="log-time">${e.time}</span><span class="log-${e.type}">${e.msg}</span></div>`
+  ).join('');
+}
+
+async function fetchSPX() {
+  const ovr = parseFloat(document.getElementById('inp_spx_override').value);
+  if(!isNaN(ovr)&&ovr>0){ STATE.spx=ovr; STATE.spxOk=true; return; }
+  const yUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?interval=1d&range=5d';
+  const proxies = ['https://api.allorigins.win/get?url='+encodeURIComponent(yUrl),'https://corsproxy.io/?'+encodeURIComponent(yUrl)];
+  for(const url of proxies){
+    try{
+      const res = await fetch(url,{signal:AbortSignal.timeout(7000)});
+      if(!res.ok) continue;
+      const w = await res.json();
+      const raw = typeof w.contents==='string'?JSON.parse(w.contents):w;
+      const closes = raw?.chart?.result?.[0]?.indicators?.quote?.[0]?.close;
+      if(closes?.length){ const v=closes.filter(x=>x!=null).pop(); if(v){ STATE.spx=v; STATE.spxOk=true; addLog(`S&P 500: ${v.toLocaleString(undefined,{maximumFractionDigits:0})}`,'info'); return; }}
+    }catch(e){}
+  }
+  STATE.spxOk=false; addLog('S&P auto-fetch failed — enter override','warn');
+}
+
+async function fetchTNX() {
+  const ovr = parseFloat(document.getElementById('inp_tnx_override').value);
+  if(!isNaN(ovr)&&ovr>0){ STATE.tnx=ovr; STATE.tnxOk=true; return; }
+  const fredUrl = 'https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&sort_order=desc&limit=5&file_type=json&api_key=a8e9b0af4d53fa60e1ecd46ef9b6aecf';
+  const proxies = [fredUrl,'https://api.allorigins.win/get?url='+encodeURIComponent(fredUrl),'https://corsproxy.io/?'+encodeURIComponent(fredUrl)];
+  for(const url of proxies){
+    try{
+      const res = await fetch(url,{signal:AbortSignal.timeout(7000)});
+      if(!res.ok) continue;
+      const w = await res.json();
+      const raw = typeof w.contents==='string'?JSON.parse(w.contents):w;
+      const obs = raw?.observations;
+      if(obs?.length){ const l=obs.find(o=>o.value!=='.'); if(l){ STATE.tnx=parseFloat(l.value); STATE.tnxOk=true; addLog(`10-yr Treasury: ${STATE.tnx}% (${l.date})`,'info'); return; }}
+    }catch(e){}
+  }
+  STATE.tnxOk=false; addLog('10-yr fetch failed — enter override','warn');
+}
+
+function scoreSignal(state) {
+  const map = { 'green':5, 'blue':10, 'yellow':25, 'amber':45, 'red':85 };
+  return map[state] || 5;
+}
+
+function updateSignals() {
+  const jobs = parseFloat(document.getElementById('inp_jobs').value);
+  const unemp = parseFloat(document.getElementById('inp_unemp').value);
+  const wage = parseFloat(document.getElementById('inp_wage').value);
+  const ma50 = parseFloat(document.getElementById('inp_ma50').value);
+  const ma20 = parseFloat(document.getElementById('inp_ma20').value);
+  const t30 = parseFloat(document.getElementById('inp_t30').value);
+  const breadth = parseFloat(document.getElementById('inp_breadth').value);
+  const prodQ2 = parseFloat(document.getElementById('inp_prodQ2').value);
+  const warsh = document.getElementById('inp_warsh').value;
+  const spxOvr = parseFloat(document.getElementById('inp_spx_override').value);
+  const tnxOvr = parseFloat(document.getElementById('inp_tnx_override').value);
+  if(!isNaN(spxOvr)&&spxOvr>0){ STATE.spx=spxOvr; STATE.spxOk=true; }
+  if(!isNaN(tnxOvr)&&tnxOvr>0){ STATE.tnx=tnxOvr; STATE.tnxOk=true; }
+
+  const spx = STATE.spx, tnx = STATE.tnx;
+  const scores = [];
+
+  // M01 — Labor
+  const f2a = (!isNaN(jobs)&&jobs<30)||(!isNaN(unemp)&&unemp>=4.4);
+  const w2a = (!isNaN(jobs)&&jobs<75)||(!isNaN(unemp)&&unemp>=4.35);
+  const s2a = f2a?'red':w2a?'yellow':'green';
+  setCard('card-2a', s2a);
+  document.getElementById('m01-jobs').textContent = isNaN(jobs)?'—':jobs+'K';
+  document.getElementById('m01-unemp').textContent = isNaN(unemp)?'—':unemp+'%';
+  document.getElementById('m01-wage').textContent = isNaN(wage)?'—':wage+'%';
+  if(f2a) addLog(`⚡ M01 FIRED — Jobs: ${jobs}K · Unemp: ${unemp}%`,'fire');
+  scores.push(scoreSignal(s2a));
+
+  // M02 — S&P Technical
+  const f2b_t1 = spx&&!isNaN(ma50)&&spx<ma50;
+  const f2b_t2 = spx&&spx<5800;
+  const f2b_t3 = spx&&spx<5450;
+  const s2b = f2b_t3?'red':f2b_t1||f2b_t2?'amber':'green';
+  setCard('card-2b', s2b);
+  if(spx){ document.getElementById('m02-spx').textContent = spx.toLocaleString(undefined,{maximumFractionDigits:0}); document.getElementById('m06-spx').textContent = spx.toLocaleString(undefined,{maximumFractionDigits:0}); }
+  if(!isNaN(ma50)){ document.getElementById('m02-ma50').textContent = ma50.toLocaleString(); const dist=spx?Math.round(spx-ma50):null; if(dist!==null){ document.getElementById('m02-dist').textContent=(dist>=0?'+':'')+dist.toLocaleString()+' pts'; }}
+  if(!isNaN(ma20)){ document.getElementById('m06-ma20').textContent = ma20.toLocaleString(); }
+  if(f2b_t1) addLog(`⚡ M02 T1 — S&P below 50-day MA`,'fire');
+  scores.push(scoreSignal(s2b));
+
+  // M03 — Bond Market
+  const f2c_t1 = tnx&&tnx>=4.60;
+  const f2c_t2 = tnx&&tnx>=4.80;
+  const w2c = tnx&&tnx>=4.40;
+  const s2c = f2c_t2?'red':f2c_t1?'amber':(!isNaN(t30)&&t30>=5)||w2c?'yellow':'green';
+  setCard('card-2c', s2c);
+  if(tnx){ document.getElementById('m03-tnx').textContent = tnx.toFixed(2)+'%'; const gap=Math.round((4.60-tnx)*100); document.getElementById('m03-gap').textContent=(gap>=0?'−':'+')+(Math.abs(gap))+' bps'; document.getElementById('tickTNX').textContent=tnx.toFixed(2)+'%'; document.getElementById('tickTNXgap').textContent=(gap>=0?'−':'+')+(Math.abs(gap))+' bps'; }
+  document.getElementById('m03-t30').textContent = isNaN(t30)?'—':t30.toFixed(2)+'%';
+  if(f2c_t2) addLog(`⚡ M03 T2 FIRED — 10-yr ${tnx?.toFixed(2)}% ≥ 4.80%`,'fire');
+  else if(f2c_t1) addLog(`⚡ M03 T1 FIRED — 10-yr ${tnx?.toFixed(2)}% ≥ 4.60%`,'fire');
+  scores.push(scoreSignal(s2c));
+
+  // M04 — Productivity
+  const f3a = !isNaN(prodQ2)&&prodQ2<1.5;
+  const s3a = f3a?'red':!isNaN(prodQ2)?'green':'yellow';
+  setCard('card-3a', s3a);
+  document.getElementById('m04-q2').textContent = isNaN(prodQ2)?'Pending Aug 7':prodQ2.toFixed(1)+'%';
+  if(f3a) addLog(`⚡ M04 FIRED — Two consecutive sub-1.5% productivity quarters`,'fire');
+  scores.push(scoreSignal(s3a));
+
+  // M05 — Earnings Breadth
+  const f3b = !isNaN(breadth)&&breadth<8;
+  const w3b = !isNaN(breadth)&&breadth<12;
+  const s3b = f3b?'red':w3b?'yellow':!isNaN(breadth)?'green':'blue';
+  setCard('card-3b', s3b);
+  document.getElementById('m05-eps').textContent = isNaN(breadth)?'Pending':breadth.toFixed(1)+'%';
+  if(f3b) addLog(`⚡ M05 FIRED — Non-Mag7 EPS ${breadth}% below 8%`,'fire');
+  scores.push(scoreSignal(s3b));
+
+  // M06 — Chart Structure
+  const f3c = spx&&!isNaN(ma20)&&spx<ma20&&spx<5450;
+  const s3c = f3c?'red':spx&&!isNaN(ma20)&&spx<ma20?'yellow':'green';
+  setCard('card-3c', s3c);
+  if(f3c) addLog('⚡ M06 FIRED — Lower high confirmed','fire');
+  scores.push(scoreSignal(s3c));
+
+  // M07 — Treasury/Warsh
+  const f3d = warsh&&warsh.toUpperCase().includes('FIRE');
+  const w3d = warsh&&(warsh.toLowerCase().includes('schedul')||warsh.toLowerCase().includes('hearing'));
+  const s3d = f3d?'red':w3d?'amber':'amber';
+  setCard('card-3d', s3d);
+  document.getElementById('m07-warsh').textContent = warsh||'Pending';
+  if(f3d) addLog('⚡ M07 FIRED — Warsh/Treasury catalyst confirmed','fire');
+  scores.push(scoreSignal(s3d));
+
+  // Composite
+  const composite = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+  const compEl = document.getElementById('macroComposite');
+  compEl.textContent = composite;
+  compEl.className = 'composite-score '+(composite<25?'green':composite<50?'amber':'red');
+
+  // Ticker SPX
+  if(spx){ document.getElementById('tickSPX').textContent = spx.toLocaleString(undefined,{maximumFractionDigits:0}); if(!isNaN(ma50)){ const g=Math.round(spx-ma50); document.getElementById('tickSPXgap').textContent=(g>=0?'+':'')+g.toLocaleString()+' pts'; }}
+
+  // Warning banner
+  const wb = document.getElementById('warningBanner');
+  const hasFire = scores.some((s,i)=>s>=85);
+  const hasWarn = (!isNaN(t30)&&t30>=5)||(tnx&&tnx>=4.40);
+  if(hasFire){ wb.className='warning-banner fire'; wb.textContent='⚡ TRIGGER FIRED — Review signal cards immediately'; }
+  else if(hasWarn){ wb.className='warning-banner'; wb.textContent='⚠ WARNING CONDITIONS ACTIVE — 30-yr ≥5% · 10-yr approaching trigger · Monitor daily'; }
+  else { wb.className='warning-banner hidden'; }
+
+  const now = new Date();
+  document.getElementById('lastUpdated').textContent = 'UPDATED: '+now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  addLog(`Signals updated — Macro composite: ${composite}`,'info');
+}
+
+function setCard(id, state) {
+  const el = document.getElementById(id);
+  if(el) el.className = 'signal-card '+state;
+}
+
+async function init() {
+  addLog('Dash 5 Macro Cascade initialized','info');
+  await Promise.allSettled([fetchSPX(), fetchTNX()]);
+  updateSignals();
+}
+
+setInterval(async()=>{ await Promise.allSettled([fetchSPX(),fetchTNX()]); updateSignals(); }, 15*60*1000);
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
