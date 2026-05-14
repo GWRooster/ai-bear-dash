@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AI BEAR">
+<title>AI BEAR — STATUS</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #16161f;
+    --border: #2a2a3e;
+    --text-primary: #ffffff;
+    --text-secondary: #c8c8e0;
+    --text-dim: #9090b0;
+    --green: #00d4a0;
+    --green-dim: rgba(0,212,160,0.1);
+    --amber: #f5a623;
+    --amber-dim: rgba(245,166,35,0.1);
+    --red: #ff4060;
+    --red-dim: rgba(255,64,96,0.1);
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  }
+
+  /* TOP BAR */
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .top-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    letter-spacing: 3px;
+    color: var(--text-primary);
+  }
+
+  .top-time {
+    font-size: 15px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-align: right;
+  }
+
+  /* HERO SCORE */
+  .hero {
+    padding: 24px 18px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero.nominal { background: var(--green-dim); }
+  .hero.watch { background: var(--amber-dim); }
+  .hero.action { background: var(--red-dim); animation: hero-pulse 3s infinite; }
+
+  @keyframes hero-pulse {
+    0%, 100% { background: var(--red-dim); }
+    50% { background: rgba(255,64,96,0.18); }
+  }
+
+  .hero-label {
+    font-size: 15px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .hero-score {
+    font-family: var(--font-display);
+    font-size: 88px;
+    line-height: 1;
+    letter-spacing: 2px;
+    transition: color 0.5s;
+  }
+
+  .hero-score.green { color: var(--green); }
+  .hero-score.amber { color: var(--amber); }
+  .hero-score.red { color: var(--red); }
+
+  .hero-status {
+    font-family: var(--font-display);
+    font-size: 20px;
+    letter-spacing: 4px;
+    margin-top: 4px;
+    transition: color 0.5s;
+  }
+
+  .hero-status.green { color: var(--green); }
+  .hero-status.amber { color: var(--amber); }
+  .hero-status.red { color: var(--red); }
+
+  .hero-instruction {
+    font-size: 16px;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-top: 10px;
+    line-height: 1.6;
+    max-width: 320px;
+    letter-spacing: 0.3px;
+  }
+
+  .hero-instruction strong {
+    color: var(--text-primary);
+  }
+
+  /* SIGNAL STRIP */
+  .signal-strip {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .strip-label {
+    font-size: 16px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .strip-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .strip-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 4px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .strip-cell:active { opacity: 0.7; }
+
+  .strip-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .strip-dot.green { background: var(--green); box-shadow: 0 0 5px var(--green); }
+  .strip-dot.amber { background: var(--amber); box-shadow: 0 0 5px var(--amber); }
+  .strip-dot.red { background: var(--red); box-shadow: 0 0 7px var(--red); }
+
+  .strip-name {
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    text-align: center;
+    line-height: 1.3;
+    text-transform: uppercase;
+  }
+
+  .strip-score {
+    font-size: 15px;
+    color: var(--text-secondary);
+  }
+
+  /* TRANCHE STATUS */
+  .tranche-strip {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tranche-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    gap: 12px;
+  }
+
+  .tranche-row:last-child { border-bottom: none; }
+
+  .t-letter {
+    font-family: var(--font-display);
+    font-size: 22px;
+    width: 22px;
+    flex-shrink: 0;
+    transition: color 0.3s;
+  }
+
+  .t-letter.watching { color: var(--text-dim); }
+  .t-letter.triggered { color: var(--amber); }
+  .t-letter.sidelined { color: var(--green); }
+
+  .t-bar-wrap { flex: 1; }
+
+  .t-bar-track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 3px;
+  }
+
+  .t-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+
+  .watching .t-bar-fill { background: var(--text-dim); }
+  .triggered .t-bar-fill { background: var(--amber); }
+  .sidelined .t-bar-fill { background: var(--green); }
+
+  .t-bar-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 16px;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+
+  .t-status {
+    font-size: 15px;
+    letter-spacing: 1px;
+    width: 80px;
+    text-align: right;
+    flex-shrink: 0;
+    transition: color 0.3s;
+  }
+
+  .t-status.watching { color: var(--text-dim); }
+  .t-status.triggered { color: var(--amber); }
+  .t-status.sidelined { color: var(--green); }
+
+  /* HOTTEST SIGNAL */
+  .hot-signal {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hot-signal-card {
+    background: var(--amber-dim);
+    border: 1px solid rgba(245,166,35,0.2);
+    padding: 12px 14px;
+  }
+
+  .hot-title { font-size: 16px; letter-spacing: 3px; color: var(--text-dim); margin-bottom: 6px; }
+
+  .hot-name {
+    font-family: var(--font-display);
+    font-size: 20px;
+    letter-spacing: 2px;
+    color: var(--amber);
+    margin-bottom: 4px;
+  }
+
+  .hot-desc { font-size: 15px; color: var(--text-secondary); line-height: 1.5; }
+
+  /* NAV LINKS */
+  .nav-buttons {
+    padding: 14px 18px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-top: auto;
+    border-top: 1px solid var(--border);
+  }
+
+  .nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    gap: 4px;
+    transition: all 0.2s;
+  }
+
+  .nav-btn:active { background: var(--border); }
+
+  .nav-btn-icon {
+    font-family: var(--font-display);
+    font-size: 18px;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+  }
+
+  .nav-btn-label {
+    font-size: 15px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  /* Scan lines */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* DESKTOP OVERRIDE — when viewed wide */
+  @media (min-width: 600px) {
+    body {
+      max-width: 480px;
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <div class="top-title">AI BEAR MONITOR</div>
+  <div class="top-time">
+    <div id="currentTime">—</div>
+    <div id="currentDate">—</div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero watch" id="hero">
+  <div class="hero-label">COMPOSITE SEVERITY SCORE</div>
+  <div class="hero-score amber" id="heroScore">—</div>
+  <div class="hero-status amber" id="heroStatus">EARLY WATCH</div>
+  <div class="hero-instruction" id="heroInstruction">
+    <strong>Tranche A threshold crossed.</strong> Consider moving $100K of Mag 7 to stable value. Open Dash 1 to review cascade propagation.
+  </div>
+</div>
+
+<!-- 8 SIGNAL STRIP -->
+<div class="signal-strip">
+  <div class="strip-label">8-SIGNAL SYSTEM STATUS</div>
+  <div class="strip-grid" id="signalStrip">
+    <!-- Populated by JS -->
+  </div>
+</div>
+
+<!-- TRANCHE STATUS -->
+<div class="tranche-strip">
+  <div class="strip-label">TRANCHE ACTIVATION — $400K MAG 7</div>
+  <div id="trancheRows">
+    <!-- Populated by JS -->
+  </div>
+</div>
+
+<!-- HOTTEST SIGNAL -->
+<div class="hot-signal">
+  <div class="hot-signal-card" id="hotSignalCard">
+    <div class="hot-title">HIGHEST ACTIVE SIGNAL</div>
+    <div class="hot-name" id="hotName">NVDA GUIDANCE</div>
+    <div class="hot-desc" id="hotDesc">Score 35 — Watch for guidance cut or gross margin compression >300bps. Data center order signals lead the entire capex loop by 12–18 months.</div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav-buttons">
+  <a href="dash1_ai_signals.html" class="nav-btn">
+    <div class="nav-btn-icon">D1</div>
+    <div class="nav-btn-label">AI SIGNALS</div>
+  </a>
+  <a href="dash2_ai_heatmap.html" class="nav-btn">
+    <div class="nav-btn-icon">D2</div>
+    <div class="nav-btn-label">HEAT MAP</div>
+  </a>
+  <a href="dash3_decision.html" class="nav-btn">
+    <div class="nav-btn-icon">D3</div>
+    <div class="nav-btn-label">DECISION</div>
+  </a>
+  <a href="dash4_macro_heatmap.html" class="nav-btn">
+    <div class="nav-btn-icon">D4</div>
+    <div class="nav-btn-label">MACRO MAP</div>
+  </a>
+  <a href="dash5_macro_signals.html" class="nav-btn">
+    <div class="nav-btn-icon">D5</div>
+    <div class="nav-btn-label">MACRO SIG</div>
+  </a>
+</div>
+
+<script>
+const SIGNALS = [
+  { id: 1, name: 'NVDA\nGUIDANCE',   state: 'amber', score: 35, desc: 'Score 35 — Watch for guidance cut or gross margin compression >300bps. Data center order signals lead the entire capex loop by 12–18 months.' },
+  { id: 2, name: 'OPENAI\nREVENUE',  state: 'green', score: 15, desc: 'Score 15 — Monitoring $20B 2026 revenue target. Commitment coverage ratio under watch.' },
+  { id: 3, name: 'DEBT\nISSUANCE',   state: 'green', score: 10, desc: 'Score 10 — IG spreads stable. Monitoring bond issuance acceleration.' },
+  { id: 4, name: 'FCF\nCOMPRESS',    state: 'green', score: 12, desc: 'Score 12 — Big 4 FCF holding near $400B. Capex pressure building.' },
+  { id: 5, name: 'CAPEX/\nREVENUE',  state: 'amber', score: 30, desc: 'Score 30 — Capex/revenue ratio approaching decade high. Multiple compression risk building.' },
+  { id: 6, name: 'CLOUD\nDECEL',     state: 'green', score: 10, desc: 'Score 10 — Azure +62% YoY. Watching for sequential deceleration pattern.' },
+  { id: 7, name: 'ENTPR\nROI',       state: 'green', score: 8,  desc: 'Score 8 — Only 29% of enterprises report significant ROI. Structural demand risk.' },
+  { id: 8, name: 'INFRA\nDEBT',      state: 'green', score: 5,  desc: 'Score 5 — No rating actions on REITs or private credit yet. Contagion risk low.' },
+];
+
+const TRANCHES = [
+  { letter: 'A', threshold: 25, amount: '$100K' },
+  { letter: 'B', threshold: 40, amount: '$100K' },
+  { letter: 'C', threshold: 60, amount: '$100K' },
+  { letter: 'D', threshold: 80, amount: '$100K' },
+];
+
+function computeComposite() {
+  return Math.round(SIGNALS.reduce((a, s) => a + s.score, 0) / SIGNALS.length);
+}
+
+function getColorClass(score) {
+  return score < 25 ? 'green' : score < 50 ? 'amber' : 'red';
+}
+
+function getState(score) {
+  return score < 25 ? 'nominal' : score < 60 ? 'watch' : 'action';
+}
+
+function buildSignalStrip() {
+  const strip = document.getElementById('signalStrip');
+  strip.innerHTML = SIGNALS.map(s => `
+    <div class="strip-cell" onclick="setHotSignal(${s.id - 1})">
+      <div class="strip-dot ${s.state}"></div>
+      <div class="strip-name">${s.name}</div>
+      <div class="strip-score">${s.score}</div>
+    </div>
+  `).join('');
+}
+
+function setHotSignal(idx) {
+  const s = SIGNALS[idx];
+  document.getElementById('hotName').textContent = s.name.replace('\n', ' ');
+  document.getElementById('hotDesc').textContent = s.desc;
+  const card = document.getElementById('hotSignalCard');
+  const colors = { green: 'rgba(0,212,160,0.1)', amber: 'rgba(245,166,35,0.1)', red: 'rgba(255,64,96,0.1)' };
+  const borders = { green: 'rgba(0,212,160,0.2)', amber: 'rgba(245,166,35,0.2)', red: 'rgba(255,64,96,0.2)' };
+  card.style.background = colors[s.state];
+  card.style.borderColor = borders[s.state];
+  document.getElementById('hotName').style.color = `var(--${s.state})`;
+}
+
+function buildTrancheRows(score) {
+  const container = document.getElementById('trancheRows');
+  container.innerHTML = TRANCHES.map(t => {
+    const triggered = score >= t.threshold;
+    const progress = Math.min((score / t.threshold) * 100, 100);
+    const stateClass = triggered ? 'triggered' : 'watching';
+    const statusText = triggered ? 'TRIGGERED' : `${Math.max(0, t.threshold - score)} PTS`;
+    return `
+      <div class="tranche-row ${stateClass}">
+        <div class="t-letter ${stateClass}">${t.letter}</div>
+        <div class="t-bar-wrap">
+          <div class="t-bar-track">
+            <div class="t-bar-fill" style="width:${progress}%"></div>
+          </div>
+          <div class="t-bar-labels">
+            <span>${t.amount}</span>
+            <span>TRIGGER: ${t.threshold}</span>
+          </div>
+        </div>
+        <div class="t-status ${stateClass}">${statusText}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function updateHero(score) {
+  const colorClass = getColorClass(score);
+  const state = getState(score);
+  document.getElementById('hero').className = 'hero ' + state;
+  document.getElementById('heroScore').className = 'hero-score ' + colorClass;
+  document.getElementById('heroScore').textContent = score;
+  document.getElementById('heroStatus').className = 'hero-status ' + colorClass;
+
+  const statuses = { nominal: 'ALL CLEAR', watch: 'EARLY WATCH', action: 'ACT NOW' };
+  document.getElementById('heroStatus').textContent = statuses[state];
+
+  const instructions = {
+    nominal: 'All tranches holding. No action required. Check back daily.',
+    watch: '<strong>Tranche A threshold crossed.</strong> Consider moving $100K Mag 7 to stable value. Open Dash 1.',
+    action: '<strong>Structural signals firing. Open Dash 3 immediately.</strong> Review tranche actions.'
+  };
+  document.getElementById('heroInstruction').innerHTML = instructions[state];
+}
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById('currentTime').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function init() {
+  const score = computeComposite();
+  updateHero(score);
+  buildSignalStrip();
+  buildTrancheRows(score);
+  // Default to hottest signal
+  const hottest = SIGNALS.reduce((a, b) => b.score > a.score ? b : a);
+  setHotSignal(SIGNALS.indexOf(hottest));
+  updateClock();
+  setInterval(updateClock, 30000);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+<script>
+// ============================================================
+// PHASE 2 — LIVE GOOGLE SHEET DATA FEED
+// CSV URL: https://docs.google.com/spreadsheets/d/e/2PACX-1vQLlAdrK3AEKqZb8t8cttPGcR9zfw4W3LWkCLbrKuh_0VlmsJYyCK4bGmTl8Mk_JwPXxEqTEkGqYqBK/pub?gid=1005822355&single=true&output=csv
+// Refreshes on every dashboard open
+// Falls back to hardcoded values if Sheet unavailable
+// ============================================================
+async function fetchSheetData() {
+  try {
+    const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQLlAdrK3AEKqZb8t8cttPGcR9zfw4W3LWkCLbrKuh_0VlmsJYyCK4bGmTl8Mk_JwPXxEqTEkGqYqBK/pub?gid=1005822355&single=true&output=csv");
+    if (!response.ok) throw new Error("Sheet fetch failed");
+    const text = await response.text();
+    const rows = text.trim().split("\n").map(r => r.split(","));
+    const data = {};
+    rows.forEach(row => {
+      if (row.length >= 2) {
+        const key = row[0].trim().replace(/"/g, '');
+        const val = row[1].trim().replace(/"/g, '');
+        data[key] = val;
+      }
+    });
+    applySheetData(data);
+    const now = new Date();
+    const el = document.getElementById('lastUpdated');
+    if (el) el.textContent = 'LIVE — UPDATED: ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    console.log("Sheet data loaded:", data);
+  } catch(err) {
+    console.warn("Sheet unavailable — using cached values:", err);
+    const el = document.getElementById('lastUpdated');
+    if (el) el.textContent = 'CACHED — SHEET OFFLINE';
+  }
+}
+
+function applySheetData(data) {
+  // COMPOSITE SCORE
+  const score = parseInt(data['COMPOSITE_SCORE']) || null;
+  if (score !== null) {
+    const scoreEl = document.getElementById('compositeScore') || document.getElementById('gaugeNumber') || document.getElementById('bannerScore') || document.getElementById('heroScore');
+    if (scoreEl) {
+      scoreEl.textContent = score;
+      const cc = score < 25 ? 'green' : score < 50 ? 'amber' : 'red';
+      scoreEl.className = scoreEl.className.replace(/green|amber|red/g, '').trim() + ' ' + cc;
+    }
+  }
+
+  // SIGNAL SCORES & RAG STATES — map to card IDs
+  const sigMap = {
+    'SIG01': 'card-6',
+    'SIG02': 'card-1',
+    'SIG03': 'card-5',
+    'SIG04': 'card-2',
+    'SIG05': 'card-7',
+    'SIG06': 'card-3',
+    'SIG07': 'card-4',
+    'SIG08': 'card-8',
+  };
+
+  Object.entries(sigMap).forEach(([sig, cardId]) => {
+    const rag = data[sig + '_RAG'];
+    const metric = data[sig + '_METRIC'];
+    const card = document.getElementById(cardId);
+    if (card && rag) {
+      card.className = 'signal-card ' + rag.toLowerCase();
+    }
+    // Update metric display if element exists
+    const metricEls = {
+      'SIG01': 'nvda-dcgrowth',
+      'SIG02': 'openai-rev',
+      'SIG03': 'hy-spread',
+      'SIG04': 'fcf-combined',
+      'SIG05': 'capex-pct',
+      'SIG06': 'azure-growth',
+      'SIG07': 'roi-pct',
+      'SIG08': 'dc-spread',
+    };
+    const elId = metricEls[sig];
+    if (elId && metric) {
+      const el = document.getElementById(elId);
+      if (el) el.textContent = metric;
+    }
+  });
+
+  // TRANCHE STATUS
+  const trancheMap = {
+    'TRANCHE_A': ['ti-a', 'ta-status'],
+    'TRANCHE_B': ['ti-b', 'tb-status'],
+    'TRANCHE_C': ['ti-c', 'tc-status'],
+    'TRANCHE_D': ['ti-d', 'td-status'],
+  };
+
+  Object.entries(trancheMap).forEach(([key, [indId, statId]]) => {
+    const val = data[key];
+    if (!val) return;
+    const triggered = val.includes('TRIGGERED');
+    const ind = document.getElementById(indId);
+    const stat = document.getElementById(statId);
+    if (ind) ind.className = 'tranche-indicator' + (triggered ? ' triggered' : '');
+    if (stat) {
+      stat.textContent = triggered ? 'TRIGGERED' : 'WATCHING';
+      stat.style.color = triggered ? 'var(--amber)' : 'var(--text-dim)';
+    }
+  });
+}
+
+// Run on load — after existing init()
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(fetchSheetData, 500);
+});
+</script>
+</body>
+</html>
