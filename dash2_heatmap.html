@@ -797,14 +797,14 @@
 
 <script>
 const SIGNALS = [
-  { id: 1, name: 'NVDA GUIDANCE',       tier: 'UPSTREAM',    state: 'amber', score: 35, direction: 'up',   desc: 'Data center order signals from NVDA earnings' },
-  { id: 2, name: 'OPENAI REVENUE',      tier: 'UPSTREAM',    state: 'green', score: 15, direction: 'flat', desc: 'Revenue vs $1.4T commitment structure' },
-  { id: 3, name: 'DEBT ISSUANCE',       tier: 'UPSTREAM',    state: 'green', score: 10, direction: 'up',   desc: 'IG spread widening & bond volume acceleration' },
-  { id: 4, name: 'FCF COMPRESSION',     tier: 'MID-STREAM',  state: 'green', score: 12, direction: 'up',   desc: 'Big 4 combined FCF vs capex rate' },
-  { id: 5, name: 'CAPEX / REVENUE',     tier: 'MID-STREAM',  state: 'amber', score: 30, direction: 'up',   desc: 'Multiple compression risk — asset-light premium eroding' },
-  { id: 6, name: 'CLOUD DECEL',         tier: 'DOWNSTREAM',  state: 'green', score: 10, direction: 'dn',   desc: 'Azure / AWS / GCP sequential growth rates' },
-  { id: 7, name: 'ENTERPRISE ROI',      tier: 'DOWNSTREAM',  state: 'green', score: 8,  direction: 'flat', desc: 'Demand-side: BTOS adoption & ROI conversion' },
-  { id: 8, name: 'INFRA DEBT STRESS',   tier: 'DOWNSTREAM',  state: 'green', score: 5,  direction: 'flat', desc: 'REIT / private credit / utility contagion risk' },
+  { id: 1, name: 'NVDA GUIDANCE',       tier: 'UPSTREAM',    state: 'amber', score: 45, direction: 'up',   desc: 'GM 72.7% — down 6pts YoY. DC revenue +56% YoY. Margin compression active.' },
+  { id: 2, name: 'OPENAI REVENUE',      tier: 'UPSTREAM',    state: 'green', score: 15, direction: 'flat', desc: 'Targeting $20-26B in 2026. Revenue vs $1.4T commitment structure under watch.' },
+  { id: 3, name: 'DEBT ISSUANCE',       tier: 'UPSTREAM',    state: 'green', score: 10, direction: 'up',   desc: 'IG spread at 13bps — calm. Monitoring bond issuance acceleration quarterly.' },
+  { id: 4, name: 'FCF COMPRESSION',     tier: 'MID-STREAM',  state: 'amber', score: 55, direction: 'up',   desc: 'AMZN FCF collapsed 71% — $38.2B to $11.2B YoY. Red line breach confirmed.' },
+  { id: 5, name: 'CAPEX / REVENUE',     tier: 'MID-STREAM',  state: 'red',   score: 70, direction: 'up',   desc: 'Hyperscalers at 45-57% capex intensity. 25% red line far exceeded. $725B combined 2026 capex.' },
+  { id: 6, name: 'CLOUD DECEL',         tier: 'DOWNSTREAM',  state: 'green', score: 20, direction: 'dn',   desc: 'Azure 40% / AWS 24% / GCP 28% YoY. Watching for 3-quarter deceleration pattern.' },
+  { id: 7, name: 'ENTERPRISE ROI',      tier: 'DOWNSTREAM',  state: 'green', score: 8,  direction: 'flat', desc: 'Only 29% of enterprises report significant ROI. Firm adoption at 18%. Structural risk.' },
+  { id: 8, name: 'INFRA DEBT STRESS',   tier: 'DOWNSTREAM',  state: 'green', score: 5,  direction: 'flat', desc: 'No rating actions on REITs or private credit. CoreWeave stable. Contagion risk low.' },
 ];
 
 const TRANCHE_THRESHOLDS = { a: 25, b: 40, c: 60, d: 80 };
@@ -832,7 +832,7 @@ function buildHeatGrid() {
         <div class="heat-rag"></div>
       </div>
       <div class="heat-name">${s.name}</div>
-      <div style="font-family:var(--font-mono); font-size:7px; color:var(--text-dim); margin-top:4px; line-height:1.4;">${s.desc}</div>
+      <div style="font-family:var(--font-body); font-size:13px; color:#c0c0d8; margin-top:6px; line-height:1.5; font-weight:400;">${s.desc}</div>
       <div class="heat-score-bar">
         <div class="heat-score-track">
           <div class="heat-score-fill" style="width:${s.score}%"></div>
@@ -1070,7 +1070,34 @@ function applySheetData(data) {
     }
   });
 
-  // TRANCHE STATUS
+  // UPDATE HEAT GRID CELLS WITH LIVE SCORES FROM SHEET
+  const sigIndexMap = {
+    'SIG01': 0, 'SIG02': 1, 'SIG03': 2, 'SIG04': 3,
+    'SIG05': 4, 'SIG06': 5, 'SIG07': 6, 'SIG08': 7
+  };
+
+  Object.entries(sigIndexMap).forEach(([sig, idx]) => {
+    const rag = (data[sig + '_RAG'] || '').toLowerCase();
+    const score = parseInt(data[sig + '_SCORE']) || null;
+    const metric = data[sig + '_METRIC'] || null;
+    const dir = (data[sig + '_DIRECTION'] || 'FLAT').toLowerCase();
+
+    // Update SIGNALS array so redraws use live data
+    if (score !== null) SIGNALS[idx].score = score;
+    if (rag) SIGNALS[idx].state = rag;
+    if (metric) SIGNALS[idx].desc = metric;
+    if (dir) SIGNALS[idx].direction = dir === 'up' ? 'up' : dir === 'down' ? 'dn' : 'flat';
+  });
+
+  // Rebuild heat grid with live data
+  buildHeatGrid();
+
+  // Update composite score gauge
+  const liveScore = parseInt(data['COMPOSITE_SCORE']) || computeComposite();
+  updateGauge(liveScore);
+  updateThresholdBars(liveScore);
+  updateTrancheStatus(liveScore);
+  updateSignalCounts();
   const trancheMap = {
     'TRANCHE_A': ['ti-a', 'ta-status'],
     'TRANCHE_B': ['ti-b', 'tb-status'],
