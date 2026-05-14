@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ROOSTER">
+<meta name="theme-color" content="#0a0a0f">
+<title>ROOSTER OF WALL STREET</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--surface:#16161f;--surface2:#0e0e16;--border:#2a2a3e;--text-primary:#ffffff;--text-secondary:#d8d8f0;--text-dim:#a8a8c8;--green:#00d4a0;--green-dim:rgba(0,212,160,0.12);--amber:#f5a623;--amber-dim:rgba(245,166,35,0.12);--red:#ff4060;--red-dim:rgba(255,64,96,0.12);--yellow:#f9e040;--yellow-dim:rgba(249,224,64,0.12);--blue:#4a9eff;--blue-dim:rgba(74,158,255,0.12);--purple:#a78bfa;--purple-dim:rgba(167,139,250,0.12);--font-display:'Bebas Neue',sans-serif;--font-mono:'IBM Plex Mono',monospace;--font-body:'IBM Plex Sans',sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{background:var(--bg);}
+body{color:var(--text-primary);font-family:var(--font-body);font-size:15px;min-height:100vh;max-width:480px;margin:0 auto;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);pointer-events:none;z-index:999;}
+
+/* HEADER */
+.top-bar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px 10px;border-bottom:1px solid var(--border);background:var(--surface);}
+.top-title{font-family:var(--font-display);font-size:20px;letter-spacing:3px;}
+.top-time{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);text-align:right;letter-spacing:1px;line-height:1.6;}
+
+/* 1. HERO */
+.hero{padding:22px 18px 18px;border-bottom:1px solid var(--border);text-align:center;transition:background 0.5s;}
+.hero.nominal{background:var(--green-dim);}
+.hero.watch{background:var(--amber-dim);}
+.hero.action{background:var(--red-dim);animation:hp 3s infinite;}
+@keyframes hp{0%,100%{background:var(--red-dim);}50%{background:rgba(255,64,96,0.2);}}
+.hero-label{font-family:var(--font-mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;}
+.hero-score{font-family:var(--font-display);font-size:84px;line-height:1;transition:color 0.5s;}
+.hero-score.green{color:var(--green);}
+.hero-score.amber{color:var(--amber);}
+.hero-score.red{color:var(--red);}
+.hero-status{font-family:var(--font-display);font-size:18px;letter-spacing:4px;margin-top:4px;}
+.hero-status.green{color:var(--green);}
+.hero-status.amber{color:var(--amber);}
+.hero-status.red{color:var(--red);}
+.hero-instruction{font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);margin-top:10px;line-height:1.6;}
+.hero-instruction strong{color:var(--text-primary);}
+
+/* 2. DUAL SYSTEM */
+.dual-system{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border);}
+.sys-panel{padding:14px 16px;border-right:1px solid var(--border);}
+.sys-panel:last-child{border-right:none;}
+.sys-label{font-family:var(--font-mono);font-size:9px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;}
+.sys-score{font-family:var(--font-display);font-size:40px;line-height:1;}
+.sys-score.green{color:var(--green);}
+.sys-score.amber{color:var(--amber);}
+.sys-score.red{color:var(--red);}
+.sys-score.purple{color:var(--purple);}
+.sys-status{font-family:var(--font-mono);font-size:10px;margin-bottom:8px;}
+.sys-status.green{color:var(--green);}
+.sys-status.amber{color:var(--amber);}
+.sys-status.red{color:var(--red);}
+.sys-status.purple{color:var(--purple);}
+.sig-pills{display:flex;gap:4px;flex-wrap:wrap;}
+.pill{font-family:var(--font-mono);font-size:9px;padding:2px 6px;border-radius:20px;}
+.pill-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(0,212,160,0.3);}
+.pill-amber{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,0.3);}
+.pill-red{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,64,96,0.3);}
+.pill-blue{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(74,158,255,0.3);}
+.pill-dim{background:rgba(255,255,255,0.05);color:var(--text-dim);border:1px solid var(--border);}
+
+/* 3. TRANCHES */
+.tranche-section{padding:14px 18px;border-bottom:1px solid var(--border);}
+.section-label{font-family:var(--font-mono);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:12px;}
+.tranche-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.tranche-row:last-child{margin-bottom:0;}
+.t-letter{font-family:var(--font-display);font-size:20px;width:22px;flex-shrink:0;}
+.t-letter.watching{color:var(--text-dim);}
+.t-letter.triggered{color:var(--amber);}
+.t-letter.executed{color:var(--green);}
+.t-bar-wrap{flex:1;}
+.t-track{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:4px;}
+.t-fill{height:100%;border-radius:3px;transition:width 0.6s;}
+.t-fill.watching{background:var(--text-dim);}
+.t-fill.triggered{background:var(--amber);}
+.t-fill.executed{background:var(--green);}
+.t-labels{font-family:var(--font-mono);font-size:9px;color:var(--text-dim);}
+.t-status{font-family:var(--font-mono);font-size:9px;width:70px;text-align:right;flex-shrink:0;}
+.t-status.watching{color:var(--text-dim);}
+.t-status.triggered{color:var(--amber);}
+.t-status.executed{color:var(--green);}
+
+/* 4 & 5. CAROUSEL SHARED STYLES */
+.carousel-section{border-bottom:1px solid var(--border);padding:14px 0 10px;}
+.carousel-header{padding:0 18px 10px;display:flex;justify-content:space-between;align-items:center;}
+.carousel-dots{display:flex;gap:5px;align-items:center;}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--border);transition:background 0.3s,width 0.3s;}
+.dot.active{background:var(--amber);width:14px;border-radius:3px;}
+
+.carousel-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:10px;padding:0 18px;}
+.carousel-track::-webkit-scrollbar{display:none;}
+.carousel-card{flex:0 0 calc(100% - 36px);scroll-snap-align:start;border:1px solid var(--border);padding:16px;position:relative;}
+
+/* Signal cards */
+.sig-card.red-card{background:linear-gradient(135deg,rgba(255,64,96,0.1),rgba(255,64,96,0.04));border-color:rgba(255,64,96,0.3);}
+.sig-card.amber-card{background:linear-gradient(135deg,rgba(245,166,35,0.1),rgba(245,166,35,0.04));border-color:rgba(245,166,35,0.3);}
+.sig-card.yellow-card{background:linear-gradient(135deg,rgba(249,224,64,0.08),rgba(249,224,64,0.03));border-color:rgba(249,224,64,0.25);}
+.sig-card.blue-card{background:linear-gradient(135deg,rgba(74,158,255,0.08),rgba(74,158,255,0.03));border-color:rgba(74,158,255,0.25);}
+.sig-card.clear-card{background:var(--green-dim);border-color:rgba(0,212,160,0.2);}
+
+.sig-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.sig-card-id{font-family:var(--font-mono);font-size:9px;color:var(--text-dim);letter-spacing:2px;}
+.sig-card-sys{font-family:var(--font-mono);font-size:9px;padding:2px 7px;border:1px solid;}
+.sig-card-sys.ai{color:var(--blue);border-color:rgba(74,158,255,0.4);}
+.sig-card-sys.macro{color:var(--purple);border-color:rgba(167,139,250,0.4);}
+
+.sig-card-name{font-family:var(--font-display);font-size:20px;letter-spacing:1px;margin-bottom:4px;line-height:1.1;}
+.sig-card-name.red{color:var(--red);}
+.sig-card-name.amber{color:var(--amber);}
+.sig-card-name.yellow{color:var(--yellow);}
+.sig-card-name.blue{color:var(--blue);}
+.sig-card-name.green{color:var(--green);}
+
+.sig-card-desc{font-family:var(--font-body);font-size:12px;color:var(--text-secondary);line-height:1.5;margin-bottom:10px;}
+.sig-card-bottom{display:flex;justify-content:space-between;align-items:center;}
+.sig-card-score{font-family:var(--font-display);font-size:32px;line-height:1;}
+.sig-card-score.red{color:var(--red);}
+.sig-card-score.amber{color:var(--amber);}
+.sig-card-score.yellow{color:var(--yellow);}
+.sig-card-score.blue{color:var(--blue);}
+.sig-card-score.green{color:var(--green);}
+.sig-card-state{font-family:var(--font-mono);font-size:10px;padding:3px 8px;border:1px solid;letter-spacing:1px;}
+.sig-card-state.red{color:var(--red);border-color:var(--red);}
+.sig-card-state.amber{color:var(--amber);border-color:var(--amber);}
+.sig-card-state.yellow{color:var(--yellow);border-color:var(--yellow);}
+.sig-card-state.blue{color:var(--blue);border-color:var(--blue);}
+.sig-card-state.green{color:var(--green);border-color:var(--green);}
+.sig-card-trigger{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);}
+
+/* Event cards */
+.evt-card{background:var(--surface);}
+.evt-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.evt-countdown{font-family:var(--font-display);font-size:44px;line-height:1;}
+.evt-countdown.imminent{color:var(--red);}
+.evt-countdown.soon{color:var(--amber);}
+.evt-countdown.future{color:var(--blue);}
+.evt-unit{font-family:var(--font-mono);font-size:9px;color:var(--text-dim);letter-spacing:2px;margin-top:2px;}
+.evt-tags{display:flex;flex-direction:column;gap:4px;align-items:flex-end;}
+.evt-tag{font-family:var(--font-mono);font-size:9px;padding:2px 7px;border:1px solid;}
+.evt-tag.t2{color:var(--yellow);border-color:rgba(249,224,64,0.3);}
+.evt-tag.t3{color:var(--blue);border-color:rgba(74,158,255,0.3);}
+.evt-tag.ai{color:var(--blue);border-color:rgba(74,158,255,0.3);}
+.evt-tag.both{color:var(--purple);border-color:rgba(167,139,250,0.3);}
+.evt-name{font-family:var(--font-display);font-size:18px;letter-spacing:1px;color:var(--text-primary);margin-bottom:4px;}
+.evt-date{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);margin-bottom:6px;}
+.evt-action{font-family:var(--font-mono);font-size:10px;color:var(--amber);line-height:1.5;padding:6px 8px;border:1px solid rgba(245,166,35,0.2);background:var(--amber-dim);}
+.evt-action-lbl{font-size:8px;letter-spacing:2px;opacity:0.7;margin-bottom:2px;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="top-bar">
+  <div class="top-title">ROOSTER</div>
+  <div class="top-time" id="topTime">—</div>
+</div>
+
+<!-- 1. MASTER SEVERITY -->
+<div class="hero watch" id="hero">
+  <div class="hero-label">MASTER SEVERITY</div>
+  <div class="hero-score amber" id="heroScore">23</div>
+  <div class="hero-status amber" id="heroStatus">EARLY WATCH</div>
+  <div class="hero-instruction" id="heroInstruction">T1 threshold at 25 — <strong>2 pts away.</strong> Monitor daily. No action yet.</div>
+</div>
+
+<!-- 2. DUAL SYSTEM -->
+<div class="dual-system">
+  <div class="sys-panel">
+    <div class="sys-label">AI BEAR</div>
+    <div class="sys-score amber" id="aiScore">29</div>
+    <div class="sys-status amber" id="aiStatus">EARLY WATCH</div>
+    <div class="sig-pills">
+      <span class="pill pill-green" id="aiGreen">5 GRN</span>
+      <span class="pill pill-amber" id="aiAmber">2 AMB</span>
+      <span class="pill pill-red" id="aiRed">1 RED</span>
+    </div>
+  </div>
+  <div class="sys-panel">
+    <div class="sys-label">MACRO</div>
+    <div class="sys-score purple" id="macroScore">17</div>
+    <div class="sys-status purple">NOMINAL</div>
+    <div class="sig-pills">
+      <span class="pill pill-green">3 CLR</span>
+      <span class="pill pill-amber">3 WCH</span>
+      <span class="pill pill-blue">1 PND</span>
+    </div>
+  </div>
+</div>
+
+<!-- 3. TRANCHES -->
+<div class="tranche-section">
+  <div class="section-label">TRANCHE STATUS — $1M 401K</div>
+  <div id="trancheRows"></div>
+</div>
+
+<!-- 4. ELEVATED SIGNALS CAROUSEL -->
+<div class="carousel-section">
+  <div class="carousel-header">
+    <div class="section-label" style="margin-bottom:0;">ELEVATED SIGNALS</div>
+    <div class="carousel-dots" id="sigDots"></div>
+  </div>
+  <div class="carousel-track" id="sigTrack"></div>
+</div>
+
+<!-- 5. UPCOMING EVENTS CAROUSEL -->
+<div class="carousel-section" style="border-bottom:none;padding-bottom:28px;">
+  <div class="carousel-header">
+    <div class="section-label" style="margin-bottom:0;">UPCOMING DATA EVENTS</div>
+    <div class="carousel-dots" id="evtDots"></div>
+  </div>
+  <div class="carousel-track" id="evtTrack"></div>
+</div>
+
+<script>
+// ── DATA ──
+const AI_SIGNALS=[
+  {id:'A01',name:'NVDA GUIDANCE',rag:'amber',score:45,sys:'ai',desc:'GM 72.7% down 6pts YoY. Earnings May 20 after close — most critical near-term event.',trigger:'GM cut or guidance miss'},
+  {id:'A02',name:'OPENAI REVENUE',rag:'green',score:15,sys:'ai',desc:'Targeting $20-26B in 2026. No miss signal yet.',trigger:'Miss target by >20%'},
+  {id:'A03',name:'DEBT ISSUANCE',rag:'green',score:10,sys:'ai',desc:'IG spread at 13bps — calm.',trigger:'Spreads widen >50bps/qtr'},
+  {id:'A04',name:'FCF COMPRESSION',rag:'amber',score:55,sys:'ai',desc:'AMZN FCF collapsed 71% YoY — $38.2B to $11.2B. Red line breach confirmed.',trigger:'Big 4 FCF declines >15% QoQ'},
+  {id:'A05',name:'CAPEX / REVENUE',rag:'red',score:70,sys:'ai',desc:'Big tech capex intensity at 45–57%. 25% red line far exceeded. $725B combined 2026 capex.',trigger:'Capex/rev exceeds 25%'},
+  {id:'A06',name:'CLOUD DECEL',rag:'green',score:20,sys:'ai',desc:'Azure 40% / AWS 24% / GCP 28% YoY. No 3-quarter pattern.',trigger:'Any below 30% YoY'},
+  {id:'A07',name:'ENTERPRISE ROI',rag:'green',score:8,sys:'ai',desc:'29% report significant ROI. At threshold already.',trigger:'ROI stalls below 30%'},
+  {id:'A08',name:'INFRA DEBT STRESS',rag:'green',score:5,sys:'ai',desc:'No rating actions. CoreWeave stable.',trigger:'Rating action on REIT/credit'},
+];
+
+const MACRO_SIGNALS=[
+  {id:'M01',name:'LABOR MARKET',rag:'green',score:5,sys:'macro',desc:'115K jobs / 4.3% unemployment — both clear. Next release Jun 5.',trigger:'Jobs <75K OR unemp ≥4.4%'},
+  {id:'M02',name:'S&P TECHNICAL',rag:'green',score:5,sys:'macro',desc:'S&P at 7,444 — well above trigger levels.',trigger:'S&P closes below 5,800'},
+  {id:'M03',name:'BOND MARKET',rag:'amber',score:45,sys:'macro',desc:'30-yr breached 5% intraday May 4. 10-yr approaching 4.60% T1 trigger.',trigger:'10-yr closes ≥4.80%'},
+  {id:'M04',name:'PRODUCTIVITY',rag:'yellow',score:25,sys:'macro',desc:'Q1 at 0.8% QoQ — yellow flag. One of two quarters needed. Q2 confirmation Aug 7.',trigger:'2 consecutive qtrs <1.5%'},
+  {id:'M05',name:'EARNINGS BREADTH',rag:'blue',score:10,sys:'macro',desc:'FactSet Q1 Earnings Insight due May 16. Non-Mag7 blended EPS growth pending.',trigger:'Non-Mag7 EPS below 8%'},
+  {id:'M06',name:'LOWER HIGH',rag:'green',score:5,sys:'macro',desc:'S&P above Feb 6,147 ATH. Sequence not active.',trigger:'S&P below 5,450 after rally fails'},
+  {id:'M07',name:'TREASURY/WARSH',rag:'amber',score:25,sys:'macro',desc:'Aug 5 refunding watch. $189B Q2 est — +$122B vs Feb. Warsh QT pending.',trigger:'Refunding revision OR Warsh QT'},
+];
+
+const EVENTS=[
+  {date:'2026-05-16',name:'FACTSET EARNINGS INSIGHT',dateStr:'May 16',tags:['t3'],action:'Update Non-Mag7 EPS Growth % in Dash 5 manual input'},
+  {date:'2026-05-20',name:'NVDA Q1 FY2027 EARNINGS',dateStr:'May 20',tags:['ai'],action:'Update Google Sheet RAW DATA rows 2, 3, 4 after close'},
+  {date:'2026-05-20',name:'FOMC MINUTES APR 28-29',dateStr:'May 20',tags:['t2'],action:'Monitor 10-yr yield — update override in Dash 5 if moves'},
+  {date:'2026-06-05',name:'MAY JOBS REPORT — BLS',dateStr:'Jun 5',tags:['t2'],action:'Update jobs, unemployment, wages in Dash 5 manual input'},
+  {date:'2026-06-11',name:'CPI MAY INFLATION',dateStr:'Jun 11',tags:['t2'],action:'Monitor 10-yr yield trajectory after release'},
+  {date:'2026-06-17',name:'FOMC RATE DECISION',dateStr:'Jun 17',tags:['t2','t3'],action:'Rate decision + press conference — monitor yield reaction'},
+  {date:'2026-08-05',name:'TREASURY REFUNDING',dateStr:'Aug 5',tags:['t3'],action:'Q3 borrowing announcement — key Warsh/QT signal'},
+  {date:'2026-08-07',name:'Q2 BLS PRODUCTIVITY',dateStr:'Aug 7',tags:['t3'],action:'Second quarter check for 3A trigger — critical AI supercycle data'},
+];
+
+const TRANCHES=[
+  {letter:'T1',threshold:25,amount:'$200K · triggers at 25'},
+  {letter:'T2',threshold:40,amount:'$200K · triggers at 40'},
+  {letter:'T3',threshold:60,amount:'$200K · triggers at 60'},
+  {letter:'T4',threshold:80,amount:'$200K · triggers at 80'},
+];
+
+const RAG_ORDER={red:0,amber:1,yellow:2,blue:3,green:4,dim:5};
+
+function cc(s){return s<25?'green':s<50?'amber':'red';}
+function daysUntil(d){const t=new Date();t.setHours(0,0,0,0);return Math.round((new Date(d+'T00:00:00')-t)/86400000);}
+
+// ── CLOCK ──
+function updateClock(){
+  const now=new Date();
+  document.getElementById('topTime').innerHTML=
+    now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})+'<br>'+
+    now.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+
+// ── HERO ──
+function updateHero(master){
+  const state=master<25?'nominal':master<60?'watch':'action';
+  const col=cc(master);
+  document.getElementById('hero').className='hero '+state;
+  const sc=document.getElementById('heroScore');
+  sc.textContent=master; sc.className='hero-score '+col;
+  const st=document.getElementById('heroStatus');
+  st.textContent={green:'ALL CLEAR',amber:'EARLY WATCH',red:'ACT NOW'}[col];
+  st.className='hero-status '+col;
+  const dist=Math.max(0,25-master);
+  const ins=document.getElementById('heroInstruction');
+  if(master>=25) ins.innerHTML='<strong>T1 threshold crossed.</strong> Consider moving $200K to stable fund. Confirm on Dash 3.';
+  else ins.innerHTML=`T1 threshold at 25 — <strong>${dist} pts away.</strong> Monitor daily. No action yet.`;
+}
+
+// ── TRANCHES ──
+function buildTranches(master){
+  document.getElementById('trancheRows').innerHTML=TRANCHES.map(t=>{
+    const triggered=master>=t.threshold;
+    const pct=Math.min((master/t.threshold)*100,100);
+    const state=triggered?'triggered':'watching';
+    const statusText=triggered?'TRIGGERED':`${Math.max(0,t.threshold-master)} PTS`;
+    return`<div class="tranche-row">
+      <div class="t-letter ${state}">${t.letter}</div>
+      <div class="t-bar-wrap">
+        <div class="t-track"><div class="t-fill ${state}" style="width:${pct}%"></div></div>
+        <div class="t-labels">${t.amount}</div>
+      </div>
+      <div class="t-status ${state}">${statusText}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── SIGNAL CAROUSEL ──
+function buildSignalCarousel(){
+  const all=[...AI_SIGNALS,...MACRO_SIGNALS];
+  const elevated=all.filter(s=>s.rag!=='green').sort((a,b)=>(RAG_ORDER[a.rag]||4)-(RAG_ORDER[b.rag]||4));
+
+  const track=document.getElementById('sigTrack');
+  const dotsEl=document.getElementById('sigDots');
+
+  if(!elevated.length){
+    track.innerHTML=`<div class="carousel-card sig-card clear-card" style="width:calc(100% - 36px);">
+      <div class="sig-card-name green">ALL SIGNALS CLEAR</div>
+      <div class="sig-card-desc">No elevated signals across AI Bear or Macro systems. System nominal.</div>
+    </div>`;
+    return;
+  }
+
+  const colorMap={red:'red',amber:'amber',yellow:'yellow',blue:'blue',green:'green'};
+  const cardClass={red:'red-card',amber:'amber-card',yellow:'yellow-card',blue:'blue-card'};
+  const stateLabel={red:'RED',amber:'AMBER',yellow:'WATCH',blue:'PENDING',green:'CLEAR'};
+
+  track.innerHTML=elevated.map(s=>`
+    <div class="carousel-card sig-card ${cardClass[s.rag]||'amber-card'}">
+      <div class="sig-card-top">
+        <div class="sig-card-id">${s.id}</div>
+        <div class="sig-card-sys ${s.sys}">${s.sys.toUpperCase()}</div>
+      </div>
+      <div class="sig-card-name ${colorMap[s.rag]}">${s.name}</div>
+      <div class="sig-card-desc">${s.desc}</div>
+      <div class="sig-card-bottom">
+        <div>
+          <div class="sig-card-score ${colorMap[s.rag]}">${s.score}</div>
+          <div class="sig-card-trigger">/ 100 · ${s.trigger}</div>
+        </div>
+        <div class="sig-card-state ${colorMap[s.rag]}">${stateLabel[s.rag]||s.rag.toUpperCase()}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Dots
+  dotsEl.innerHTML=elevated.map((_,i)=>`<div class="dot${i===0?' active':''}" data-sig="${i}"></div>`).join('');
+
+  // Dot sync on scroll
+  track.addEventListener('scroll',()=>{
+    const idx=Math.round(track.scrollLeft/(track.offsetWidth));
+    dotsEl.querySelectorAll('.dot').forEach((d,i)=>d.className='dot'+(i===idx?' active':''));
+  },{passive:true});
+}
+
+// ── EVENT CAROUSEL ──
+function buildEventCarousel(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const upcoming=EVENTS.filter(e=>new Date(e.date+'T00:00:00')>=today).sort((a,b)=>new Date(a.date)-new Date(b.date));
+
+  const track=document.getElementById('evtTrack');
+  const dotsEl=document.getElementById('evtDots');
+
+  if(!upcoming.length){track.innerHTML='<div class="carousel-card evt-card" style="padding:16px;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);">No upcoming events scheduled.</div>';return;}
+
+  const tagClass={t2:'t2',t3:'t3',ai:'ai',both:'both'};
+
+  track.innerHTML=upcoming.map(ev=>{
+    const days=daysUntil(ev.date);
+    const cdClass=days<=3?'imminent':days<=14?'soon':'future';
+    const cdText=days<=0?'TODAY':days;
+    const tags=ev.tags.map(t=>`<span class="evt-tag ${tagClass[t]||'t2'}">${t.toUpperCase()}</span>`).join('');
+    return`<div class="carousel-card evt-card">
+      <div class="evt-card-top">
+        <div>
+          <div class="evt-countdown ${cdClass}">${cdText}</div>
+          <div class="evt-unit">${days<=0?'':'DAYS AWAY'}</div>
+        </div>
+        <div class="evt-tags">${tags}</div>
+      </div>
+      <div class="evt-name">${ev.name}</div>
+      <div class="evt-date">${ev.dateStr}</div>
+      <div class="evt-action"><div class="evt-action-lbl">⬡ ACTION REQUIRED AFTER RELEASE</div>${ev.action}</div>
+    </div>`;
+  }).join('');
+
+  dotsEl.innerHTML=upcoming.map((_,i)=>`<div class="dot${i===0?' active':''}" data-evt="${i}"></div>`).join('');
+
+  track.addEventListener('scroll',()=>{
+    const idx=Math.round(track.scrollLeft/(track.offsetWidth));
+    dotsEl.querySelectorAll('.dot').forEach((d,i)=>d.className='dot'+(i===idx?' active':''));
+  },{passive:true});
+}
+
+// ── SHEET FEED ──
+const SHEET_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vQLlAdrK3AEKqZb8t8cttPGcR9zfw4W3LWkCLbrKuh_0VlmsJYyCK4bGmTl8Mk_JwPXxEqTEkGqYqBK/pub?gid=1005822355&single=true&output=csv";
+async function fetchSheet(){
+  try{
+    const r=await fetch(SHEET_URL);
+    if(!r.ok)throw new Error();
+    const txt=await r.text();
+    const d={};
+    txt.trim().split('\n').forEach(row=>{const p=row.split(',');if(p.length>=2)d[p[0].trim().replace(/"/g,'')]=p[1].trim().replace(/"/g,'');});
+    const aiScore=parseInt(d['COMPOSITE_SCORE'])||29;
+    const master=Math.round((aiScore+17)/2);
+    document.getElementById('aiScore').textContent=aiScore;
+    document.getElementById('aiScore').className='sys-score '+cc(aiScore);
+    document.getElementById('aiStatus').textContent=aiScore<25?'NOMINAL':aiScore<50?'EARLY WATCH':'ACTION';
+    document.getElementById('aiStatus').className='sys-status '+cc(aiScore);
+    // Update AI signal scores from sheet
+    const sm={SIG01_SCORE:0,SIG02_SCORE:1,SIG03_SCORE:2,SIG04_SCORE:3,SIG05_SCORE:4,SIG06_SCORE:5,SIG07_SCORE:6,SIG08_SCORE:7};
+    Object.entries(sm).forEach(([k,i])=>{
+      const v=parseInt(d[k]);if(!isNaN(v))AI_SIGNALS[i].score=v;
+      const rk=k.replace('_SCORE','_RAG');if(d[rk])AI_SIGNALS[i].rag=d[rk].toLowerCase();
+    });
+    updateHero(master);buildTranches(master);buildSignalCarousel();
+  }catch(e){updateHero(23);buildTranches(23);}
+}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded',()=>{
+  updateClock();setInterval(updateClock,30000);
+  updateHero(23);buildTranches(23);
+  buildSignalCarousel();buildEventCarousel();
+  setTimeout(fetchSheet,500);
+});
+</script>
+</body>
+</html>
