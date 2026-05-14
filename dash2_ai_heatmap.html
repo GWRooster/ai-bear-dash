@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DASH 2 — AI HEAT MAP</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--surface:#16161f;--surface2:#0e0e16;--border:#2a2a3e;--text-primary:#ffffff;--text-secondary:#d8d8f0;--text-dim:#a8a8c8;--green:#00d4a0;--green-dim:rgba(0,212,160,0.12);--amber:#f5a623;--amber-dim:rgba(245,166,35,0.12);--red:#ff4060;--red-dim:rgba(255,64,96,0.12);--blue:#4a9eff;--blue-dim:rgba(74,158,255,0.12);--font-display:'Bebas Neue',sans-serif;--font-mono:'IBM Plex Mono',monospace;--font-body:'IBM Plex Sans',sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text-primary);font-family:var(--font-body);font-size:17px;min-height:100vh;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:999;}
+.header{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;}
+.header-left{display:flex;align-items:baseline;gap:16px;}
+.dash-id{font-family:var(--font-display);font-size:28px;letter-spacing:3px;}
+.dash-sub{font-family:var(--font-mono);font-size:12px;color:var(--text-secondary);letter-spacing:2px;text-transform:uppercase;}
+.last-updated{font-family:var(--font-mono);font-size:12px;color:var(--text-dim);letter-spacing:1px;}
+.nav-bar{display:flex;padding:0 28px;border-bottom:1px solid var(--border);background:var(--bg);overflow-x:auto;}
+.nav-link{font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:10px 18px;color:var(--text-dim);text-decoration:none;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;}
+.nav-link:hover{color:var(--text-secondary);}
+.nav-link.active{color:var(--text-primary);border-bottom-color:var(--blue);}
+.main{padding:24px 28px;max-width:1500px;margin:0 auto;}
+
+/* HERO */
+.hero{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--blue);padding:32px 28px;margin-bottom:24px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 100%,rgba(74,158,255,0.05) 0%,transparent 70%);pointer-events:none;}
+
+/* THREE COLUMN HERO GRID — equal height columns */
+.hero-grid{display:grid;grid-template-columns:1fr 260px 1fr;gap:32px;align-items:stretch;min-height:320px;}
+
+/* LEFT COLUMN — distribution top, trend bottom */
+.hero-left{display:flex;flex-direction:column;justify-content:space-between;}
+.hero-label{font-family:var(--font-mono);font-size:12px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:14px;}
+
+.sig-counts{display:flex;gap:10px;justify-content:center;}
+.sig-c{display:flex;flex-direction:column;align-items:center;padding:14px 18px;border:1px solid var(--border);background:var(--surface2);min-width:64px;}
+.sig-c-num{font-family:var(--font-display);font-size:36px;line-height:1;}
+.sig-c-num.green{color:var(--green);}
+.sig-c-num.amber{color:var(--amber);}
+.sig-c-num.red{color:var(--red);}
+.sig-c-num.dim{color:var(--text-dim);}
+.sig-c-lbl{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-top:4px;}
+
+.trend-area{margin-top:auto;}
+.trend-label{font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;}
+.trend-svg{width:100%;height:72px;}
+
+/* CENTER COLUMN — gauge dominant and vertically centered */
+.hero-center{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;}
+.gauge-wrap{position:relative;width:240px;height:134px;}
+.gauge-svg{width:100%;height:100%;}
+.gauge-score-display{position:absolute;bottom:0;left:50%;transform:translateX(-50%);text-align:center;}
+.gauge-number{font-family:var(--font-display);font-size:72px;line-height:1;transition:color 0.5s;}
+.gauge-number.green{color:var(--green);}
+.gauge-number.amber{color:var(--amber);}
+.gauge-number.red{color:var(--red);}
+.gauge-sub{font-family:var(--font-mono);font-size:13px;color:var(--text-dim);letter-spacing:2px;text-align:center;}
+.gauge-status{font-family:var(--font-display);font-size:22px;letter-spacing:3px;text-align:center;}
+.gauge-status.green{color:var(--green);}
+.gauge-status.amber{color:var(--amber);}
+.gauge-status.red{color:var(--red);}
+
+/* RIGHT COLUMN — history top, divergence chart bottom */
+.hero-right{display:flex;flex-direction:column;justify-content:space-between;}
+.history-table{width:100%;}
+.hist-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-family:var(--font-mono);font-size:13px;}
+.hist-row:last-child{border-bottom:none;}
+.hist-lbl{color:var(--text-dim);}
+.hist-val{color:var(--text-secondary);}
+.hist-val.rising{color:var(--amber);}
+
+.div-area{margin-top:auto;}
+.div-label{font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;}
+.div-svg{width:100%;height:72px;}
+.div-legend{display:flex;gap:16px;margin-top:6px;}
+.div-leg-item{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;color:var(--text-dim);}
+.div-leg-dot{width:20px;height:2px;border-radius:1px;}
+
+/* SIGNAL LIST */
+.signal-section{margin-bottom:24px;}
+.section-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.section-lbl{font-family:var(--font-mono);font-size:11px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;border-left:2px solid var(--blue);padding-left:10px;}
+.section-badge{font-family:var(--font-mono);font-size:11px;padding:3px 10px;border:1px solid;border-radius:2px;}
+.badge-elevated{color:var(--amber);border-color:rgba(245,166,35,0.4);background:var(--amber-dim);}
+.badge-stable{color:var(--green);border-color:rgba(0,212,160,0.4);background:var(--green-dim);}
+
+.signal-list{background:var(--surface);border:1px solid var(--border);overflow:hidden;}
+.list-header{display:grid;grid-template-columns:16px 2fr 80px 60px 44px 1.2fr 150px;gap:10px;padding:8px 20px;background:var(--surface2);font-family:var(--font-mono);font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;align-items:center;}
+.list-header span:nth-child(3),.list-header span:nth-child(4),.list-header span:nth-child(5){text-align:center;}
+
+.sig-row-elevated{display:grid;grid-template-columns:16px 2fr 80px 60px 44px 1.2fr 150px;gap:10px;padding:14px 20px;border-top:1px solid var(--border);align-items:start;}
+.sig-row-elevated.red-row{background:linear-gradient(135deg,rgba(255,64,96,0.08),rgba(255,64,96,0.03));}
+.sig-row-elevated.amber-row{background:linear-gradient(135deg,rgba(245,166,35,0.08),rgba(245,166,35,0.03));}
+
+.sig-dot{border-radius:50%;flex-shrink:0;margin-top:4px;}
+.sig-dot.red{width:11px;height:11px;background:var(--red);box-shadow:0 0 6px var(--red);}
+.sig-dot.amber{width:11px;height:11px;background:var(--amber);box-shadow:0 0 6px var(--amber);}
+.sig-dot.green{width:9px;height:9px;background:var(--green);box-shadow:0 0 4px var(--green);}
+
+.sig-name-elevated{font-family:var(--font-display);font-size:18px;letter-spacing:1px;margin-bottom:4px;line-height:1;}
+.sig-name-elevated.red{color:var(--red);}
+.sig-name-elevated.amber{color:var(--amber);}
+.sig-desc{font-family:var(--font-body);font-size:13px;line-height:1.6;}
+.sig-desc.red{color:rgba(255,64,96,0.85);}
+.sig-desc.amber{color:rgba(245,166,35,0.85);}
+
+.sig-state{font-family:var(--font-mono);font-size:12px;font-weight:500;text-align:center;padding-top:3px;}
+.sig-state.red{color:var(--red);}
+.sig-state.amber{color:var(--amber);}
+.sig-score{font-family:var(--font-display);font-size:24px;text-align:center;}
+.sig-score.red{color:var(--red);}
+.sig-score.amber{color:var(--amber);}
+.sig-dir{font-size:18px;text-align:center;}
+.sig-metric{font-family:var(--font-mono);font-size:13px;padding-top:3px;}
+.sig-metric.red{color:rgba(255,64,96,0.9);}
+.sig-metric.amber{color:rgba(245,166,35,0.9);}
+.sig-trigger{font-family:var(--font-mono);font-size:12px;padding-top:3px;}
+.sig-trigger.red{color:rgba(255,64,96,0.7);}
+.sig-trigger.amber{color:rgba(245,166,35,0.7);}
+
+.stable-divider{display:flex;justify-content:space-between;align-items:center;padding:8px 20px;background:var(--surface2);border-top:1px solid var(--border);font-family:var(--font-mono);font-size:11px;}
+.stable-lbl{color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;}
+.stable-badge{color:var(--green);border:1px solid rgba(0,212,160,0.3);background:var(--green-dim);padding:2px 8px;}
+
+.sig-row-compact{display:grid;grid-template-columns:16px 2fr 80px 60px 44px 1.2fr 150px;gap:10px;padding:12px 20px;border-top:1px solid rgba(255,255,255,0.04);align-items:start;}
+.sig-name-compact{font-family:var(--font-body);font-size:15px;color:var(--text-primary);margin-bottom:2px;}
+.sig-desc-compact{font-family:var(--font-body);font-size:12px;color:var(--text-dim);line-height:1.5;}
+.sig-state-compact{font-family:var(--font-mono);font-size:11px;color:var(--green);text-align:center;padding-top:3px;}
+.sig-score-compact{font-family:var(--font-display);font-size:18px;color:var(--green);text-align:center;}
+.sig-metric-compact{font-family:var(--font-mono);font-size:12px;color:var(--text-dim);padding-top:3px;}
+.sig-trigger-compact{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);padding-top:3px;}
+
+@media(max-width:1200px){.hero-grid{grid-template-columns:1fr;min-height:auto}.hero-left,.hero-right{gap:24px}.list-header,.sig-row-elevated,.sig-row-compact{grid-template-columns:16px 2fr 70px 50px 40px 1fr}.main{padding:16px}}
+@media(max-width:768px){.header{flex-wrap:wrap;gap:12px}.nav-link{padding:8px 10px;font-size:10px}}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-left">
+    <div class="dash-id">DASH 02</div>
+    <div class="dash-sub">AI HEAT MAP — SEVERITY INDEX</div>
+  </div>
+  <div class="last-updated" id="lastUpdated">LOADING...</div>
+</header>
+<nav class="nav-bar">
+  <a href="dash1_ai_signals.html" class="nav-link">AI SIGNALS</a>
+  <a href="#" class="nav-link active">AI HEAT MAP</a>
+  <a href="dash3_decision.html" class="nav-link">DECISION ENGINE</a>
+  <a href="dash4_macro_heatmap.html" class="nav-link">MACRO HEAT MAP</a>
+  <a href="dash5_macro_signals.html" class="nav-link">MACRO SIGNALS</a>
+  <a href="dash_summary.html" class="nav-link">SUMMARY</a>
+</nav>
+<main class="main">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-grid">
+
+      <!-- LEFT: signal distribution top, trend line bottom -->
+      <div class="hero-left">
+        <div>
+          <div class="hero-label">SIGNAL STATUS DISTRIBUTION</div>
+          <div class="sig-counts">
+            <div class="sig-c"><div class="sig-c-num green" id="cntGreen">5</div><div class="sig-c-lbl">GREEN</div></div>
+            <div class="sig-c"><div class="sig-c-num amber" id="cntAmber">2</div><div class="sig-c-lbl">AMBER</div></div>
+            <div class="sig-c"><div class="sig-c-num red" id="cntRed">1</div><div class="sig-c-lbl">RED</div></div>
+            <div class="sig-c"><div class="sig-c-num dim">8</div><div class="sig-c-lbl">TOTAL</div></div>
+          </div>
+        </div>
+        <div class="trend-area">
+          <div class="trend-label">COMPOSITE SCORE TREND</div>
+          <svg class="trend-svg" id="trendSvg" viewBox="0 0 300 72" preserveAspectRatio="none"></svg>
+          <div style="display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);margin-top:4px;letter-spacing:1px;">
+            <span>-8 WKS</span><span>-6</span><span>-4</span><span>-2</span><span>NOW</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CENTER: gauge large and dominant -->
+      <div class="hero-center">
+        <div class="hero-label" style="text-align:center;margin-bottom:0;">COMPOSITE SEVERITY</div>
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 200 110" fill="none">
+            <path d="M20 100 A80 80 0 0 1 180 100" stroke="#2a2a3e" stroke-width="14" fill="none" stroke-linecap="round"/>
+            <path d="M20 100 A80 80 0 0 1 43.4 43.4" stroke="rgba(0,212,160,0.25)" stroke-width="14" fill="none" stroke-linecap="butt"/>
+            <path d="M43.4 43.4 A80 80 0 0 1 100.0 20.0" stroke="rgba(245,166,35,0.25)" stroke-width="14" fill="none" stroke-linecap="butt"/>
+            <path d="M100.0 20.0 A80 80 0 0 1 180 100" stroke="rgba(255,64,96,0.25)" stroke-width="14" fill="none" stroke-linecap="butt"/>
+            <path d="M20 100 A80 80 0 0 1 20 100" stroke="#f5a623" stroke-width="14" fill="none" stroke-linecap="round" id="gaugeFill" opacity="0.9"/>
+            <text x="12" y="118" font-family="monospace" font-size="8" fill="#a8a8c8">0</text>
+            <text x="91" y="10" font-family="monospace" font-size="8" fill="#a8a8c8">50</text>
+            <text x="178" y="118" font-family="monospace" font-size="8" fill="#a8a8c8">100</text>
+          </svg>
+          <div class="gauge-score-display">
+            <div class="gauge-number amber" id="gaugeNum">29</div>
+          </div>
+        </div>
+        <div class="gauge-sub">/ 100 SEVERITY</div>
+        <div class="gauge-status amber" id="gaugeStatus">EARLY WATCH</div>
+      </div>
+
+      <!-- RIGHT: history top, divergence chart bottom — no box -->
+      <div class="hero-right">
+        <div>
+          <div class="hero-label">COMPOSITE HISTORY</div>
+          <div class="history-table">
+            <div class="hist-row"><span class="hist-lbl">1 WEEK AGO</span><span class="hist-val" id="h1wk">—</span></div>
+            <div class="hist-row"><span class="hist-lbl">2 WEEKS AGO</span><span class="hist-val" id="h2wk">—</span></div>
+            <div class="hist-row"><span class="hist-lbl">1 MONTH AGO</span><span class="hist-val" id="h1mo">—</span></div>
+            <div class="hist-row"><span class="hist-lbl">DIRECTION</span><span class="hist-val rising">↑ RISING</span></div>
+            <div class="hist-row"><span class="hist-lbl">WK CHANGE</span><span class="hist-val rising">+3 PTS</span></div>
+            <div class="hist-row"><span class="hist-lbl">MO CHANGE</span><span class="hist-val">—</span></div>
+            <div class="hist-row" style="border-bottom:none;"><span class="hist-lbl">QTR CHANGE</span><span class="hist-val">—</span></div>
+          </div>
+        </div>
+        <div class="div-area">
+          <div class="div-label">AI BEAR vs S&P 500 — DIVERGENCE</div>
+          <svg class="div-svg" id="divSvg" viewBox="0 0 300 72" preserveAspectRatio="none"></svg>
+          <div class="div-legend">
+            <div class="div-leg-item"><div class="div-leg-dot" style="background:var(--amber);"></div>AI BEAR</div>
+            <div class="div-leg-item"><div class="div-leg-dot" style="background:var(--blue);"></div>S&P 500</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ELEVATED SIGNALS -->
+  <div class="signal-section">
+    <div class="section-bar">
+      <div class="section-lbl">ELEVATED SIGNALS — RED · AMBER</div>
+      <div class="section-badge badge-elevated">3 ACTIVE</div>
+    </div>
+    <div class="signal-list">
+      <div class="list-header">
+        <span></span><span>Signal + context</span><span style="text-align:center">State</span><span style="text-align:center">Score</span><span style="text-align:center">Dir</span><span>Key metric</span><span>Trigger threshold</span>
+      </div>
+      <div class="sig-row-elevated red-row">
+        <div class="sig-dot red" style="margin-top:5px;"></div>
+        <div>
+          <div class="sig-name-elevated red">CAPEX / REVENUE</div>
+          <div class="sig-desc red">Big tech capex intensity at 45–57%. 25% red line far exceeded. $725B combined 2026 capex planned. Multiple compression risk — asset-light premium eroding structurally.</div>
+        </div>
+        <div class="sig-state red">RED</div>
+        <div class="sig-score red">70</div>
+        <div class="sig-dir" style="color:var(--red);">↑</div>
+        <div class="sig-metric red">45–57% vs 25% red line</div>
+        <div class="sig-trigger red">Capex/rev exceeds 25%</div>
+      </div>
+      <div class="sig-row-elevated amber-row">
+        <div class="sig-dot amber" style="margin-top:5px;"></div>
+        <div>
+          <div class="sig-name-elevated amber">NVDA GUIDANCE</div>
+          <div class="sig-desc amber">GM 72.7% — down 6pts YoY. DC Revenue +56% YoY. Earnings May 20 after close — most critical near-term AI Bear event. GM below 74% moves SIG01 to RED immediately.</div>
+        </div>
+        <div class="sig-state amber">AMBER</div>
+        <div class="sig-score amber">45</div>
+        <div class="sig-dir" style="color:var(--amber);">↑</div>
+        <div class="sig-metric amber">GM 72.7% / DC Rev +56%</div>
+        <div class="sig-trigger amber">GM cut or guidance miss</div>
+      </div>
+      <div class="sig-row-elevated amber-row">
+        <div class="sig-dot amber" style="margin-top:5px;"></div>
+        <div>
+          <div class="sig-name-elevated amber">FCF COMPRESSION</div>
+          <div class="sig-desc amber">AMZN FCF collapsed 71% YoY — $38.2B to $11.2B. Red line breach confirmed at AMZN. Watch MSFT and GOOG next quarterly filings for cascade confirmation.</div>
+        </div>
+        <div class="sig-state amber">AMBER</div>
+        <div class="sig-score amber">55</div>
+        <div class="sig-dir" style="color:var(--amber);">↑</div>
+        <div class="sig-metric amber">AMZN FCF $11.2B vs $38.2B</div>
+        <div class="sig-trigger amber">Big 4 FCF declines >15% QoQ</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STABLE SIGNALS -->
+  <div class="signal-section">
+    <div class="section-bar">
+      <div class="section-lbl">STABLE SIGNALS — GREEN</div>
+      <div class="section-badge badge-stable">5 CLEAR</div>
+    </div>
+    <div class="signal-list">
+      <div class="list-header">
+        <span></span><span>Signal + context</span><span style="text-align:center">State</span><span style="text-align:center">Score</span><span style="text-align:center">Dir</span><span>Key metric</span><span>Trigger threshold</span>
+      </div>
+      <div class="sig-row-compact">
+        <div class="sig-dot green" style="margin-top:5px;"></div>
+        <div><div class="sig-name-compact">Cloud Deceleration</div><div class="sig-desc-compact">No 3-quarter deceleration pattern yet. Azure 40% / AWS 24% / GCP 28% YoY. Watching for sequential decel trend across three consecutive quarters.</div></div>
+        <div class="sig-state-compact">GREEN</div>
+        <div class="sig-score-compact">20</div>
+        <div class="sig-dir" style="color:var(--green);font-size:16px;text-align:center;">↓</div>
+        <div class="sig-metric-compact">Azure 40% / AWS 24% / GCP 28%</div>
+        <div class="sig-trigger-compact">Any below 30% YoY</div>
+      </div>
+      <div class="sig-row-compact">
+        <div class="sig-dot green" style="margin-top:5px;"></div>
+        <div><div class="sig-name-compact">OpenAI Revenue</div><div class="sig-desc-compact">Targeting $20-26B in 2026. Revenue vs $1.4T commitment structure under watch. No miss signal yet from public reporting.</div></div>
+        <div class="sig-state-compact">GREEN</div>
+        <div class="sig-score-compact">15</div>
+        <div class="sig-dir" style="color:var(--text-dim);font-size:16px;text-align:center;">→</div>
+        <div class="sig-metric-compact">Target $20-26B 2026</div>
+        <div class="sig-trigger-compact">Miss target by >20%</div>
+      </div>
+      <div class="sig-row-compact">
+        <div class="sig-dot green" style="margin-top:5px;"></div>
+        <div><div class="sig-name-compact">Debt Issuance</div><div class="sig-desc-compact">IG spread at 13bps — calm. Monitoring bond issuance acceleration quarterly. Well below 50bps trigger threshold.</div></div>
+        <div class="sig-state-compact">GREEN</div>
+        <div class="sig-score-compact">10</div>
+        <div class="sig-dir" style="color:var(--red);font-size:16px;text-align:center;">↑</div>
+        <div class="sig-metric-compact">IG spread 13bps — calm</div>
+        <div class="sig-trigger-compact">Spreads widen >50bps/qtr</div>
+      </div>
+      <div class="sig-row-compact">
+        <div class="sig-dot green" style="margin-top:5px;"></div>
+        <div><div class="sig-name-compact">Enterprise ROI</div><div class="sig-desc-compact">Only 29% of enterprises report significant ROI. Structural demand risk building slowly. Already at the 30% threshold.</div></div>
+        <div class="sig-state-compact">GREEN</div>
+        <div class="sig-score-compact">8</div>
+        <div class="sig-dir" style="color:var(--text-dim);font-size:16px;text-align:center;">→</div>
+        <div class="sig-metric-compact">29% report significant ROI</div>
+        <div class="sig-trigger-compact">ROI stalls below 30%</div>
+      </div>
+      <div class="sig-row-compact">
+        <div class="sig-dot green" style="margin-top:5px;"></div>
+        <div><div class="sig-name-compact">Infra Debt Stress</div><div class="sig-desc-compact">No rating actions on REITs or private credit. CoreWeave stable. No contagion signals from utilities, insurers, or pension funds.</div></div>
+        <div class="sig-state-compact">GREEN</div>
+        <div class="sig-score-compact">5</div>
+        <div class="sig-dir" style="color:var(--text-dim);font-size:16px;text-align:center;">→</div>
+        <div class="sig-metric-compact">No rating actions</div>
+        <div class="sig-trigger-compact">Rating action on REIT/credit</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+<script>
+const SIGNALS=[{rag:'red',score:70},{rag:'amber',score:45},{rag:'amber',score:55},{rag:'green',score:20},{rag:'green',score:15},{rag:'green',score:10},{rag:'green',score:8},{rag:'green',score:5}];
+function calcComposite(){return Math.round(SIGNALS.reduce((a,s)=>a+s.score,0)/SIGNALS.length);}
+function cc(s){return s<25?'green':s<50?'amber':'red';}
+
+function buildCharts(){
+  const bearData=[16,17,19,18,21,22,25,29];
+  const spxData=[55,58,56,62,66,70,73,78];
+  function makePts(data,w,h){
+    const mx=Math.max(...data),mn=Math.min(...data),n=data.length;
+    return data.map((v,i)=>((i/(n-1))*w)+','+(h-((v-mn)/(mx-mn||1))*(h-8)-4)).join(' ');
+  }
+
+  // Trend SVG — no box, just lines on transparent
+  const tSvg=document.getElementById('trendSvg');
+  const tPts=makePts(bearData,300,72);
+  tSvg.innerHTML=`<defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f5a623" stop-opacity="0.25"/><stop offset="100%" stop-color="#f5a623" stop-opacity="0"/></linearGradient></defs><polyline points="${tPts} 300,72 0,72" fill="url(#tg)" stroke="none"/><polyline points="${tPts}" fill="none" stroke="#f5a623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+
+  // Divergence SVG — no box, transparent background, same height as trend
+  const dSvg=document.getElementById('divSvg');
+  const bPts=makePts(bearData,300,72);
+  const sPts=makePts(spxData,300,72);
+  dSvg.innerHTML=`<polyline points="${bPts}" fill="none" stroke="#f5a623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/><polyline points="${sPts}" fill="none" stroke="#4a9eff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>`;
+}
+
+function calcGaugeArc(score) {
+  // Arc goes from left (180deg, score 0) to right (0deg, score 100)
+  // SVG center: cx=100, cy=100, r=80, start point: M20 100
+  const pct = Math.min(Math.max(score, 0), 100) / 100;
+  const angleDeg = 180 - pct * 180;
+  const angleRad = angleDeg * Math.PI / 180;
+  const cx = 100, cy = 100, r = 80;
+  const ex = cx - r * Math.cos(angleRad);
+  const ey = cy - r * Math.sin(angleRad);
+  const largeArc = pct > 0.5 ? 1 : 0;
+  return `M20 100 A80 80 0 ${largeArc} 1 ${ex.toFixed(1)} ${ey.toFixed(1)}`;
+}
+
+function updateGauge(score){
+  const el=document.getElementById('gaugeNum');
+  el.textContent=score;
+  el.className='gauge-number '+cc(score);
+  const st=document.getElementById('gaugeStatus');
+  st.textContent=score<25?'NOMINAL':score<50?'EARLY WATCH':'ACTION REQUIRED';
+  st.className='gauge-status '+cc(score);
+  // Update gauge arc
+  const fill=document.getElementById('gaugeFill');
+  if(fill){
+    fill.setAttribute('d', calcGaugeArc(score));
+    const colors={green:'#00d4a0',amber:'#f5a623',red:'#ff4060'};
+    fill.setAttribute('stroke', colors[cc(score)]);
+  }
+}
+
+const SHEET_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vQLlAdrK3AEKqZb8t8cttPGcR9zfw4W3LWkCLbrKuh_0VlmsJYyCK4bGmTl8Mk_JwPXxEqTEkGqYqBK/pub?gid=1005822355&single=true&output=csv";
+async function fetchSheet(){
+  try{
+    const r=await fetch(SHEET_URL);
+    if(!r.ok)throw new Error();
+    const txt=await r.text();
+    const d={};
+    txt.trim().split('\n').map(r=>r.split(',')).forEach(row=>{if(row.length>=2)d[row[0].trim().replace(/"/g,'')]=row[1].trim().replace(/"/g,'');});
+    const score=parseInt(d['COMPOSITE_SCORE'])||calcComposite();
+    updateGauge(score);
+    document.getElementById('lastUpdated').textContent='LIVE — UPDATED: '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){
+    document.getElementById('lastUpdated').textContent='CACHED — SHEET OFFLINE';
+    updateGauge(calcComposite());
+  }
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  buildCharts();
+  updateGauge(calcComposite());
+  setTimeout(fetchSheet,500);
+});
+</script>
+</body>
+</html>
