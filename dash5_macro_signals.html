@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DASH 5 — MACRO SIGNAL MONITOR</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #16161f;
+    --surface2: #0e0e16;
+    --border: #2a2a3e;
+    --text-primary: #ffffff;
+    --text-secondary: #d8d8f0;
+    --text-dim: #a8a8c8;
+    --green: #00d4a0;
+    --green-dim: rgba(0,212,160,0.1);
+    --amber: #f5a623;
+    --amber-dim: rgba(245,166,35,0.1);
+    --red: #ff4060;
+    --red-dim: rgba(255,64,96,0.1);
+    --yellow: #f9e040;
+    --yellow-dim: rgba(249,224,64,0.1);
+    --blue: #4a9eff;
+    --blue-dim: rgba(74,158,255,0.1);
+    --purple: #a78bfa;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --font-body: 'IBM Plex Sans', sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text-primary); font-family:var(--font-body); font-size:15px; min-height:100vh; }
+  body::after { content:''; position:fixed; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px); pointer-events:none; z-index:999; }
+
+  .header { display:flex; align-items:center; justify-content:space-between; padding:16px 28px; border-bottom:1px solid var(--border); background:var(--surface); position:sticky; top:0; z-index:100; }
+  .header-left { display:flex; align-items:baseline; gap:16px; }
+  .dash-id { font-family:var(--font-display); font-size:28px; letter-spacing:3px; }
+  .dash-sub { font-family:var(--font-mono); font-size:15px; color:var(--text-secondary); letter-spacing:2px; text-transform:uppercase; }
+  .header-right { display:flex; align-items:center; gap:16px; }
+  .composite-pill { display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--border); padding:8px 16px; }
+  .composite-label { font-family:var(--font-mono); font-size:16px; color:var(--text-secondary); letter-spacing:2px; }
+  .composite-score { font-family:var(--font-display); font-size:32px; line-height:1; transition:color 0.5s; }
+  .composite-score.green { color:var(--green); }
+  .composite-score.amber { color:var(--amber); }
+  .composite-score.red { color:var(--red); }
+  .last-updated { font-family:var(--font-mono); font-size:16px; color:var(--text-dim); letter-spacing:1px; }
+
+  .nav-bar { display:flex; padding:0 28px; border-bottom:1px solid var(--border); background:var(--bg); overflow-x:auto; }
+  .nav-link { font-family:var(--font-mono); font-size:16px; letter-spacing:2px; text-transform:uppercase; padding:10px 16px; color:var(--text-dim); text-decoration:none; border-bottom:2px solid transparent; transition:all 0.2s; white-space:nowrap; }
+  .nav-link:hover { color:var(--text-secondary); }
+  .nav-link.active { color:var(--text-primary); border-bottom-color:var(--purple); }
+  .nav-link.ai { border-bottom-color:transparent; }
+  .nav-link.ai.active { border-bottom-color:var(--blue); }
+
+  .warning-banner { background:rgba(249,224,64,0.08); border-bottom:1px solid rgba(249,224,64,0.3); padding:10px 28px; font-family:var(--font-mono); font-size:15px; color:var(--yellow); letter-spacing:0.5px; }
+  .warning-banner.fire { background:rgba(255,64,96,0.1); border-color:rgba(255,64,96,0.4); color:var(--red); animation:warn-pulse 2s infinite; }
+  .warning-banner.hidden { display:none; }
+  @keyframes warn-pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
+
+  .main { padding:28px; max-width:1400px; margin:0 auto; }
+
+  .ticker-bar { display:grid; grid-template-columns:repeat(4,1fr); border:1px solid var(--border); margin-bottom:20px; background:var(--surface2); }
+  .ticker-item { padding:14px 20px; border-right:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .ticker-item:last-child { border-right:none; }
+  .ticker-label { font-family:var(--font-mono); font-size:16px; letter-spacing:2px; color:var(--text-dim); text-transform:uppercase; }
+  .ticker-right { text-align:right; }
+  .ticker-value { font-family:var(--font-display); font-size:24px; letter-spacing:1px; }
+  .ticker-sub { font-family:var(--font-mono); font-size:16px; color:var(--text-dim); margin-top:2px; letter-spacing:1px; }
+
+  .cascade-wrapper { display:flex; flex-direction:column; gap:0; }
+  .tier-label { font-family:var(--font-mono); font-size:14px; letter-spacing:3px; color:var(--text-dim); text-transform:uppercase; margin-bottom:8px; border-left:2px solid var(--text-dim); padding-left:8px; }
+
+  .signal-row { display:grid; gap:12px; margin-bottom:0; }
+  .row-3 { grid-template-columns:1fr 1fr 1fr; }
+  .row-2 { grid-template-columns:1fr 1fr; }
+
+  .connector { display:flex; justify-content:center; align-items:center; height:28px; padding:4px 0; gap:4px; }
+  .connector-text { font-family:var(--font-mono); font-size:15px; color:var(--text-dim); letter-spacing:2px; padding:0 12px; }
+
+  .signal-card { background:var(--surface); border:1px solid var(--border); padding:18px 20px; position:relative; transition:all 0.3s; animation:fadeIn 0.4s ease forwards; }
+  .signal-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--text-dim); transition:background 0.3s; }
+  .signal-card.green::before { background:var(--green); }
+  .signal-card.amber::before { background:var(--amber); }
+  .signal-card.red::before { background:var(--red); }
+  .signal-card.yellow::before { background:var(--yellow); }
+  .signal-card.blue::before { background:var(--blue); }
+  .signal-card.green { background:linear-gradient(135deg,var(--surface),var(--green-dim)); border-color:rgba(0,212,160,0.2); }
+  .signal-card.amber { background:linear-gradient(135deg,var(--surface),var(--amber-dim)); border-color:rgba(245,166,35,0.2); }
+  .signal-card.red { background:linear-gradient(135deg,var(--surface),var(--red-dim)); border-color:rgba(255,64,96,0.2); animation:red-pulse 3s infinite; }
+  .signal-card.yellow { background:linear-gradient(135deg,var(--surface),var(--yellow-dim)); border-color:rgba(249,224,64,0.2); }
+  .signal-card.blue { background:linear-gradient(135deg,var(--surface),var(--blue-dim)); border-color:rgba(74,158,255,0.2); }
+  @keyframes red-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,64,96,0);} 50%{box-shadow:0 0 12px 2px rgba(255,64,96,0.15);} }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:translateY(0);} }
+
+  .card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+  .signal-number { font-family:var(--font-display); font-size:15px; color:var(--text-dim); letter-spacing:2px; }
+  .rag-dot { width:10px; height:10px; border-radius:50%; background:var(--text-dim); flex-shrink:0; transition:background 0.3s; }
+  .green .rag-dot { background:var(--green); box-shadow:0 0 6px var(--green); }
+  .amber .rag-dot { background:var(--amber); box-shadow:0 0 6px var(--amber); }
+  .red .rag-dot { background:var(--red); box-shadow:0 0 8px var(--red); }
+  .yellow .rag-dot { background:var(--yellow); box-shadow:0 0 6px var(--yellow); }
+  .blue .rag-dot { background:var(--blue); box-shadow:0 0 4px var(--blue); }
+
+  .signal-name { font-family:var(--font-display); font-size:20px; letter-spacing:1.5px; color:var(--text-primary); margin-bottom:6px; line-height:1.1; }
+  .signal-edu { font-family:var(--font-body); font-size:16px; color:#d0d0e8; line-height:1.6; margin-bottom:10px; font-weight:400; }
+
+  .signal-metrics { display:flex; flex-direction:column; gap:6px; border-top:1px solid var(--border); padding-top:10px; }
+  .metric-row { display:flex; justify-content:space-between; align-items:center; }
+  .metric-label { font-family:var(--font-mono); font-size:14px; color:#b0b8d0; letter-spacing:1px; text-transform:uppercase; }
+  .metric-value { font-family:var(--font-mono); font-size:16px; color:var(--text-secondary); }
+  .metric-value.live { color:var(--text-primary); font-weight:500; font-size:14px; }
+
+  .trigger-line { margin-top:8px; padding:8px 10px; background:rgba(255,255,255,0.03); border-left:2px solid var(--text-dim); font-family:var(--font-mono); font-size:14px; color:var(--text-dim); letter-spacing:0.3px; line-height:1.6; transition:all 0.3s; }
+  .green .trigger-line { border-color:var(--green); color:rgba(0,212,160,0.85); }
+  .amber .trigger-line { border-color:var(--amber); color:rgba(245,166,35,0.9); }
+  .red .trigger-line { border-color:var(--red); color:rgba(255,64,96,0.95); font-weight:500; }
+  .yellow .trigger-line { border-color:var(--yellow); color:rgba(249,224,64,0.9); }
+  .blue .trigger-line { border-color:var(--blue); color:rgba(74,158,255,0.8); }
+
+  /* MANUAL INPUT */
+  .input-section { background:var(--surface); border:1px solid var(--border); padding:20px; margin-top:24px; }
+  .input-section-title { font-family:var(--font-mono); font-size:16px; letter-spacing:3px; color:var(--text-dim); text-transform:uppercase; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+  .input-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; }
+  .input-group { display:flex; flex-direction:column; gap:5px; }
+  .input-label { font-family:var(--font-mono); font-size:16px; letter-spacing:1px; color:var(--text-dim); text-transform:uppercase; }
+  .input-field { background:var(--surface2); border:1px solid var(--border); padding:8px 10px; color:var(--text-primary); font-family:var(--font-mono); font-size:14px; width:100%; outline:none; transition:border-color 0.2s; }
+  .input-field:focus { border-color:var(--amber); }
+  .update-btn { font-family:var(--font-mono); font-size:14px; letter-spacing:2px; padding:8px 20px; background:var(--amber); color:#000; border:none; cursor:pointer; font-weight:500; transition:opacity 0.2s; text-transform:uppercase; }
+  .update-btn:hover { opacity:0.85; }
+
+  .log-section { background:var(--surface2); border:1px solid var(--border); padding:14px 20px; max-height:120px; overflow-y:auto; margin-top:12px; }
+  .log-title { font-family:var(--font-mono); font-size:16px; letter-spacing:3px; color:var(--text-dim); text-transform:uppercase; margin-bottom:8px; }
+  .log-entry { display:flex; gap:12px; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.03); font-family:var(--font-mono); font-size:14px; }
+  .log-time { color:var(--text-dim); min-width:80px; }
+  .log-fire { color:var(--red); }
+  .log-warn { color:var(--yellow); }
+  .log-info { color:var(--text-secondary); }
+
+  ::-webkit-scrollbar { width:4px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--border); }
+
+  @media (max-width:1200px) { .row-3 { grid-template-columns:1fr 1fr; } .row-2 { grid-template-columns:1fr; } .main { padding:16px; } .ticker-bar { grid-template-columns:1fr 1fr; } }
+  @media (max-width:768px) { .row-3,.row-2 { grid-template-columns:1fr; } .header { flex-wrap:wrap; gap:12px; } .ticker-bar { grid-template-columns:1fr 1fr; } }
+
+  /* LOCK SYSTEM */
+  .lock-row { display:flex; align-items:center; gap:8px; margin-top:4px; }
+  .lock-btn {
+    font-family:var(--font-mono); font-size:9px; letter-spacing:1px;
+    padding:3px 8px; border:1px solid var(--amber); background:transparent;
+    color:var(--amber); cursor:pointer; white-space:nowrap; text-transform:uppercase;
+    flex-shrink:0;
+  }
+  .lock-btn.locked { border-color:var(--green); color:var(--green); }
+  .lock-btn:hover { background:var(--amber-dim); }
+  .lock-btn.locked:hover { background:var(--green-dim); }
+  .lock-stamp { font-family:var(--font-mono); font-size:9px; color:var(--text-dim); margin-top:2px; letter-spacing:0.5px; }
+  .input-field.locked { border-color:var(--green); color:var(--green); }
+  .data-toolbar {
+    display:flex; gap:10px; padding:10px 28px;
+    background:var(--surface2); border-bottom:1px solid var(--border);
+    align-items:center; flex-wrap:wrap;
+  }
+  .toolbar-btn {
+    font-family:var(--font-mono); font-size:10px; letter-spacing:2px;
+    padding:7px 16px; border:1px solid; cursor:pointer; text-transform:uppercase;
+  }
+  .toolbar-export { border-color:var(--amber); color:var(--amber); background:transparent; }
+  .toolbar-export:hover { background:var(--amber-dim); }
+  .toolbar-import { border-color:var(--border); color:var(--text-dim); background:transparent; }
+  .toolbar-import:hover { border-color:var(--blue); color:var(--blue); }
+  .toolbar-label { font-family:var(--font-mono); font-size:10px; color:var(--text-dim); letter-spacing:1px; margin-left:auto; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div class="dash-id">DASH 05</div>
+    <div class="dash-sub">MACRO SIGNAL MONITOR — 401K PROTECTION FRAMEWORK</div>
+  </div>
+  <div class="header-right">
+    <div class="composite-pill">
+      <div class="composite-label">MACRO COMPOSITE</div>
+      <div class="composite-score green" id="macroComposite">17</div>
+      <div class="composite-label">/ 100</div>
+    </div>
+    <div class="last-updated" id="lastUpdated">LOADING...</div>
+  </div>
+</header>
+
+<nav class="nav-bar">
+  <a href="dash1_ai_signals.html" class="nav-link ai">AI SIGNALS</a>
+  <a href="dash2_ai_heatmap.html" class="nav-link ai">AI HEAT MAP</a>
+  <a href="dash3_decision.html" class="nav-link">DECISION ENGINE</a>
+  <a href="dash4_macro_heatmap.html" class="nav-link">MACRO HEAT MAP</a>
+  <a href="#" class="nav-link active">MACRO SIGNALS</a>
+  <a href="dash_summary.html" class="nav-link">SUMMARY</a>
+</nav>
+
+<div class="data-toolbar">
+  <button class="toolbar-btn toolbar-export" onclick="exportData()">⬡ EXPORT SYNC</button>
+  <button class="toolbar-btn toolbar-import" onclick="importData()">⬡ IMPORT SYNC</button>
+  <div class="toolbar-label">Lock values after each data release · Export to sync iPhone</div>
+</div>
+
+
+<div class="warning-banner" id="warningBanner">
+  ⚠ WARNING CONDITIONS ACTIVE — 30-yr yield ≥5% · 10-yr approaching 4.80% · 2C bond trigger in watch zone · Monitor daily
+</div>
+
+<main class="main">
+
+  <!-- TICKER -->
+  <div class="ticker-bar">
+    <div class="ticker-item">
+      <div class="ticker-label">S&P 500</div>
+      <div class="ticker-right">
+        <div class="ticker-value" id="tickSPX" style="color:var(--green)">—</div>
+        <div class="ticker-sub" id="tickSPXsrc">Fetching...</div>
+      </div>
+    </div>
+    <div class="ticker-item">
+      <div class="ticker-label">T1 TRIGGER GAP</div>
+      <div class="ticker-right">
+        <div class="ticker-value" id="tickSPXgap" style="color:var(--green)">—</div>
+        <div class="ticker-sub">pts above 50-day MA</div>
+      </div>
+    </div>
+    <div class="ticker-item">
+      <div class="ticker-label">10-YR TREASURY</div>
+      <div class="ticker-right">
+        <div class="ticker-value" id="tickTNX" style="color:var(--yellow)">—</div>
+        <div class="ticker-sub" id="tickTNXsrc">Fetching...</div>
+      </div>
+    </div>
+    <div class="ticker-item">
+      <div class="ticker-label">BOND TRIGGER GAP</div>
+      <div class="ticker-right">
+        <div class="ticker-value" id="tickTNXgap" style="color:var(--yellow)">—</div>
+        <div class="ticker-sub">bps below 4.60% T1 trigger</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cascade-wrapper">
+
+    <!-- TIER 1: MARKET TECHNICAL -->
+    <div class="tier-label">TIER 1 — MARKET TECHNICAL SIGNALS</div>
+    <div class="signal-row row-3">
+
+      <div class="signal-card green" id="card-2a">
+        <div class="card-header"><div class="signal-number">M01 — LABOR</div><div class="rag-dot"></div></div>
+        <div class="signal-name">LABOR MARKET DETERIORATION</div>
+        <div class="signal-edu">The jobs report is the single most reliable leading indicator of consumer spending and corporate revenue. Two consecutive weak prints have historically preceded market corrections of 15%+. Fires when payrolls collapse or unemployment accelerates.</div>
+        <div class="signal-metrics">
+          <div class="metric-row"><div class="metric-label">JOBS ADDED</div><div class="metric-value live" id="m01-jobs">115K</div></div>
+          <div class="metric-row"><div class="metric-label">UNEMPLOYMENT RATE</div><div class="metric-value live" id="m01-unemp">4.3%</div></div>
+          <div class="metric-row"><div class="metric-label">WAGE GROWTH MOM</div><div class="metric-value" id="m01-wage">0.2%</div></div>
+        </div>
+        <div class="trigger-line" id="trig-2a">T1 WATCH: Jobs &lt;75K OR unemployment ≥4.35%. T1 FIRE: Jobs &lt;30K OR unemployment ≥4.4%. Next release: Jun 5 — BLS.gov</div>
+      </div>
+
+      <div class="signal-card yellow" id="card-2b">
+        <div class="card-header"><div class="signal-number">M02 — S&P TECHNICAL</div><div class="rag-dot"></div></div>
+        <div class="signal-name">S&P 500 TECHNICAL BREAKDOWN</div>
+        <div class="signal-edu">The 50-day moving average breach on above-average volume is the institutional early warning signal. It fires before catastrophic losses — not after. A close below the 50-day MA is watched by every major fund manager simultaneously, creating self-reinforcing selling pressure.</div>
+        <div class="signal-metrics">
+          <div class="metric-row"><div class="metric-label">S&P 500 CURRENT</div><div class="metric-value live" id="m02-spx">—</div></div>
+          <div class="metric-row"><div class="metric-label">50-DAY MA</div><div class="metric-value" id="m02-ma50">—</div></div>
+          <div class="metric-row"><div class="metric-label">DISTANCE TO T1</div><div class="metric-value" id="m02-dist">—</div></div>
+        </div>
+        <div class="trigger-line" id="trig-2b">T1 FIRE: Close below 50-day MA on above-average volume. T2 FIRE: Close below 5,800 (~10% correction). T3 FIRE: Close below 5,450 OR death cross confirmed. Feb ATH: 6,147.</div>
+      </div>
+
+      <div class="signal-card amber" id="card-2c">
+        <div class="card-header"><div class="signal-number">M03 — BOND MARKET</div><div class="rag-dot"></div></div>
+        <div class="signal-name">BOND MARKET ACCELERATION</div>
+        <div class="signal-edu">Rising long-term yields directly compress equity valuations by increasing the discount rate applied to future earnings. The 30-yr breaching 5% is a structural warning — it signals the bond market does not believe the Fed has inflation under control, regardless of what equities are doing.</div>
+        <div class="signal-metrics">
+          <div class="metric-row"><div class="metric-label">10-YR YIELD</div><div class="metric-value live" id="m03-tnx">—</div></div>
+          <div class="metric-row"><div class="metric-label">30-YR HIGH (WK)</div><div class="metric-value amber" id="m03-t30">5.02%</div></div>
+          <div class="metric-row"><div class="metric-label">GAP TO T1 (4.60%)</div><div class="metric-value" id="m03-gap">—</div></div>
+        </div>
+        <div class="trigger-line" id="trig-2c">T1 FIRE: 10-yr closes above 4.60%. T2 FIRE: 10-yr closes above 4.80%. ⚠ 30-yr breached 5% intraday May 4 — WARNING ACTIVE. FRED: fred.stlouisfed.org/series/DGS10</div>
+      </div>
+
+    </div>
+
+    <div class="connector"><div style="width:1px;height:100%;background:var(--border)"></div><div class="connector-text">CASCADES TO</div><div style="width:1px;height:100%;background:var(--border)"></div></div>
+
+    <!-- TIER 2: STRUCTURAL CONFIRMATION -->
+    <div class="tier-label">TIER 2 — STRUCTURAL CONFIRMATION SIGNALS</div>
+    <div class="signal-row row-2">
+
+      <div class="signal-card yellow" id="card-3a">
+        <div class="card-header"><div class="signal-number">M04 — PRODUCTIVITY</div><div class="rag-dot"></div></div>
+        <div class="signal-name">BLS PRODUCTIVITY — AI SUPERCYCLE FAIL</div>
+        <div class="signal-edu">The entire AI bull case rests on a productivity supercycle — the idea that AI tools will dramatically increase output per worker. If two consecutive quarters show productivity below 1.5% annualized, the supercycle thesis fails. This directly undermines the revenue justification for $725B in annual AI capex.</div>
+        <div class="signal-metrics">
+          <div class="metric-row"><div class="metric-label">Q1 2026 QOQ ANN.</div><div class="metric-value live" style="color:var(--red)">0.8% ⚠</div></div>
+          <div class="metric-row"><div class="metric-label">Q2 2026 (PENDING)</div><div class="metric-value" id="m04-q2">Pending Aug 7</div></div>
+          <div class="metric-row"><div class="metric-label">LABOR SHARE</div><div class="metric-value" style="color:var(--red)">54.1% — Record low</div></div>
+        </div>
+        <div class="trigger-line" id="trig-3a">YELLOW FLAG ACTIVE: Q1 at 0.8% — 1 of 2 quarters below 1.5%. T3 FIRE: Q2 also below 1.5% (two consecutive). Releases Aug 7 — BLS.gov → Productivity &amp; Costs.</div>
+      </div>
+
+      <div class="signal-card blue" id="card-3b">
+        <div class="card-header"><div class="signal-number">M05 — EARNINGS BREADTH</div><div class="rag-dot" id="dot-m05"></div></div>
+        <div class="signal-name">NON-MAG7 EARNINGS BREADTH FAILS</div>
+        <div class="signal-edu">If only the Mag 7 are growing earnings while the rest of the S&P 500 stagnates, the market rally is a narrow illusion. Non-Mag7 EPS growth below 8% means the average American company is not benefiting from AI — the productivity story only works for the top seven. Market-wide valuation cannot be sustained on seven companies alone.</div>
+        <div class="signal-metrics">
+          <div class="metric-row"><div class="metric-label">NON-MAG7 EPS GROWTH</div><div class="metric-value live" id="m05-eps">Pending</div></div>
+          <div class="metric-row"><div class="metric-label">DATA SOURCE</div><div class="metric-value" style="font-size:15px;">FactSet Earnings Insight — weekly</div></div>
+          <div class="metric-row"><div class="metric-label">NEXT RELEASE</div><div class="metric-value" id="m05-next">May 16</div></div>
+        </div>
+        <div class="trigger-line" id="trig-3b">PENDING DATA: Update every Friday from factset.com/earnings-insight. T3 FIRE: Non-Mag7 blended EPS growth below 8%.</div>
+      </div>
+
+    </div>
+
+    <div class="connector"><div style="width:1px;height:100%;background:var(--border)"></div><div class="connector-text">CASCADES TO</div><div style="width:1px;height:100%;background:var(--border)"></div></div>
+
+    <!-- TIER 3: DOWNSTREAM CONFIRMATION -->
+    <div class="tier-label">TIER 3 — DOWNSTREAM CONFIRMATION SIGNALS</div>
+    <div class="signal-row row-2">
+
+      <div class="signal-card green" id="card-3c">
+        <div class="card-header"><div class="signal-number">M06 — CHART STRUCTURE</div><div class="rag-dot"></div></div>
+        <div class="signal-name">LOWER HIGH CONFIRMED ON CHART</div>
+        <div class="signal-edu">A lower high pattern confirms the rally has failed. The sequence: rally stalls below the Feb 6,147 ATH → 3–5 consecutive lower closes → S&P breaks back below 5,450 with volume confirmation. This is the technical pattern that precedes sustained bear markets, not temporary corrections.</div>
+        <div class="signal-metrics">
+          <div class="metric-row"><div class="metric-label">FEB ATH REFERENCE</div><div class="metric-value">6,147</div></div>
+          <div class="metric-row"><div class="metric-label">CURRENT S&P</div><div class="metric-value live" id="m06-spx">—</div></div>
+          <div class="metric-row"><div class="metric-label">20-DAY MA</div><div class="metric-value" id="m06-ma20">—</div></div>
+        </div>
+        <div class="trigger-line" id="trig-3c">NOT ACTIVE: Rally must first stall below 6,147 ATH → confirm lower high → then break 5,450 on volume. T3 FIRE: Full sequence confirmed. Enter 20-day MA from TradingView.</div>
+      </div>
+
+      <div class="signal-card amber" id="card-3d">
+        <div class="card-header"><div class="signal-number">M07 — TREASURY CATALYST</div><div class="rag-dot"></div></div>
+        <div class="signal-name">TREASURY / WARSH CATALYST</div>
+        <div class="signal-edu">The Treasury's quarterly refunding announcements set the supply of long-dated bonds hitting the market. If supply increases materially while demand is already stressed (30-yr at 5%), yields spike rapidly. Warsh confirming accelerated QT removes the implicit Fed backstop that equity markets have relied on since 2020.</div>
+        <div class="signal-metrics">
+          <div class="metric-row"><div class="metric-label">AUG REFUNDING DATE</div><div class="metric-value">Aug 5, 2026</div></div>
+          <div class="metric-row"><div class="metric-label">WARSH STATUS</div><div class="metric-value" id="m07-warsh">Pending</div></div>
+          <div class="metric-row"><div class="metric-label">CURRENT Q2 EST.</div><div class="metric-value" style="color:var(--amber)">$189B (+$122B vs Feb)</div></div>
+        </div>
+        <div class="trigger-line" id="trig-3d">WATCH LIST: Aug 5 refunding shows further upward revision OR Warsh confirms accelerated QT at Senate hearings. T3 FIRE: Type "FIRE" in Warsh status input below.</div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- MANUAL INPUT -->
+  <div class="input-section">
+    <div class="input-section-title">
+      <span>⬡ MANUAL DATA ENTRY — All fields editable directly in dashboard</span>
+      <button class="update-btn" onclick="updateSignals()">▶ UPDATE SIGNALS</button>
+    </div>
+    <div class="input-grid">
+      <div class="input-group">
+        <label class="input-label">⬡ Jobs Added (K) · BLS · Next: Jun 5</label>
+        <input class="input-field" id="inp_jobs" type="number" value="115">
+        <div class="lock-row"><button class="lock-btn" id="lock-jobs" onclick="toggleLock('jobs','inp_jobs')">✓ LOCK</button><span class="lock-stamp" id="stamp-jobs">Edit then LOCK to persist</span></div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬡ Unemployment Rate % · BLS</label>
+        <input class="input-field" id="inp_unemp" type="number" step="0.1" value="4.3">
+        <div class="lock-row"><button class="lock-btn" id="lock-unemp" onclick="toggleLock('unemp','inp_unemp')">✓ LOCK</button><span class="lock-stamp" id="stamp-unemp">Edit then LOCK to persist</span></div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬡ Wage Growth MoM % · BLS</label>
+        <input class="input-field" id="inp_wage" type="number" step="0.1" value="0.2">
+        <div class="lock-row"><button class="lock-btn" id="lock-wage" onclick="toggleLock('wage','inp_wage')">✓ LOCK</button><span class="lock-stamp" id="stamp-wage">Edit then LOCK to persist</span></div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬡ S&P 50-Day MA · TradingView</label>
+        <input class="input-field" id="inp_ma50" type="number" placeholder="e.g. 5620">
+        <div class="lock-row"><button class="lock-btn" id="lock-ma50" onclick="toggleLock('ma50','inp_ma50')">✓ LOCK</button><span class="lock-stamp" id="stamp-ma50">Edit then LOCK to persist</span></div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬡ S&P 20-Day MA · TradingView</label>
+        <input class="input-field" id="inp_ma20" type="number" placeholder="e.g. 5580">
+        <div class="lock-row"><button class="lock-btn" id="lock-ma20" onclick="toggleLock('ma20','inp_ma20')">✓ LOCK</button><span class="lock-stamp" id="stamp-ma20">Edit then LOCK to persist</span></div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬡ 30-Yr Treasury High This Week %</label>
+        <input class="input-field" id="inp_t30" type="number" step="0.01" value="5.02">
+        <div class="lock-row"><button class="lock-btn" id="lock-t30" onclick="toggleLock('t30','inp_t30')">✓ LOCK</button><span class="lock-stamp" id="stamp-t30">Edit then LOCK to persist</span></div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬡ Non-Mag7 EPS Growth % · FactSet Fridays</label>
+        <input class="input-field" id="inp_breadth" type="number" step="0.1" placeholder="Pending May 16">
+        <div class="lock-row"><button class="lock-btn" id="lock-breadth" onclick="toggleLock('breadth','inp_breadth')">✓ LOCK</button><span class="lock-stamp" id="stamp-breadth">Edit then LOCK to persist</span></div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬡ Q2 Productivity QoQ% · BLS Aug 7</label>
+        <input class="input-field" id="inp_prodQ2" type="number" step="0.1" placeholder="Pending Aug 7">
+        <div class="lock-row"><button class="lock-btn" id="lock-prodQ2" onclick="toggleLock('prodQ2','inp_prodQ2')">✓ LOCK</button><span class="lock-stamp" id="stamp-prodQ2">Edit then LOCK to persist</span></div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬡ Warsh Status (type FIRE to trigger M07)</label>
+        <input class="input-field" id="inp_warsh" type="text" value="Pending">
+        <div class="lock-row"><button class="lock-btn" id="lock-warsh" onclick="toggleLock('warsh','inp_warsh')">✓ LOCK</button><span class="lock-stamp" id="stamp-warsh">Edit then LOCK to persist</span></div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬤ S&P Override (if auto-fetch fails)</label>
+        <input class="input-field" id="inp_spx_override" type="number" placeholder="Auto-fetched">
+        <div class="lock-row"><button class="lock-btn" id="lock-spx_ovr" onclick="toggleLock('spx_ovr','inp_spx_override')">✓ LOCK</button><span class="lock-stamp" id="stamp-spx_ovr">Edit then LOCK to persist</span></div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬤ 10-Yr Yield Override % · FRED</label>
+        <input class="input-field" id="inp_tnx_override" type="number" step="0.01" placeholder="Auto-fetched">
+        <div class="lock-row"><button class="lock-btn" id="lock-tnx_ovr" onclick="toggleLock('tnx_ovr','inp_tnx_override')">✓ LOCK</button><span class="lock-stamp" id="stamp-tnx_ovr">Edit then LOCK to persist</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="log-section">
+    <div class="log-title">EVENT LOG</div>
+    <div id="eventLog"></div>
+  </div>
+
+</main>
+
+<script>
+const M5_KEY = 'rooster_dash5_v1';
+
+const M5_FIELDS = [
+  {key:'jobs',    id:'inp_jobs',         label:'Jobs Added K'},
+  {key:'unemp',   id:'inp_unemp',        label:'Unemployment %'},
+  {key:'wage',    id:'inp_wage',         label:'Wage Growth MoM %'},
+  {key:'ma50',    id:'inp_ma50',         label:'50-Day MA'},
+  {key:'ma20',    id:'inp_ma20',         label:'20-Day MA'},
+  {key:'t30',     id:'inp_t30',          label:'30-yr High %'},
+  {key:'breadth', id:'inp_breadth',      label:'Non-Mag7 EPS %'},
+  {key:'prodQ2',  id:'inp_prodQ2',       label:'Q2 Productivity %'},
+  {key:'warsh',   id:'inp_warsh',        label:'Warsh Status'},
+  {key:'spx_ovr', id:'inp_spx_override', label:'S&P Override'},
+  {key:'tnx_ovr', id:'inp_tnx_override', label:'10-yr Override'},
+];
+
+function m5Load(){ try{ return JSON.parse(localStorage.getItem(M5_KEY))||{}; }catch(e){ return {}; } }
+function m5Save(d){ try{ localStorage.setItem(M5_KEY, JSON.stringify(d)); }catch(e){} }
+
+function toggleLock(key, inpId){
+  const inp  = document.getElementById(inpId);
+  const btn  = document.getElementById('lock-'+key);
+  const stamp= document.getElementById('stamp-'+key);
+  if(!inp) return;
+
+  if(btn.classList.contains('locked')){
+    // Unlock
+    inp.readOnly = false;
+    inp.classList.remove('locked');
+    btn.textContent = '✓ LOCK';
+    btn.classList.remove('locked');
+    if(stamp) stamp.textContent = 'Edit then LOCK to persist';
+  } else {
+    // Lock
+    if(!inp.value && inp.value !== '0') return;
+    const val = inp.value;
+    const now = new Date();
+    const ts  = now.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    const d   = m5Load();
+    d[key]    = { value: val, locked: now.toISOString() };
+    m5Save(d);
+    inp.readOnly = true;
+    inp.classList.add('locked');
+    btn.textContent = '🔒 LOCKED';
+    btn.classList.add('locked');
+    if(stamp) stamp.textContent = '🔒 Locked '+ts;
+    updateSignals();
+  }
+}
+
+function populateFromStorage(){
+  const d = m5Load();
+  M5_FIELDS.forEach(f => {
+    if(d[f.key]){
+      const inp   = document.getElementById(f.id);
+      const btn   = document.getElementById('lock-'+f.key);
+      const stamp = document.getElementById('stamp-'+f.key);
+      const ts    = new Date(d[f.key].locked).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      if(inp){ inp.value = d[f.key].value; inp.readOnly = true; inp.classList.add('locked'); }
+      if(btn){ btn.textContent = '🔒 LOCKED'; btn.classList.add('locked'); }
+      if(stamp){ stamp.textContent = '🔒 Locked '+ts; }
+    }
+  });
+}
+
+function exportData(){
+  const d = m5Load();
+  const str = 'ROOSTER-MACRO-v1::' + JSON.stringify(d);
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(str).then(()=>{ showToast('📋 Copied — paste into Notes or Messages to sync iPhone'); });
+  } else {
+    prompt('Copy this sync string:', str);
+  }
+}
+
+function importData(){
+  const raw = prompt('Paste sync string from another device:');
+  if(!raw || !raw.startsWith('ROOSTER-MACRO-v1::')){
+    showToast('⚠ Invalid sync string'); return;
+  }
+  try{
+    const d = JSON.parse(raw.replace('ROOSTER-MACRO-v1::',''));
+    m5Save(d);
+    populateFromStorage();
+    updateSignals();
+    showToast('✓ Data imported — all fields updated');
+  }catch(e){ showToast('⚠ Could not parse sync string'); }
+}
+
+function showToast(msg){
+  let t = document.getElementById('m5-toast');
+  if(!t){
+    t = document.createElement('div');
+    t.id = 'm5-toast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#16161f;border:1px solid #f5a623;color:#f5a623;font-family:IBM Plex Mono,monospace;font-size:13px;padding:10px 20px;z-index:9999;letter-spacing:1px;max-width:320px;text-align:center;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(()=>{ t.style.display='none'; }, 4000);
+}
+
+// ── LIVE STATE ──
+const STATE = { spx:null, tnx:null };
+
+async function fetchSPX(){
+  const ovr = parseFloat(document.getElementById('inp_spx_override').value);
+  if(!isNaN(ovr)&&ovr>0){ STATE.spx=ovr; updateSignals(); return; }
+  const yUrl='https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?interval=1d&range=5d';
+  const proxies=['https://api.allorigins.win/get?url='+encodeURIComponent(yUrl),'https://corsproxy.io/?'+encodeURIComponent(yUrl)];
+  for(const url of proxies){
+    try{
+      const r=await fetch(url,{signal:AbortSignal.timeout(7000)});
+      if(!r.ok)continue;
+      const w=await r.json();
+      const raw=typeof w.contents==='string'?JSON.parse(w.contents):w;
+      const closes=raw?.chart?.result?.[0]?.indicators?.quote?.[0]?.close;
+      if(closes?.length){ const v=closes.filter(x=>x!=null).pop(); if(v){ STATE.spx=v; updateSignals(); return; } }
+    }catch(e){}
+  }
+}
+
+async function fetchTNX(){
+  const ovr = parseFloat(document.getElementById('inp_tnx_override').value);
+  if(!isNaN(ovr)&&ovr>0){ STATE.tnx=ovr; updateSignals(); return; }
+  const fredUrl='https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&sort_order=desc&limit=5&file_type=json&api_key=a8e9b0af4d53fa60e1ecd46ef9b6aecf';
+  const proxies=[fredUrl,'https://api.allorigins.win/get?url='+encodeURIComponent(fredUrl)];
+  for(const url of proxies){
+    try{
+      const r=await fetch(url,{signal:AbortSignal.timeout(7000)});
+      if(!r.ok)continue;
+      const w=await r.json();
+      const raw=typeof w.contents==='string'?JSON.parse(w.contents):w;
+      const obs=raw?.observations;
+      if(obs?.length){ const l=obs.find(o=>o.value!=='.'); if(l){ STATE.tnx=parseFloat(l.value); updateSignals(); return; } }
+    }catch(e){}
+  }
+}
+
+function cc(s){ return s<25?'green':s<50?'amber':'red'; }
+
+function updateSignals(){
+  const jobs    = parseFloat(document.getElementById('inp_jobs').value);
+  const unemp   = parseFloat(document.getElementById('inp_unemp').value);
+  const wage    = parseFloat(document.getElementById('inp_wage').value);
+  const ma50    = parseFloat(document.getElementById('inp_ma50').value);
+  const ma20    = parseFloat(document.getElementById('inp_ma20').value);
+  const t30     = parseFloat(document.getElementById('inp_t30').value);
+  const breadth = parseFloat(document.getElementById('inp_breadth').value);
+  const prodQ2  = parseFloat(document.getElementById('inp_prodQ2').value);
+  const warsh   = document.getElementById('inp_warsh').value;
+  const spx     = STATE.spx;
+  const tnx     = STATE.tnx;
+
+  // Update live display values in signal cards
+  if(!isNaN(jobs))   setVal('m01-jobs',  jobs+'K');
+  if(!isNaN(unemp))  setVal('m01-unemp', unemp+'%');
+  if(!isNaN(wage))   setVal('m01-wage',  wage+'%');
+  if(spx)            setVal('m02-spx',   spx.toLocaleString(undefined,{maximumFractionDigits:0}));
+  if(!isNaN(ma50))   setVal('m02-ma50',  ma50.toLocaleString());
+  if(spx&&!isNaN(ma50)){ const d=Math.round(spx-ma50); setVal('m02-dist',(d>0?'+':'')+d+' pts'); }
+  if(tnx)            setVal('m03-tnx',   tnx.toFixed(2)+'%');
+  if(!isNaN(t30))    setVal('m03-t30',   t30.toFixed(2)+'%');
+  if(tnx)            setVal('m03-gap',   (4.60-tnx>0?'-':'+')+(Math.abs(4.60-tnx)*100).toFixed(0)+' bps');
+  if(!isNaN(prodQ2)) setVal('m04-q2',    prodQ2.toFixed(1)+'%');
+  if(!isNaN(breadth))setVal('m05-eps',   breadth.toFixed(1)+'%');
+  if(spx)            setVal('m06-spx',   spx.toLocaleString(undefined,{maximumFractionDigits:0}));
+  if(!isNaN(ma20))   setVal('m06-ma20',  ma20.toLocaleString());
+  if(warsh)          setVal('m07-warsh', warsh);
+
+  // Update card RAG states based on current values
+  function setCard(id, ragClass){
+    const c=document.getElementById(id);
+    if(c){ const base=c.className.replace(/\s*(green|amber|red|yellow|blue|pending)\b/g,'').trim(); c.className=base+' '+ragClass; }
+  }
+  function setDot(id, ragClass){
+    const d=document.getElementById(id);
+    if(d) d.className='rag-dot '+ragClass;
+  }
+
+  // M01 Labor
+  if(!isNaN(jobs)||!isNaN(unemp)){
+    const f=(!isNaN(jobs)&&jobs<30)||(!isNaN(unemp)&&unemp>=4.4);
+    const w=(!isNaN(jobs)&&jobs<75)||(!isNaN(unemp)&&unemp>=4.35);
+    const rag=f?'red':w?'amber':'green';
+    setDot('dot-m01', rag);
+  }
+
+  // M02 S&P Technical
+  if(spx&&!isNaN(ma50)){
+    const rag=spx<ma50?'amber':spx<(ma50*1.05)?'yellow':'green';
+    setDot('dot-m02', rag);
+  }
+
+  // M03 Bond Market
+  if(tnx){
+    const rag=tnx>=4.80?'red':tnx>=4.60?'amber':t30>=5?'yellow':'green';
+    setDot('dot-m03', rag);
+  }
+
+  // M04 Productivity
+  if(!isNaN(prodQ2)){
+    const rag=prodQ2<1.5?'red':'green';
+    setDot('dot-m04', rag);
+  }
+
+  // M05 Earnings Breadth — KEY FIX
+  if(!isNaN(breadth)){
+    const rag=breadth<8?'red':breadth<12?'amber':'green';
+    setDot('dot-m05', rag);
+    // Also update the card background
+    const card=document.getElementById('card-3b');
+    if(card){
+      card.className=card.className.replace(/\b(blue|green|amber|red|yellow|pending)\b/g,'').trim();
+      const cardRag=breadth<8?'red':breadth<12?'amber':'green';
+      card.className=(card.className+' '+cardRag).replace(/\s+/g,' ').trim();
+    }
+  }
+
+  // M07 Warsh
+  if(warsh){
+    const rag=warsh.toUpperCase().includes('FIRE')?'red':'amber';
+    setDot('dot-m07', rag);
+  }
+
+  // Update Macro composite header
+  const macroScore = calcMacroComposite(jobs,unemp,tnx,t30,breadth,prodQ2,warsh,spx,ma50);
+  const mEl = document.getElementById('macroComposite');
+  if(mEl){ mEl.textContent = macroScore; mEl.className = 'composite-score '+cc(macroScore); }
+
+  document.getElementById('lastUpdated').textContent = 'UPDATED: '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+
+function setVal(id, val){
+  const el = document.getElementById(id);
+  if(el) el.textContent = val;
+}
+
+function calcMacroComposite(jobs,unemp,tnx,t30,breadth,prodQ2,warsh,spx,ma50){
+  let scores = [5,5,5,10,5,5,5]; // defaults
+  if(!isNaN(jobs)){ scores[0] = jobs<30?85:jobs<75?45:5; }
+  if(!isNaN(unemp)&&unemp>=4.4){ scores[0] = Math.max(scores[0],45); }
+  if(spx&&!isNaN(ma50)&&spx<ma50){ scores[1]=45; }
+  if(tnx){ scores[2] = tnx>=4.80?85:tnx>=4.60?45:t30>=5?25:5; }
+  if(!isNaN(prodQ2)&&prodQ2<1.5){ scores[3]=85; }
+  else if(prodQ2>=1.5){ scores[3]=5; }
+  if(!isNaN(breadth)){ scores[4]=breadth<8?85:breadth<12?25:5; }
+  if(warsh&&warsh.toUpperCase().includes('FIRE')){ scores[6]=85; }
+  return Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  populateFromStorage();
+  updateSignals();
+  fetchSPX();
+  fetchTNX();
+});
+</script>
+</body>
+</html>
