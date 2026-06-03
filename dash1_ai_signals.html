@@ -1,0 +1,2184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DASH 1 — AI SIGNAL MONITOR</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #16161f;
+    --border: #2a2a3e;
+    --text-primary: #ffffff;
+    --text-secondary: #c8c8e0;
+    --text-dim: #9090b0;
+    --green: #00d4a0;
+    --green-dim: rgba(0,212,160,0.12);
+    --amber: #f5a623;
+    --amber-dim: rgba(245,166,35,0.12);
+    --red: #ff4060;
+    --red-dim: rgba(255,64,96,0.12);
+    --blue: #4a9eff;
+    --connector: #2a2a3e;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --font-body: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 15px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+
+  .dash-id {
+    font-family: var(--font-display);
+    font-size: 28px;
+    letter-spacing: 3px;
+    color: var(--text-primary);
+  }
+
+  .dash-sub {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text-secondary);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .composite-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: 2px;
+  }
+
+  .composite-label {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text-secondary);
+    letter-spacing: 2px;
+  }
+
+  .composite-score {
+    font-family: var(--font-display);
+    font-size: 32px;
+    line-height: 1;
+    color: var(--amber);
+    transition: color 0.5s;
+  }
+
+  .composite-score.green { color: var(--green); }
+  .composite-score.amber { color: var(--amber); }
+  .composite-score.red { color: var(--red); }
+
+  .last-updated {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  .health-btn {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 2px;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+  .health-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+  /* NAV LINKS */
+  .nav-bar {
+    display: flex;
+    gap: 0;
+    padding: 0 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  .nav-link {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    color: var(--text-dim);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .nav-link:hover { color: var(--text-secondary); }
+  .nav-link.active { color: var(--text-primary); border-bottom-color: var(--blue); }
+
+  /* MAIN LAYOUT */
+  .main {
+    padding: 28px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* CASCADE CONTAINER */
+  .cascade-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* TIER LABELS */
+  .tier-label {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    border-left: 2px solid var(--text-dim);
+    padding-left: 8px;
+  }
+
+  /* SIGNAL ROW */
+  .signal-row {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 0;
+  }
+
+  .row-1 { grid-template-columns: 1fr; }
+  .row-2 { grid-template-columns: 1fr 1fr 1fr; }
+  .row-3 { grid-template-columns: 1fr 1fr; }
+  .row-4 { grid-template-columns: 1fr 1fr 1fr; }
+
+  /* CONNECTOR LINES */
+  .connector {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 32px;
+    position: relative;
+    margin: 4px 0;
+  }
+
+  .connector-line {
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(to bottom, var(--connector), var(--connector));
+    position: absolute;
+  }
+
+  .connector-spread {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .connector-spread::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 16.67%;
+    right: 16.67%;
+    height: 1px;
+    background: var(--connector);
+  }
+
+  .connector-spread::after {
+    content: '▼';
+    font-size: 16px;
+    color: var(--connector);
+    margin-top: 8px;
+  }
+
+  .connector-dots {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .connector-dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--connector);
+    animation: pulse-dot 2s infinite;
+  }
+  .connector-dot:nth-child(2) { animation-delay: 0.3s; }
+  .connector-dot:nth-child(3) { animation-delay: 0.6s; }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+
+  /* SIGNAL CARD */
+  .signal-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px 18px;
+    position: relative;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+
+  .signal-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--text-dim);
+    transition: background 0.3s;
+  }
+
+  .signal-card.green::before { background: var(--green); }
+  .signal-card.amber::before { background: var(--amber); }
+  .signal-card.red::before { background: var(--red); }
+
+  .signal-card.green { background: linear-gradient(135deg, var(--surface), var(--green-dim)); border-color: rgba(0,212,160,0.2); }
+  .signal-card.amber { background: linear-gradient(135deg, var(--surface), var(--amber-dim)); border-color: rgba(245,166,35,0.2); }
+  .signal-card.red { background: linear-gradient(135deg, var(--surface), var(--red-dim)); border-color: rgba(255,64,96,0.2); }
+
+  .signal-card:hover { transform: translateY(-1px); }
+
+  .signal-card.red {
+    animation: red-pulse 3s infinite;
+  }
+
+  @keyframes red-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,64,96,0); }
+    50% { box-shadow: 0 0 12px 2px rgba(255,64,96,0.15); }
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+
+  .signal-number {
+    font-family: var(--font-display);
+    font-size: 13px;
+    color: #8888aa;
+    letter-spacing: 2px;
+  }
+
+  .rag-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .green .rag-dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .amber .rag-dot { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+  .red .rag-dot { background: var(--red); box-shadow: 0 0 8px var(--red); }
+
+  .signal-name {
+    font-family: var(--font-display);
+    font-size: 22px;
+    letter-spacing: 1.5px;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    line-height: 1.1;
+  }
+
+  .signal-edu {
+    font-family: var(--font-body);
+    font-size: 15px;
+    color: #d0d0e8;
+    line-height: 1.7;
+    margin-bottom: 12px;
+    font-weight: 400;
+  }
+
+  .signal-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+
+  .metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .metric-label {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: #b0b8d0;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .metric-value {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: #d0d8f0;
+  }
+
+  .metric-value.live {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 16px;
+  }
+
+  .trigger-line {
+    margin-top: 8px;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.03);
+    border-left: 2px solid var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text-dim);
+    letter-spacing: 0.3px;
+    line-height: 1.6;
+    transition: all 0.3s;
+  }
+
+  .green .trigger-line { border-color: var(--green); color: rgba(0,212,160,0.85); }
+  .amber .trigger-line { border-color: var(--amber); color: rgba(245,166,35,0.9); }
+  .red .trigger-line { border-color: var(--red); color: rgba(255,64,96,0.95); font-weight: 500; }
+
+  .data-source-tag {
+    margin-top: 6px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .source-chip {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: #8888aa;
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    text-transform: uppercase;
+  }
+
+  .source-chip.broken {
+    color: var(--red);
+    border-color: var(--red);
+  }
+
+  /* BOTTOM SECTION */
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 28px;
+  }
+
+  .info-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px 18px;
+  }
+
+  .panel-title {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .cascade-status {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .cascade-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    color: var(--text-secondary);
+  }
+
+  .step-num {
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+
+  .step-num.active {
+    background: var(--amber-dim);
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+
+  .step-num.fired {
+    background: var(--red-dim);
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  /* HEALTH MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    width: 600px;
+    max-width: 90vw;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 24px;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    letter-spacing: 2px;
+  }
+
+  .modal-close {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 4px 10px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+
+  .health-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .health-signal-name {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text-secondary);
+    flex: 1;
+  }
+
+  .health-source {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    color: var(--text-dim);
+    flex: 2;
+    padding: 0 12px;
+  }
+
+  .health-status {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    padding: 3px 8px;
+    border: 1px solid;
+    letter-spacing: 1px;
+  }
+
+  .health-status.ok { color: var(--green); border-color: var(--green); background: var(--green-dim); }
+  .health-status.broken { color: var(--red); border-color: var(--red); background: var(--red-dim); }
+  .health-status.warn { color: var(--amber); border-color: var(--amber); background: var(--amber-dim); }
+
+  .repair-instruction {
+    margin-top: 8px;
+    padding: 8px;
+    background: var(--red-dim);
+    border: 1px solid rgba(255,64,96,0.2);
+    font-family: var(--font-mono);
+    font-size: 16px;
+    color: rgba(255,64,96,0.9);
+    line-height: 1.6;
+    display: none;
+  }
+
+  .repair-instruction.visible { display: block; }
+
+  /* RESPONSIVE */
+  @media (max-width: 1200px) {
+    .row-2 { grid-template-columns: 1fr 1fr; }
+    .row-3 { grid-template-columns: 1fr; }
+    .row-4 { grid-template-columns: 1fr 1fr; }
+    .bottom-grid { grid-template-columns: 1fr; }
+    .main { padding: 16px; }
+  }
+
+  @media (max-width: 768px) {
+    .row-2, .row-3, .row-4 { grid-template-columns: 1fr; }
+    .header { flex-wrap: wrap; gap: 12px; }
+    .composite-score { font-size: 24px; }
+    .dash-id { font-size: 20px; }
+    .nav-link { padding: 8px 12px; font-size: 16px; }
+  }
+
+  /* SCAN LINE EFFECT */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* REFRESH ANIMATION */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .signal-card {
+    animation: fadeIn 0.4s ease forwards;
+  }
+
+  .signal-card:nth-child(1) { animation-delay: 0.05s; }
+  .signal-card:nth-child(2) { animation-delay: 0.1s; }
+  .signal-card:nth-child(3) { animation-delay: 0.15s; }
+
+  /* LOCK SYSTEM */
+  .metric-row { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .metric-row-inner { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+  .metric-value.locked { color: var(--green); }
+  .metric-value.locked::after { content: ''; }
+  .lock-input {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text-primary); font-family: var(--font-mono); font-size: 13px;
+    padding: 4px 8px; width: 100%; outline: none; margin-top: 4px;
+    display: block;
+  }
+  .lock-input:focus { border-color: var(--amber); }
+  .lock-input:focus { border-color: var(--amber); }
+  .lock-btn {
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px;
+    padding: 3px 8px; border: 1px solid var(--amber); background: transparent;
+    color: var(--amber); cursor: pointer; white-space: nowrap; flex-shrink: 0;
+    margin-left: 8px; text-transform: uppercase;
+  }
+  .lock-btn.locked { border-color: var(--green); color: var(--green); }
+  .lock-btn:hover { background: var(--amber-dim); }
+  .lock-btn.locked:hover { background: var(--green-dim); }
+  .lock-stamp { font-family: var(--font-mono); font-size: 9px; color: var(--text-dim); margin-top: 3px; letter-spacing: 0.5px; }
+  .data-toolbar {
+    display: flex; gap: 10px; padding: 10px 28px;
+    background: var(--surface2); border-bottom: 1px solid var(--border);
+    align-items: center;
+  }
+  .toolbar-btn {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px;
+    padding: 7px 16px; border: 1px solid; cursor: pointer; text-transform: uppercase; transition: all 0.2s;
+  }
+  .toolbar-export { border-color: var(--amber); color: var(--amber); background: transparent; }
+  .toolbar-export:hover { background: var(--amber-dim); }
+  .toolbar-import { border-color: var(--border); color: var(--text-dim); background: transparent; }
+  .toolbar-import:hover { border-color: var(--blue); color: var(--blue); }
+  .toolbar-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); letter-spacing: 1px; margin-left: auto; }
+
+  /* ── WAKE UP MODAL — LIGHT MODE ── */
+  .wakeup-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #f2f2f6;
+    z-index: 9999;
+    overflow-y: auto;
+    width: 100vw;
+    height: 100vh;
+  }
+  .wakeup-overlay.open { display: block; }
+
+  .wakeup-modal {
+    background: #f2f2f6;
+    width: 100%;
+    min-height: 100vh;
+    max-width: 900px;
+    margin: 0 auto;
+    padding-bottom: 88px;
+    font-size: 16px;
+  }
+
+  .wakeup-header {
+    background: #ffffff;
+    border-bottom: 1px solid #e0e0e8;
+    padding: 20px 32px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .wakeup-title {
+    font-family: var(--font-display);
+    font-size: 32px;
+    letter-spacing: 2px;
+    color: #1a1a2e;
+  }
+
+  .wakeup-meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: #888;
+    margin-top: 3px;
+    letter-spacing: 0.5px;
+  }
+
+  .wakeup-header-status {
+    text-align: right;
+  }
+
+  .wakeup-header-status-main {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    color: #444;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+  }
+
+  .wakeup-header-status-sub {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: #999;
+    margin-top: 2px;
+  }
+
+  .wakeup-body { padding: 20px 32px; }
+
+  .wakeup-tier { margin-bottom: 28px; }
+
+  .wakeup-tier-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: #999;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-left: 2px;
+  }
+
+  /* Signal block */
+  .wakeup-sig-block {
+    background: #ffffff;
+    border: 1px solid #e0e0e8;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .wakeup-sig-block.stale { border-color: #f0c070; }
+  .wakeup-sig-block.never { border-color: #f0a0a0; }
+  .wakeup-sig-block.current { border-color: #a0d8c0; }
+
+  .wakeup-sig-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 18px;
+    border-bottom: 1px solid #f0f0f4;
+  }
+  .wakeup-sig-block.current .wakeup-sig-header { border-bottom: none; }
+  .wakeup-sig-block.stale .wakeup-sig-header { border-bottom-color: #f8eedc; }
+  .wakeup-sig-block.never .wakeup-sig-header { border-bottom-color: #fce8e8; }
+
+  .wakeup-rag {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .wakeup-rag.green  { background: #1D9E75; }
+  .wakeup-rag.amber  { background: #d4890a; }
+  .wakeup-rag.red    { background: #cc3333; }
+
+  .wakeup-sig-name {
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 500;
+    color: #1a1a2e;
+    flex: 1;
+  }
+
+  .wakeup-status-pill {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+  .wakeup-status-pill.current { background: #e1f5ee; color: #0F6E56; }
+  .wakeup-status-pill.stale   { background: #faeeda; color: #854F0B; }
+  .wakeup-status-pill.never   { background: #fceaea; color: #8b2020; }
+
+  /* Field rows */
+  .wakeup-field-rows { padding: 4px 0; }
+
+  .wakeup-field-row {
+    display: grid;
+    grid-template-columns: 220px 1fr 120px;
+    align-items: start;
+    gap: 0;
+    padding: 18px 20px;
+    border-bottom: 1px solid #f4f4f8;
+  }
+  .wakeup-field-row:last-child { border-bottom: none; }
+
+  .wakeup-field-label {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: #444;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+  }
+
+  .wakeup-field-instruction {
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: #777;
+    line-height: 1.5;
+    padding-right: 16px;
+  }
+
+  .wakeup-field-center { padding: 0 12px; }
+
+  .wakeup-inline-input {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    padding: 10px 12px;
+    background: #f8f8fb;
+    border: 1px solid #d0d0dc;
+    color: #1a1a2e;
+    outline: none;
+    width: 100%;
+    border-radius: 4px;
+    transition: border-color 0.2s;
+  }
+  .wakeup-inline-input:focus { border-color: #888; background: #fff; }
+  .wakeup-inline-input.confirmed { border-color: #1D9E75; color: #0F6E56; background: #f0faf5; }
+
+  .wakeup-get-data {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    padding: 5px 12px;
+    border: 1px solid #c8c8d8;
+    color: #555;
+    background: #f8f8fb;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .wakeup-get-data:hover { border-color: #4a9eff; color: #4a9eff; background: #f0f5ff; }
+
+  .wakeup-sig-confirm {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px 18px 12px;
+    border-top: 1px solid #f0f0f4;
+    background: #fafafa;
+  }
+  .wakeup-sig-block.stale .wakeup-sig-confirm { background: #fefbf5; border-top-color: #f8eedc; }
+  .wakeup-sig-block.never .wakeup-sig-confirm { background: #fef8f8; border-top-color: #fce8e8; }
+
+  .wakeup-confirm-btn {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 1px;
+    padding: 7px 20px;
+    border: 1px solid #d4890a;
+    color: #854F0B;
+    background: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .wakeup-confirm-btn:hover { background: #faeeda; }
+  .wakeup-confirm-btn.done { border-color: #1D9E75; color: #0F6E56; background: #f0faf5; cursor: default; }
+
+  /* Footer */
+  .wakeup-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border-top: 1px solid #e0e0e8;
+    padding: 14px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 20;
+  }
+
+  .wakeup-footer-hint {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: #aaa;
+    letter-spacing: 0.5px;
+  }
+
+  .wakeup-footer-actions { display: flex; gap: 10px; align-items: center; }
+
+  .wakeup-skip-btn {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 1px;
+    padding: 8px 20px;
+    border: 1px solid #d0d0dc;
+    color: #888;
+    background: transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .wakeup-skip-btn:hover { border-color: #888; color: #444; }
+
+  .wakeup-enter-btn {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 2px;
+    padding: 9px 28px;
+    border: 1px solid #1D9E75;
+    color: #0F6E56;
+    background: #e8f8f1;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .wakeup-enter-btn:hover { background: #d0f0e4; }
+  .wakeup-enter-btn.ready { animation: pulse-green-light 2s infinite; }
+
+  @keyframes pulse-green-light {
+    0%,100% { box-shadow: 0 0 0 0 rgba(29,158,117,0); }
+    50% { box-shadow: 0 0 0 4px rgba(29,158,117,0.15); }
+  }
+
+  /* ── SUCCESS MODAL ── */
+  .success-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(240,240,245,0.96);
+    z-index: 600;
+    align-items: center;
+    justify-content: center;
+  }
+  .success-overlay.open { display: flex; }
+
+  .success-modal {
+    background: #ffffff;
+    border: 1px solid #a0d8c0;
+    border-radius: 8px;
+    padding: 48px 56px;
+    text-align: center;
+    min-width: 360px;
+    animation: success-in 0.35s ease;
+  }
+
+  @keyframes success-in {
+    from { opacity: 0; transform: scale(0.96); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .success-icon  { font-size: 44px; margin-bottom: 16px; }
+  .success-title { font-family: var(--font-display); font-size: 28px; letter-spacing: 2px; color: #0F6E56; margin-bottom: 16px; }
+  .success-detail { font-family: var(--font-mono); font-size: 12px; color: #888; letter-spacing: 0.5px; line-height: 2; }
+
+  /* ── STALE BADGE on cards ── */
+  .stale-badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 2px 6px;
+    border: 1px solid var(--amber);
+    color: var(--amber);
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  @media (max-width: 768px) {
+    .wakeup-field-row { grid-template-columns: 1fr; gap: 8px; }
+    .wakeup-body { padding: 14px 16px; }
+    .wakeup-header { padding: 16px; }
+    .wakeup-footer { padding: 12px 16px; }
+  }
+
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <div class="dash-id">DASH 01</div>
+    <div class="dash-sub">AI SIGNAL MONITOR — AI CLOSED LOOP BEAR CASE</div>
+  </div>
+  <div class="header-right">
+    <div class="composite-pill">
+      <div class="composite-label">COMPOSITE</div>
+      <div class="composite-score amber" id="compositeScore">—</div>
+      <div class="composite-label">/ 100</div>
+    </div>
+    <div class="last-updated" id="lastUpdated">LOADING...</div>
+    <button class="health-btn" onclick="openHealth()">⬡ HEALTH</button>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav class="nav-bar">
+  <a href="#" class="nav-link active ai">AI SIGNALS</a>
+  <a href="dash2_ai_heatmap.html" class="nav-link">AI HEAT MAP</a>
+  <a href="dash3_decision.html" class="nav-link">DECISION ENGINE</a>
+  <a href="dash4_macro_heatmap.html" class="nav-link">MACRO HEAT MAP</a>
+  <a href="dash5_macro_signals.html" class="nav-link">MACRO SIGNALS</a>
+  <a href="dash_summary.html" class="nav-link">SUMMARY</a>
+</nav>
+
+
+<!-- DATA TOOLBAR -->
+<div class="data-toolbar">
+  <button class="toolbar-btn toolbar-export" onclick="exportData()">⬡ EXPORT SYNC</button>
+  <button class="toolbar-btn toolbar-import" onclick="importData()">⬡ IMPORT SYNC</button>
+  <div class="toolbar-label">Lock values after each earnings release · Export to sync iPhone</div>
+</div>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="cascade-wrapper">
+
+    <!-- TIER 1: UPSTREAM ORIGINATION -->
+    <div class="tier-label">TIER 1 — UPSTREAM ORIGINATION</div>
+    <div class="signal-row row-2">
+
+      <div class="signal-card amber" id="card-6">
+        <div class="card-header">
+          <div class="signal-number">SIG 01</div>
+          <div class="rag-dot"></div>
+        </div>
+        <div class="signal-name">NVIDIA FORWARD GUIDANCE</div>
+        <div class="signal-edu">NVDA sees the entire capex loop before anyone else. Hyperscalers order GPUs 12–18 months out. A guidance cut or margin compression means they are pulling back orders — the loop starts to starve at the source.</div>
+        <div class="signal-metrics">
+          <div class="metric-row">
+            <div class="metric-row-inner">
+              <div class="metric-label">DATA CENTER REV GROWTH</div>
+              <div style="display:flex;align-items:center;gap:0;">
+                <div class="metric-value" id="nvda-dcgrowth">—</div>
+                <button class="lock-btn" id="lock-btn-nvda-dcgrowth" onclick="lockField('nvda-dcgrowth')">✓ LOCK</button>
+              </div>
+            </div>
+            <input class="lock-input" id="input-nvda-dcgrowth" type="text" placeholder="+56% YoY" onkeydown="if(event.key==='Enter')lockField('nvda-dcgrowth')">
+            <div class="lock-stamp" id="stamp-nvda-dcgrowth">Type value above then click LOCK</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-row-inner">
+              <div class="metric-label">GROSS MARGIN</div>
+              <div style="display:flex;align-items:center;gap:0;">
+                <div class="metric-value" id="nvda-gm">—</div>
+                <button class="lock-btn" id="lock-btn-nvda-gm" onclick="lockField('nvda-gm')">✓ LOCK</button>
+              </div>
+            </div>
+            <input class="lock-input" id="input-nvda-gm" type="text" placeholder="73.8%" onkeydown="if(event.key==='Enter')lockField('nvda-gm')">
+            <div class="lock-stamp" id="stamp-nvda-gm">Type value above then click LOCK</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-label">GUIDANCE DELTA</div>
+            <div class="metric-value" id="nvda-guidance">AWAITING EARNINGS</div>
+          </div>
+        </div>
+        <div class="trigger-line" id="trigger-6">WATCH: Guidance cut OR gross margin compression &gt;300bps. RED LINE: Any mention of order cancellations or hyperscaler capex pullback in earnings commentary.</div>
+        <div class="data-source-tag"><span class="source-chip" id="src-6">MACROTRENDS / EARNINGS</span></div>
+      </div>
+
+      <div class="signal-card green" id="card-1">
+        <div class="card-header">
+          <div class="signal-number">SIG 02</div>
+          <div class="rag-dot"></div>
+        </div>
+        <div class="signal-name">OPENAI REVENUE vs COMMITMENT</div>
+        <div class="signal-edu">OpenAI is the structural epicenter of the loop. It has committed over $1.4 trillion in infrastructure contracts funded by companies that are simultaneously its investors. If OpenAI misses revenue targets, the entire capital recycling chain reprices.</div>
+        <div class="signal-metrics">
+          <div class="metric-row">
+            <div class="metric-label">2026 REVENUE TARGET</div>
+            <div class="metric-value">$20–26B</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-row-inner">
+              <div class="metric-label">CURRENT RUN RATE</div>
+              <div style="display:flex;align-items:center;gap:0;">
+                <div class="metric-value" id="openai-rev">—</div>
+                <button class="lock-btn" id="lock-btn-openai-rev" onclick="lockField('openai-rev')">✓ LOCK</button>
+              </div>
+            </div>
+            <input class="lock-input" id="input-openai-rev" type="text" placeholder="$1.6B/mo" onkeydown="if(event.key==='Enter')lockField('openai-rev')">
+            <div class="lock-stamp" id="stamp-openai-rev">Type value above then click LOCK</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-label">COMMITMENT COVERAGE RATIO</div>
+            <div class="metric-value" id="openai-ratio">CALCULATING</div>
+          </div>
+        </div>
+        <div class="trigger-line" id="trigger-1">WATCH: Miss on $20B 2026 target by &gt;20%. RED LINE: Any renegotiated or deferred infrastructure commitments with MSFT, ORCL, or AWS.</div>
+        <div class="data-source-tag"><span class="source-chip" id="src-1">BLOOMBERG / WSJ / REUTERS</span></div>
+      </div>
+
+      <div class="signal-card green" id="card-5">
+        <div class="card-header">
+          <div class="signal-number">SIG 03</div>
+          <div class="rag-dot"></div>
+        </div>
+        <div class="signal-name">HYPERSCALER DEBT ISSUANCE</div>
+        <div class="signal-edu">Hyperscalers initially funded AI capex from internal cash flow. When that self-financing capacity exhausts, they move to debt markets. Accelerating bond issuance signals that internally generated cash is no longer sufficient to sustain the build rate.</div>
+        <div class="signal-metrics">
+          <div class="metric-row">
+            <div class="metric-row-inner">
+              <div class="metric-label">MSFT / AMZN / GOOGL SPREAD</div>
+              <div style="display:flex;align-items:center;gap:0;">
+                <div class="metric-value" id="hy-spread">—</div>
+                <button class="lock-btn" id="lock-btn-hy-spread" onclick="lockField('hy-spread')">✓ LOCK</button>
+              </div>
+            </div>
+            <input class="lock-input" id="input-hy-spread" type="text" placeholder="13bps" onkeydown="if(event.key==='Enter')lockField('hy-spread')">
+            <div class="lock-stamp" id="stamp-hy-spread">Type value above then click LOCK</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-row-inner">
+              <div class="metric-label">QTR ISSUANCE VOLUME</div>
+              <div style="display:flex;align-items:center;gap:0;">
+                <div class="metric-value" id="hy-volume">—</div>
+                <button class="lock-btn" id="lock-btn-hy-volume" onclick="lockField('hy-volume')">✓ LOCK</button>
+              </div>
+            </div>
+            <input class="lock-input" id="input-hy-volume" type="text" placeholder="$42B" onkeydown="if(event.key==='Enter')lockField('hy-volume')">
+            <div class="lock-stamp" id="stamp-hy-volume">Type value above then click LOCK</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-label">DEBT / EBITDA TREND</div>
+            <div class="metric-value" id="hy-ratio">MONITORING</div>
+          </div>
+        </div>
+        <div class="trigger-line" id="trigger-5">WATCH: IG spreads widen &gt;50bps in a quarter. RED LINE: Any hyperscaler issues &gt;$30B in a single quarter.</div>
+        <div class="data-source-tag"><span class="source-chip" id="src-5">FRED / SIFMA / SEC FILINGS</span></div>
+      </div>
+
+    </div>
+
+    <!-- CONNECTOR: TIER 1 → TIER 2 -->
+    <div style="display:flex; justify-content:center; padding: 8px 0; gap: 4px; align-items:center; height:28px;">
+      <div style="width:1px; height:100%; background: linear-gradient(to bottom, var(--connector), var(--border));"></div>
+      <div style="font-family: var(--font-mono); font-size:7px; color: var(--text-dim); letter-spacing:2px; padding: 0 12px;">CASCADES TO</div>
+      <div style="width:1px; height:100%; background: linear-gradient(to bottom, var(--connector), var(--border));"></div>
+    </div>
+
+    <!-- TIER 2: MID-STREAM TRANSMISSION -->
+    <div class="tier-label">TIER 2 — MID-STREAM TRANSMISSION</div>
+    <div class="signal-row row-3">
+
+      <div class="signal-card green" id="card-2">
+        <div class="card-header">
+          <div class="signal-number">SIG 04</div>
+          <div class="rag-dot"></div>
+        </div>
+        <div class="signal-name">FREE CASH FLOW COMPRESSION</div>
+        <div class="signal-edu">FCF is the self-financing engine. As capex accelerates beyond revenue growth, FCF margins compress. This is the most reliable leading indicator because it is reported quarterly and directly tests whether the build rate is sustainable without external debt.</div>
+        <div class="signal-metrics">
+          <div class="metric-row">
+            <div class="metric-row-inner">
+              <div class="metric-label">BIG 4 COMBINED FCF (TTM)</div>
+              <div style="display:flex;align-items:center;gap:0;">
+                <div class="metric-value" id="fcf-combined">—</div>
+                <button class="lock-btn" id="lock-btn-fcf-combined" onclick="lockField('fcf-combined')">✓ LOCK</button>
+              </div>
+            </div>
+            <input class="lock-input" id="input-fcf-combined" type="text" placeholder="$285B" onkeydown="if(event.key==='Enter')lockField('fcf-combined')">
+            <div class="lock-stamp" id="stamp-fcf-combined">Type value above then click LOCK</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-row-inner">
+              <div class="metric-label">QOQ CHANGE</div>
+              <div style="display:flex;align-items:center;gap:0;">
+                <div class="metric-value" id="fcf-qoq">—</div>
+                <button class="lock-btn" id="lock-btn-fcf-qoq" onclick="lockField('fcf-qoq')">✓ LOCK</button>
+              </div>
+            </div>
+            <input class="lock-input" id="input-fcf-qoq" type="text" placeholder="-18%" onkeydown="if(event.key==='Enter')lockField('fcf-qoq')">
+            <div class="lock-stamp" id="stamp-fcf-qoq">Type value above then click LOCK</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-row-inner">
+              <div class="metric-label">CAPEX / REVENUE RATIO</div>
+              <div style="display:flex;align-items:center;gap:0;">
+                <div class="metric-value" id="capex-rev">—</div>
+                <button class="lock-btn" id="lock-btn-capex-rev" onclick="lockField('capex-rev')">✓ LOCK</button>
+              </div>
+            </div>
+            <input class="lock-input" id="input-capex-rev" type="text" placeholder="22%" onkeydown="if(event.key==='Enter')lockField('capex-rev')">
+            <div class="lock-stamp" id="stamp-capex-rev">Type value above then click LOCK</div>
+          </div>
+        </div>
+        <div class="trigger-line" id="trigger-2">WATCH: Any Big 4 posts QoQ FCF decline &gt;15% while maintaining capex. RED LINE: Combined FCF drops below $250B annualized.</div>
+        <div class="data-source-tag"><span class="source-chip" id="src-2">SEC 10-Q / MACROTRENDS</span></div>
+      </div>
+
+      <div class="signal-card amber" id="card-7">
+        <div class="card-header">
+          <div class="signal-number">SIG 05</div>
+          <div class="rag-dot"></div>
+        </div>
+        <div class="signal-name">CAPEX-TO-REVENUE EXPANSION</div>
+        <div class="signal-edu">Premium valuations were assigned to asset-light businesses. As capex share of revenue rises, the valuation multiple compression argument becomes structural — not cyclical. Industrial-scale capex intensity does not justify software-level P/E multiples.</div>
+        <div class="signal-metrics">
+          <div class="metric-row">
+            <div class="metric-row-inner">
+              <div class="metric-label">BIG TECH CAPEX / REV %</div>
+              <div style="display:flex;align-items:center;gap:0;">
+                <div class="metric-value" id="capex-pct">—</div>
+                <button class="lock-btn" id="lock-btn-capex-pct" onclick="lockField('capex-pct')">✓ LOCK</button>
+              </div>
+            </div>
+            <input class="lock-input" id="input-capex-pct" type="text" placeholder="45-57%" onkeydown="if(event.key==='Enter')lockField('capex-pct')">
+            <div class="lock-stamp" id="stamp-capex-pct">Type value above then click LOCK</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-label">10-YEAR HIGH THRESHOLD</div>
+            <div class="metric-value">25%</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-row-inner">
+              <div class="metric-label">CURRENT P/E vs SECTOR AVG</div>
+              <div style="display:flex;align-items:center;gap:0;">
+                <div class="metric-value" id="pe-delta">—</div>
+                <button class="lock-btn" id="lock-btn-pe-delta" onclick="lockField('pe-delta')">✓ LOCK</button>
+              </div>
+            </div>
+            <input class="lock-input" id="input-pe-delta" type="text" placeholder="+28pts premium" onkeydown="if(event.key==='Enter')lockField('pe-delta')">
+            <div class="lock-stamp" id="stamp-pe-delta">Type value above then click LOCK</div>
+          </div>
+        </div>
+        <div class="trigger-line" id="trigger-7">WATCH: Big 4 aggregate capex/revenue exceeds 25%. RED LINE: P/E compression begins even with stable earnings — multiple contraction signal.</div>
+        <div class="data-source-tag"><span class="source-chip" id="src-7">MACROTRENDS / WISESHEETS</span></div>
+      </div>
+
+    </div>
+
+    <!-- CONNECTOR: TIER 2 → TIER 3 -->
+    <div style="display:flex; justify-content:center; padding: 8px 0; gap: 4px; align-items:center; height:28px;">
+      <div style="width:1px; height:100%; background: linear-gradient(to bottom, var(--connector), var(--border));"></div>
+      <div style="font-family: var(--font-mono); font-size:7px; color: var(--text-dim); letter-spacing:2px; padding: 0 12px;">CASCADES TO</div>
+      <div style="width:1px; height:100%; background: linear-gradient(to bottom, var(--connector), var(--border));"></div>
+    </div>
+
+    <!-- TIER 3: DOWNSTREAM CONFIRMATION -->
+    <div class="tier-label">TIER 3 — DOWNSTREAM CONFIRMATION</div>
+    <div class="signal-row row-4">
+
+      <div class="signal-card green" id="card-3">
+        <div class="card-header">
+          <div class="signal-number">SIG 06</div>
+          <div class="rag-dot"></div>
+        </div>
+        <div class="signal-name">CLOUD REVENUE DECELERATION</div>
+        <div class="signal-edu">Cloud AI revenue growth rate is the most visible and tradable quarterly signal. Sequential deceleration confirms that demand is not absorbing supply at the rate required to justify infrastructure investment. Three consecutive quarters of deceleration removes the "timing gap" excuse.</div>
+        <div class="signal-metrics">
+          <div class="metric-row">
+            <div class="metric-row-inner">
+              <div class="metric-label">AZURE AI YOY GROWTH</div>
+              <div style="display:flex;align-items:center;gap:0;">
+                <div class="metric-value" id="azure-growth">—</div>
+                <button class="lock-btn" id="lock-btn-azure-growth" onclick="lockField('azure-growth')">✓ LOCK</button>
+              </div>
+            </div>
+            <input class="lock-input" id="input-azure-growth" type="text" placeholder="40%" onkeydown="if(event.key==='Enter')lockField('azure-growth')">
+            <div class="lock-stamp" id="stamp-azure-growth">Type value above then click LOCK</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-row-inner">
+              <div class="metric-label">AWS AI YOY GROWTH</div>
+              <div style="display:flex;align-items:center;gap:0;">
+                <div class="metric-value" id="aws-growth">—</div>
+                <button class="lock-btn" id="lock-btn-aws-growth" onclick="lockField('aws-growth')">✓ LOCK</button>
+              </div>
+            </div>
+            <input class="lock-input" id="input-aws-growth" type="text" placeholder="24%" onkeydown="if(event.key==='Enter')lockField('aws-growth')">
+            <div class="lock-stamp" id="stamp-aws-growth">Type value above then click LOCK</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-row-inner">
+              <div class="metric-label">GCP AI YOY GROWTH</div>
+              <div style="display:flex;align-items:center;gap:0;">
+                <div class="metric-value" id="gcp-growth">—</div>
+                <button class="lock-btn" id="lock-btn-gcp-growth" onclick="lockField('gcp-growth')">✓ LOCK</button>
+              </div>
+            </div>
+            <input class="lock-input" id="input-gcp-growth" type="text" placeholder="28%" onkeydown="if(event.key==='Enter')lockField('gcp-growth')">
+            <div class="lock-stamp" id="stamp-gcp-growth">Type value above then click LOCK</div>
+          </div>
+        </div>
+        <div class="trigger-line" id="trigger-3">WATCH: Any hyperscaler AI growth decelerates 3+ consecutive points QoQ. RED LINE: Any segment drops below 30% YoY growth.</div>
+        <div class="data-source-tag"><span class="source-chip" id="src-3">EARNINGS TRANSCRIPTS / IR SITES</span></div>
+      </div>
+
+      <div class="signal-card green" id="card-4">
+        <div class="card-header">
+          <div class="signal-number">SIG 07</div>
+          <div class="rag-dot"></div>
+        </div>
+        <div class="signal-name">ENTERPRISE ROI REALIZATION</div>
+        <div class="signal-edu">Demand-side signal. Only 29% of enterprises currently report significant ROI from AI. If this number stalls or declines, enterprise AI budgets stop growing — removing the demand justification for the entire infrastructure build. This is the slowest-moving but most structural signal.</div>
+        <div class="signal-metrics">
+          <div class="metric-row">
+            <div class="metric-label">ENTERPRISE ROI % (SIGNIFICANT)</div>
+            <div class="metric-value live" id="roi-pct">29%</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-label">FIRM ADOPTION RATE (BTOS)</div>
+            <div class="metric-value live" id="btos-rate">18%</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-label">PILOT→PRODUCTION CONVERSION</div>
+            <div class="metric-value" id="pilot-conv">~30%</div>
+          </div>
+        </div>
+        <div class="trigger-line" id="trigger-4">WATCH: BTOS adoption stalls or reverses; ROI % stays below 30%. RED LINE: Enterprise AI budget growth decelerates while conversion stays below 30%.</div>
+        <div class="data-source-tag"><span class="source-chip" id="src-4">CENSUS BTOS / DELOITTE / WRITER</span></div>
+      </div>
+
+      <div class="signal-card green" id="card-8">
+        <div class="card-header">
+          <div class="signal-number">SIG 08</div>
+          <div class="rag-dot"></div>
+        </div>
+        <div class="signal-name">INFRASTRUCTURE DEBT STRESS</div>
+        <div class="signal-edu">The contagion vector. Risk has migrated from tech balance sheets into utilities, insurers, data center REITs, private credit, and pensions — entities that do not see themselves as betting on GPU cycles. When these entities reprice, the contagion broadens rapidly beyond the tech sector.</div>
+        <div class="signal-metrics">
+          <div class="metric-row">
+            <div class="metric-row-inner">
+              <div class="metric-label">DATACENTER REIT SPREAD</div>
+              <div style="display:flex;align-items:center;gap:0;">
+                <div class="metric-value" id="dc-spread">—</div>
+                <button class="lock-btn" id="lock-btn-dc-spread" onclick="lockField('dc-spread')">✓ LOCK</button>
+              </div>
+            </div>
+            <input class="lock-input" id="input-dc-spread" type="text" placeholder="Stable / +15bps" onkeydown="if(event.key==='Enter')lockField('dc-spread')">
+            <div class="lock-stamp" id="stamp-dc-spread">Type value above then click LOCK</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-label">CORWEAVE / PRIVATE CREDIT</div>
+            <div class="metric-value" id="pc-status">MONITORING</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-row-inner">
+              <div class="metric-label">ORACLE CAPEX COVERAGE</div>
+              <div style="display:flex;align-items:center;gap:0;">
+                <div class="metric-value" id="orcl-cov">—</div>
+                <button class="lock-btn" id="lock-btn-orcl-cov" onclick="lockField('orcl-cov')">✓ LOCK</button>
+              </div>
+            </div>
+            <input class="lock-input" id="input-orcl-cov" type="text" placeholder="1.2x" onkeydown="if(event.key==='Enter')lockField('orcl-cov')">
+            <div class="lock-stamp" id="stamp-orcl-cov">Type value above then click LOCK</div>
+          </div>
+        </div>
+        <div class="trigger-line" id="trigger-8">WATCH: Data center REITs or private credit vehicles show covenant stress or rating action. RED LINE: Any hyperscaler-adjacent entity misses debt service or seeks refinancing.</div>
+        <div class="data-source-tag"><span class="source-chip" id="src-8">BLOOMBERG / MOODY'S / S&amp;P</span></div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- BOTTOM PANELS -->
+  <div class="bottom-grid">
+    <div class="info-panel">
+      <div class="panel-title">CASCADE PROPAGATION STATUS</div>
+      <div class="cascade-status">
+        <div class="cascade-step">
+          <div class="step-num active">1</div>
+          <span>NVDA guidance / OpenAI revenue signals active — upstream stress present</span>
+        </div>
+        <div class="cascade-step">
+          <div class="step-num">2</div>
+          <span>FCF compression / debt issuance — mid-stream transmission beginning</span>
+        </div>
+        <div class="cascade-step">
+          <div class="step-num">3</div>
+          <span>Cloud deceleration confirmed across 2+ hyperscalers</span>
+        </div>
+        <div class="cascade-step">
+          <div class="step-num">4</div>
+          <span>Enterprise ROI stalls — demand-side confirmation</span>
+        </div>
+        <div class="cascade-step">
+          <div class="step-num">5</div>
+          <span>Infrastructure debt stress — contagion broadening beyond tech</span>
+        </div>
+        <div class="cascade-step">
+          <div class="step-num">6</div>
+          <span>FULL CASCADE — all 8 signals in amber/red — Dash 3 action required</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-panel">
+      <div class="panel-title">DATA HEALTH SUMMARY</div>
+      <div id="healthSummary" style="font-family: var(--font-mono); font-size: 14px; color: var(--text-secondary); line-height: 2;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+          <span>SOURCES ACTIVE</span><span style="color:var(--green)">8 / 8</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+          <span>SOURCES BROKEN</span><span id="brokenCount" style="color:var(--green)">0</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+          <span>LAST FULL REFRESH</span><span id="refreshTime">—</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+          <span>NEXT REFRESH</span><span>MANUAL / ON OPEN</span>
+        </div>
+        <div style="margin-top:12px; padding:8px; background: rgba(0,212,160,0.05); border: 1px solid rgba(0,212,160,0.15); color: var(--text-dim); font-size:8px; line-height:1.6;">
+          TO UPDATE A BROKEN SOURCE: Open Google Sheet → CONFIG tab → replace URL in the corresponding row → all dashboards update automatically on next open.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- WAKE UP MODAL -->
+<div class="wakeup-overlay" id="wakeupModal">
+  <div class="wakeup-modal">
+
+    <div class="wakeup-header">
+      <div>
+        <div class="wakeup-title">🐓 SYSTEM WAKE UP</div>
+        <div class="wakeup-meta" id="wakeup-meta">Checking signal status...</div>
+      </div>
+      <div class="wakeup-header-status">
+        <div class="wakeup-header-status-main" id="wakeup-status-main" style="font-size:22px;"></div>
+        <div class="wakeup-header-status-sub" id="wakeup-status-sub"></div>
+      </div>
+    </div>
+
+    <div id="wakeup-progress"></div>
+
+    <div class="wakeup-body" id="wakeup-body"></div>
+
+    <div class="wakeup-footer">
+      <div class="wakeup-footer-hint">Enter values · Get data opens source in new tab · Skip moves to next tier</div>
+      <div class="wakeup-footer-actions">
+        <button class="wakeup-skip-btn" onclick="advanceStep()">Skip tier →</button>
+        <button class="wakeup-enter-btn" id="wakeup-enter-btn" onclick="advanceStep()">Next →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="success-overlay" id="successModal">
+  <div class="success-modal">
+    <div class="success-icon">✅</div>
+    <div class="success-title">ALL SIGNALS CURRENT</div>
+    <div class="success-detail" id="success-detail"></div>
+  </div>
+</div>
+
+<!-- HEALTH MODAL -->
+<div class="modal-overlay" id="healthModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">SOURCE HEALTH MONITOR</div>
+      <button class="modal-close" onclick="closeHealth()">✕ CLOSE</button>
+    </div>
+
+    <div id="healthRows">
+      <!-- Populated by JS -->
+    </div>
+
+    <div style="margin-top:20px; padding:12px; background: var(--amber-dim); border: 1px solid rgba(245,166,35,0.2); font-family: var(--font-mono); font-size: 16px; color: var(--amber); line-height:1.8;">
+      BROKEN SOURCE REPAIR PROTOCOL<br>
+      1. Note the signal name and current source above<br>
+      2. Use the search query provided to find a replacement<br>
+      3. Open Google Sheet → CONFIG tab → update the URL<br>
+      4. Reload this dashboard — data auto-populates
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ============================================================
+// ROOSTER — DASH 1 DATA ENGINE v2.0
+// Rec D: History logging on every lock
+// Rec C: Staleness engine using cadence tags
+// Rec B: Source URLs per field
+// Rec A: Wake Up modal (hard stop, Upstream→Mid→Downstream)
+//        Option 1 workflow: modal stays open, inline input
+// ============================================================
+
+const STORAGE_KEY = 'rooster_dash1_v1';
+
+// ── STALE THRESHOLDS (days) ──
+const STALE_DAYS = { weekly: 9, monthly: 35, quarterly: 95 };
+
+// ── SIGNAL GROUPINGS for Wake Up modal ──
+// Signal groups match card HTML exactly — names from signal-name divs, cadence from slowest field
+const SIGNAL_GROUPS = [
+  {
+    tier: 'TIER 1 — UPSTREAM ORIGINATION',
+    sigs: [
+      { sig:'SIG01', name:'NVIDIA FORWARD GUIDANCE',        cadence:'quarterly' },
+      { sig:'SIG02', name:'OPENAI REVENUE vs COMMITMENT',   cadence:'quarterly' },
+      { sig:'SIG03', name:'HYPERSCALER DEBT ISSUANCE',      cadence:'weekly'    },
+    ]
+  },
+  {
+    tier: 'TIER 2 — MID-STREAM TRANSMISSION',
+    sigs: [
+      { sig:'SIG04', name:'FREE CASH FLOW COMPRESSION',     cadence:'quarterly' },
+      { sig:'SIG05', name:'CAPEX / REVENUE EXPANSION',      cadence:'quarterly' },
+    ]
+  },
+  {
+    tier: 'TIER 3 — DOWNSTREAM CONFIRMATION',
+    sigs: [
+      { sig:'SIG06', name:'CLOUD REVENUE DECELERATION',     cadence:'quarterly' },
+      { sig:'SIG07', name:'ENTERPRISE ROI REALIZATION',     cadence:'monthly'   },
+      { sig:'SIG08', name:'INFRASTRUCTURE DEBT STRESS',     cadence:'weekly'    },
+    ]
+  }
+];
+
+// ── FIELDS — instructions derived directly from card HTML, trigger lines, and metric labels ──
+const FIELDS = [
+
+  // ── SIG01 — NVDA GUIDANCE ──
+  // Card trigger: "WATCH: Guidance cut OR gross margin compression >300bps."
+  // Source chip: MACROTRENDS / EARNINGS
+  { id:'nvda-dcgrowth', label:'DC REVENUE GROWTH',  sig:'SIG01', cadence:'quarterly',
+    url:'https://www.macrotrends.net/stocks/charts/NVDA/nvidia/revenue',
+    instruction:'Macrotrends → NVDA → Revenue → select Quarterly → find Data Center segment YoY% growth vs same quarter prior year',
+    hint:'+56% YoY' },
+  { id:'nvda-gm',       label:'GROSS MARGIN',        sig:'SIG01', cadence:'quarterly',
+    url:'https://www.macrotrends.net/stocks/charts/NVDA/nvidia/gross-profit-margin',
+    instruction:'Macrotrends → NVDA → Gross Profit Margin → most recent quarter % — use quarterly column not TTM. Watch for >300bps compression vs prior quarter',
+    hint:'73.8%' },
+  { id:'nvda-guidance', label:'GUIDANCE DELTA',      sig:'SIG01', cadence:'quarterly',
+    url:'https://investor.nvidia.com/financial-information/quarterly-results/default.aspx',
+    instruction:'NVDA investor relations → latest earnings press release → next quarter revenue guidance vs analyst consensus. Enter: Raised / Inline / Cut',
+    hint:'Raised / Inline / Cut' },
+
+  // ── SIG02 — OPENAI REVENUE vs COMMITMENT ──
+  // Card trigger: "WATCH: Miss on $20B 2026 target by >20%."
+  // Source chip: BLOOMBERG / WSJ / REUTERS
+  // Reframed as AI Monetization Ratio per session audit
+  { id:'openai-rev',   label:'AI MONETIZATION RATIO', sig:'SIG02', cadence:'quarterly',
+    url:'https://www.reuters.com/technology/artificial-intelligence/',
+    instruction:'Combined AI-attributed revenue (MSFT Azure AI + AWS AI + Google Cloud) divided by combined quarterly capex for same three companies. Q1 2026 baseline: $33B / $114.8B = 0.29x. Rising toward 1.0x = bull. Flat or falling = bear',
+    hint:'0.29x' },
+  { id:'openai-ratio', label:'COMMITMENT COVERAGE',   sig:'SIG02', cadence:'quarterly',
+    url:'https://www.reuters.com/technology/artificial-intelligence/',
+    instruction:'Search Reuters or WSJ for any renegotiated, deferred, or cancelled infrastructure commitments between OpenAI and MSFT / ORCL / AWS. Enter: No Changes / Watch / Renegotiated',
+    hint:'No Changes / Watch / Renegotiated' },
+
+  // ── SIG03 — HYPERSCALER DEBT ISSUANCE ──
+  // Card trigger: "WATCH: IG spreads widen >50bps in a quarter. RED LINE: Any hyperscaler issues >$30B in single quarter."
+  // Source chip: FRED / SIFMA / SEC FILINGS
+  { id:'hy-spread',  label:'MSFT / AMZN / GOOGL SPREAD', sig:'SIG03', cadence:'weekly',
+    url:'https://fred.stlouisfed.org/series/BAMLC0A0CM',
+    instruction:'FRED → ICE BofA US Corporate Index OAS → most recent data point on right of chart. This is Investment Grade spread in basis points. Watch trigger: >50bps widening in a single quarter',
+    hint:'74bps' },
+  { id:'hy-volume',  label:'QTR ISSUANCE VOLUME',         sig:'SIG03', cadence:'quarterly',
+    url:'https://www.reuters.com/markets/rates-bonds/',
+    instruction:'Reuters Markets → search "hyperscaler bond issuance" for current quarter. Enter combined $ volume of new IG bond deals by MSFT + AMZN + GOOGL + META. Red line: any single company >$30B in one quarter',
+    hint:'~$54B (AMZN Q1 alone)' },
+  { id:'hy-ratio',   label:'DEBT / EBITDA TREND',         sig:'SIG03', cadence:'quarterly',
+    url:'https://www.gurufocus.com/term/debt-to-ebitda/MSFT',
+    instruction:'Gurufocus → toggle MSFT / AMZN / GOOGL → check Debt/EBITDA vs prior quarter and 10-year average. Enter trend direction: Rising / Stable / Declining',
+    hint:'Stable' },
+
+  // ── SIG04 — FREE CASH FLOW COMPRESSION ──
+  // Card trigger: "WATCH: Combined FCF drops >15% QoQ. RED LINE: Any single company FCF goes negative."
+  // Source chip: EARNINGS / MACROTRENDS
+  { id:'fcf-combined', label:'BIG 4 COMBINED FCF (TTM)', sig:'SIG04', cadence:'quarterly',
+    url:'https://www.macrotrends.net/stocks/charts/MSFT/microsoft/free-cash-flow',
+    instruction:'Macrotrends → pull TTM FCF for MSFT + AMZN + GOOGL + META → add all four → enter combined $B total. Watch: drop >15% QoQ',
+    hint:'$285B' },
+  { id:'fcf-qoq',      label:'QOQ CHANGE',               sig:'SIG04', cadence:'quarterly',
+    url:'https://www.macrotrends.net/stocks/charts/MSFT/microsoft/free-cash-flow',
+    instruction:'Compare most recent quarter combined Big 4 FCF vs prior quarter → calculate % change. Negative = compression. Red line: any single company FCF goes negative',
+    hint:'-8%' },
+  { id:'capex-rev',    label:'CAPEX / REVENUE RATIO',    sig:'SIG04', cadence:'quarterly',
+    url:'https://www.gurufocus.com/term/capex-to-revenue/MSFT',
+    instruction:'Gurufocus → toggle MSFT / AMZN / GOOGL / META → note capex as % of revenue for each. Enter MSFT ratio as primary — flag if others diverging significantly',
+    hint:'22%' },
+
+  // ── SIG05 — CAPEX / REVENUE EXPANSION ──
+  // Card trigger: "WATCH: Ratio expands >5pts QoQ across 3+ companies."
+  // Source chip: EARNINGS / MACROTRENDS
+  { id:'capex-pct',    label:'BIG TECH CAPEX/REV %',     sig:'SIG05', cadence:'quarterly',
+    url:'https://www.gurufocus.com/term/capex-to-revenue/MSFT',
+    instruction:'Gurufocus → pull capex/revenue % for MSFT + AMZN + GOOGL + META → average the four. Watch: sustained above 25% is warning threshold. Toggle tickers in URL',
+    hint:'45-57%' },
+
+  // ── SIG06 — CLOUD REVENUE DECELERATION ──
+  // Card trigger: "WATCH: Any hyperscaler AI growth decelerates 3+ consecutive points QoQ. RED LINE: Any segment drops below 30% YoY."
+  // Source chip: EARNINGS TRANSCRIPTS / IR SITES
+  { id:'azure-growth', label:'AZURE AI YOY GROWTH',      sig:'SIG06', cadence:'quarterly',
+    url:'https://ir.microsoft.com/financial-information/quarterly-earnings',
+    instruction:'MSFT IR → latest earnings press release → Intelligent Cloud segment → Azure and other cloud services YoY% growth figure stated in the release. Q1 2026: 40%',
+    hint:'40%' },
+  { id:'aws-growth',   label:'AWS AI YOY GROWTH',        sig:'SIG06', cadence:'quarterly',
+    url:'https://ir.aboutamazon.com/quarterly-results/default.aspx',
+    instruction:'Amazon IR → latest earnings release → AWS net sales YoY growth % from segment table. Q1 2026: 28%',
+    hint:'28%' },
+  { id:'gcp-growth',   label:'GCP AI YOY GROWTH',        sig:'SIG06', cadence:'quarterly',
+    url:'https://abc.xyz/investor/',
+    instruction:'Alphabet IR → latest earnings release → Google Cloud revenue YoY growth % from segment table. Q1 2026: 63%',
+    hint:'63%' },
+
+  // ── SIG07 — ENTERPRISE ROI REALIZATION ──
+  // Card trigger: "WATCH: BTOS adoption stalls or reverses; ROI % stays below 30%. RED LINE: Enterprise AI budget growth decelerates while conversion stays below 30%."
+  // Source chip: CENSUS BTOS / DELOITTE / WRITER
+  { id:'roi-pct',    label:'ENTERPRISE ROI % (SIGNIFICANT)', sig:'SIG07', cadence:'quarterly',
+    url:'https://www.census.gov/library/stories/2026/05/ai-use-businesses.html',
+    instruction:'Census BTOS AI use story page → find % of businesses reporting significant ROI or cost savings from AI. Watch: stalls or declines below 29% baseline',
+    hint:'29%' },
+  { id:'btos-rate',  label:'FIRM ADOPTION RATE (BTOS)',       sig:'SIG07', cadence:'monthly',
+    url:'https://www.census.gov/programs-surveys/btos.html',
+    instruction:'Census BTOS → AI Use at US Businesses → current national AI adoption rate %. Current: 19.8% (May 2026). Watch: stalls or reverses',
+    hint:'19.8%' },
+  { id:'pilot-conv', label:'PILOT→PRODUCTION CONVERSION',     sig:'SIG07', cadence:'quarterly',
+    url:'https://www.deloitte.com/global/en/issues/generative-ai/state-of-ai-in-enterprise.html',
+    instruction:'Deloitte State of AI report (annual, download from page) → find pilot-to-production conversion %. Current: ~25%. Updated once per year when new report publishes',
+    hint:'~25%' },
+
+  // ── SIG08 — INFRASTRUCTURE DEBT STRESS ──
+  // Card trigger: "WATCH: Data center REITs or private credit show covenant stress or rating action. RED LINE: Any hyperscaler-adjacent entity misses debt service or seeks refinancing."
+  // Source chip: BLOOMBERG / MOODY'S / S&P
+  { id:'dc-spread',  label:'DATACENTER REIT SPREAD',    sig:'SIG08', cadence:'weekly',
+    url:'https://www.bloomberg.com/markets/rates-bonds/government-bonds/us',
+    instruction:'Bloomberg or search "data center REIT credit spread" → compare current spread vs 52-week average. Enter basis point reading or: Stable / Widening +Xbps / Tightening. Watch: any covenant stress or rating action on DC REITs',
+    hint:'Stable / +15bps' },
+  { id:'pc-status',  label:'COREWEAVE / PRIVATE CREDIT', sig:'SIG08', cadence:'monthly',
+    url:'https://www.bloomberg.com/news/articles/2026-06-02/coreweave-tied-data-center-raises-900-million-in-junk-bond-sale',
+    instruction:'Bloomberg → search CoreWeave debt or AI private credit. Current news: CoreWeave-tied data center raised $900M in junk bond sale (Jun 2, 2026). Enter: Stable / Watch / Stress. Red line: missed debt service or refinancing request',
+    hint:'Stable / Watch / Stress' },
+  { id:'orcl-cov',   label:'ORACLE CAPEX COVERAGE',     sig:'SIG08', cadence:'quarterly',
+    url:'https://investor.oracle.com/investor-news/financial-data/quarterly-results/default.aspx',
+    instruction:'Oracle IR → latest earnings → divide quarterly operating cash flow by quarterly capex. Enter the ratio. Below 1.0x means capex exceeds operating cash — watch signal. Red line: below 0.8x',
+    hint:'1.2x' },
+];
+
+// ── SOURCES — health monitor (8 data sources, one per signal) ──
+const SOURCES = [
+  { signal:'SIG 01 — NVDA GUIDANCE',         id:'src-6', url:'https://www.macrotrends.net/stocks/charts/NVDA/nvidia/gross-profit-margin', label:'MACROTRENDS/NVDA',   status:'ok' },
+  { signal:'SIG 02 — OPENAI REVENUE',        id:'src-1', url:'https://www.reuters.com/technology/artificial-intelligence/',               label:'REUTERS/AI',         status:'ok' },
+  { signal:'SIG 03 — DEBT ISSUANCE',         id:'src-5', url:'https://fred.stlouisfed.org/series/BAMLC0A0CM',                             label:'FRED/SPREADS',       status:'ok' },
+  { signal:'SIG 04 — FCF COMPRESSION',       id:'src-2', url:'https://www.macrotrends.net/stocks/charts/MSFT/microsoft/free-cash-flow',   label:'MACROTRENDS/FCF',    status:'ok' },
+  { signal:'SIG 05 — CAPEX/REVENUE',         id:'src-7', url:'https://www.gurufocus.com/term/capex-to-revenue/MSFT',                      label:'GURUFOCUS/CAPEX',    status:'ok' },
+  { signal:'SIG 06 — CLOUD DECEL',           id:'src-3', url:'https://ir.microsoft.com/financial-information/quarterly-earnings',         label:'MSFT/AWS/GCP IR',    status:'ok' },
+  { signal:'SIG 07 — ENTERPRISE ROI',        id:'src-4', url:'https://www.census.gov/programs-surveys/btos.html',                         label:'CENSUS BTOS',        status:'ok' },
+  { signal:'SIG 08 — INFRA DEBT STRESS',     id:'src-8', url:'https://www.bloomberg.com/markets/rates-bonds/government-bonds/us',         label:'BLOOMBERG/BONDS',    status:'ok' },
+];
+
+// ── STORAGE ──
+function loadAll() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+  catch(e) { return {}; }
+}
+
+function saveAll(data) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+  catch(e) { console.warn('localStorage unavailable'); }
+}
+
+// ── STALENESS ENGINE ──
+// Returns { stale: bool, label: string, state: 'current'|'stale'|'never' }
+function checkStaleness(fieldId) {
+  const data = loadAll();
+  const record = data[fieldId];
+  if (!record || !record.locked) return { stale: true, label: 'NEVER ENTERED', state: 'never' };
+
+  const field = FIELDS.find(f => f.id === fieldId);
+  const cadence = field ? field.cadence : 'quarterly';
+  const threshold = STALE_DAYS[cadence] || 95;
+
+  const lockedDate = new Date(record.locked);
+  const now = new Date();
+  const ageDays = Math.floor((now - lockedDate) / (1000 * 60 * 60 * 24));
+
+  if (ageDays > threshold) {
+    return { stale: true, label: 'STALE ' + ageDays + 'd', state: 'stale' };
+  }
+  return { stale: false, label: 'CURRENT — ' + lockedDate.toLocaleDateString('en-US',{month:'short',day:'numeric'}), state: 'current' };
+}
+
+// Check staleness at signal level — stale if ANY field in that signal is stale
+function checkSignalStaleness(sigCode) {
+  const sigFields = FIELDS.filter(f => f.sig === sigCode);
+  for (const f of sigFields) {
+    const s = checkStaleness(f.id);
+    if (s.state === 'never') return { stale: true, label: 'NEVER ENTERED', state: 'never' };
+    if (s.state === 'stale') return { stale: true, label: s.label, state: 'stale' };
+  }
+  // Find most recent lock
+  const data = loadAll();
+  const dates = sigFields.filter(f => data[f.id] && data[f.id].locked).map(f => new Date(data[f.id].locked));
+  if (!dates.length) return { stale: true, label: 'NEVER ENTERED', state: 'never' };
+  const latest = new Date(Math.max(...dates));
+  return { stale: false, label: 'CURRENT — ' + latest.toLocaleDateString('en-US',{month:'short',day:'numeric'}), state: 'current' };
+}
+
+// ── LOCK FIELD (v2 — with history logging) ──
+function lockField(id) {
+  const input = document.getElementById('input-'+id);
+  const btn   = document.getElementById('lock-btn-'+id);
+  const disp  = document.getElementById(id);
+  const stamp = document.getElementById('stamp-'+id);
+  if (!input) return;
+
+  // First click — show input
+  if (input.style.display === 'none' || input.style.display === '') {
+    input.style.display = 'block';
+    input.focus();
+    btn.textContent = '✓ CONFIRM';
+    if (stamp) stamp.textContent = 'Type value then click CONFIRM';
+    return;
+  }
+  // Second click — lock
+  if (!input.value.trim()) { input.focus(); return; }
+
+  const val = input.value.trim();
+  const now = new Date();
+  const ts  = now.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+
+  // Save with history (Rec D)
+  const data = loadAll();
+  const existing = data[id];
+  const historyEntry = existing ? { value: existing.value, locked: existing.locked } : null;
+  const history = (existing && existing.history) ? [...existing.history] : [];
+  if (historyEntry) history.push(historyEntry);
+
+  data[id] = { value: val, locked: now.toISOString(), history };
+  saveAll(data);
+
+  // Update UI
+  disp.textContent    = val;
+  disp.className      = 'metric-value locked';
+  input.style.display = 'none';
+  btn.textContent     = '🔒 LOCKED';
+  btn.className       = 'lock-btn locked';
+  btn.onclick         = () => unlockField(id);
+  if (stamp) stamp.textContent = '🔒 Locked ' + ts;
+
+  // Refresh composite
+  updateCompositeDisplay();
+  // Update stale badge if visible on card
+  updateStaleBadge(id);
+}
+
+function lockFieldFromModal(id, value) {
+  const now = new Date();
+  const ts  = now.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+
+  const data = loadAll();
+  const existing = data[id];
+  const historyEntry = existing ? { value: existing.value, locked: existing.locked } : null;
+  const history = (existing && existing.history) ? [...existing.history] : [];
+  if (historyEntry) history.push(historyEntry);
+
+  data[id] = { value: value, locked: now.toISOString(), history };
+  saveAll(data);
+
+  // Update dashboard card UI
+  const disp  = document.getElementById(id);
+  const btn   = document.getElementById('lock-btn-'+id);
+  const inp   = document.getElementById('input-'+id);
+  const stamp = document.getElementById('stamp-'+id);
+  if (disp)  { disp.textContent = value; disp.className = 'metric-value locked'; }
+  if (inp)   { inp.style.display = 'none'; inp.value = value; }
+  if (btn)   { btn.textContent = '🔒 LOCKED'; btn.className = 'lock-btn locked'; btn.onclick = () => unlockField(id); }
+  if (stamp) { stamp.textContent = '🔒 Locked ' + ts; }
+  updateCompositeDisplay();
+}
+
+function unlockField(id) {
+  const input = document.getElementById('input-'+id);
+  const btn   = document.getElementById('lock-btn-'+id);
+  const disp  = document.getElementById(id);
+  const stamp = document.getElementById('stamp-'+id);
+  input.value = disp.textContent !== '—' ? disp.textContent : '';
+  input.style.display = 'block';
+  input.focus();
+  btn.textContent = '✓ LOCK';
+  btn.className   = 'lock-btn';
+  btn.onclick     = () => lockField(id);
+  if (stamp) stamp.textContent = 'Enter value then LOCK';
+}
+
+function updateStaleBadge(fieldId) {
+  const badgeId = 'stale-badge-' + fieldId;
+  const badge = document.getElementById(badgeId);
+  if (!badge) return;
+  const s = checkStaleness(fieldId);
+  if (s.state === 'current') { badge.style.display = 'none'; }
+  else { badge.style.display = 'inline-block'; badge.textContent = s.label; }
+}
+
+function populateFromStorage() {
+  const data = loadAll();
+  FIELDS.forEach(f => {
+    if (data[f.id]) {
+      const val   = data[f.id].value;
+      const ts    = new Date(data[f.id].locked);
+      const label = ts.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      const s     = checkStaleness(f.id);
+      const disp  = document.getElementById(f.id);
+      const btn   = document.getElementById('lock-btn-'+f.id);
+      const inp   = document.getElementById('input-'+f.id);
+      const stamp = document.getElementById('stamp-'+f.id);
+      if (disp)  { disp.textContent = val; disp.className = 'metric-value locked'; }
+      if (inp)   { inp.style.display = 'none'; inp.value = val; }
+      if (btn)   { btn.textContent = '🔒 LOCKED'; btn.className = 'lock-btn locked'; btn.onclick = () => unlockField(f.id); }
+      if (stamp) {
+        const staleTag = s.stale ? ' ⚠ ' + s.label : '';
+        stamp.textContent = '🔒 Locked ' + label + staleTag;
+        stamp.style.color = s.stale ? 'var(--amber)' : '';
+      }
+    }
+  });
+}
+
+// ── EXPORT / IMPORT ──
+function exportData() {
+  const data = loadAll();
+  const str = 'ROOSTER-DATA-v1::' + JSON.stringify(data);
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(str).then(() => {
+      showToast('📋 Copied to clipboard — paste into Notes or Messages to sync iPhone');
+    });
+  } else {
+    prompt('Copy this sync string:', str);
+  }
+}
+
+function importData() {
+  const raw = prompt('Paste sync string from another device:');
+  if (!raw || !raw.startsWith('ROOSTER-DATA-v1::')) {
+    showToast('⚠ Invalid sync string');
+    return;
+  }
+  try {
+    const data = JSON.parse(raw.replace('ROOSTER-DATA-v1::', ''));
+    saveAll(data);
+    populateFromStorage();
+    showToast('✓ Data imported — all fields updated');
+  } catch(e) {
+    showToast('⚠ Could not parse sync string');
+  }
+}
+
+// ── TOAST ──
+function showToast(msg) {
+  let t = document.getElementById('rooster-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'rooster-toast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#16161f;border:1px solid #f5a623;color:#f5a623;font-family:IBM Plex Mono,monospace;font-size:13px;padding:10px 20px;z-index:9999;letter-spacing:1px;max-width:320px;text-align:center;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 4000);
+}
+
+// ── COMPOSITE SCORE — LOCAL CALCULATION (no external Sheet) ──
+// Score = % of fields that are stale or never entered, scaled 0-100
+// 0 = all current (green), 50+ = half stale (amber), 80+ = mostly stale (red)
+function computeCompositeLocal() {
+  const total  = FIELDS.length;
+  if (!total) return 0;
+  let staleCount = 0;
+  FIELDS.forEach(f => {
+    const s = checkStaleness(f.id);
+    if (s.stale) staleCount++;
+  });
+  return Math.round((staleCount / total) * 100);
+}
+
+function updateCompositeDisplay() {
+  const score = computeCompositeLocal();
+  const el    = document.getElementById('compositeScore');
+  if (!el) return;
+  el.textContent = score;
+  el.className   = 'composite-score ' + (score < 25 ? 'green' : score < 50 ? 'amber' : 'red');
+  document.getElementById('lastUpdated').textContent =
+    'LOCAL — ' + new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── WAKE UP MODAL ──
+
+let wakeupQueue = [];
+
+// ── STEPPED WAKE UP MODAL ──
+let wakeupQueue   = [];
+let currentStep   = 0;   // 0-based index into SIGNAL_GROUPS
+const TOTAL_STEPS = 3;
+
+function buildWakeUpModal() {
+  currentStep = 0;
+  renderStep(currentStep);
+  const now         = new Date();
+  const lastSession = getLastSessionDate();
+  const meta        = document.getElementById('wakeup-meta');
+  if (meta) meta.textContent =
+    'Session: ' + now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) +
+    (lastSession ? ' · Last visit: ' + lastSession : ' · First visit');
+}
+
+function renderStep(stepIdx) {
+  const group      = SIGNAL_GROUPS[stepIdx];
+  const body       = document.getElementById('wakeup-body');
+  const statusMain = document.getElementById('wakeup-status-main');
+  const statusSub  = document.getElementById('wakeup-status-sub');
+  const nextBtn    = document.getElementById('wakeup-enter-btn');
+  const progress   = document.getElementById('wakeup-progress');
+
+  // Progress bar
+  if (progress) {
+    const pct = Math.round(((stepIdx) / TOTAL_STEPS) * 100);
+    progress.innerHTML =
+      '<div style="display:flex;align-items:center;gap:16px;padding:12px 32px;background:#fff;border-bottom:1px solid #e0e0e8;">' +
+      '<div style="font-family:var(--font-mono);font-size:12px;color:#999;letter-spacing:1px;white-space:nowrap;">STEP ' + (stepIdx+1) + ' OF ' + TOTAL_STEPS + '</div>' +
+      '<div style="flex:1;height:4px;background:#e8e8f0;border-radius:2px;">' +
+      '<div style="width:' + (((stepIdx+1)/TOTAL_STEPS)*100) + '%;height:100%;background:#1D9E75;border-radius:2px;transition:width 0.4s;"></div>' +
+      '</div>' +
+      '<div style="font-family:var(--font-mono);font-size:11px;color:#bbb;letter-spacing:1px;">' + group.tier + '</div>' +
+      '</div>';
+  }
+
+  // Count stale in this tier
+  let tierStale   = 0;
+  let tierCurrent = 0;
+  group.sigs.forEach(sig => {
+    const s = checkSignalStaleness(sig.sig);
+    if (s.stale) tierStale++; else tierCurrent++;
+  });
+
+  // Big status
+  if (statusMain) {
+    if (tierStale === 0) {
+      statusMain.textContent = 'All current';
+      statusMain.style.color = '#0F6E56';
+    } else {
+      statusMain.textContent = tierStale + ' signal' + (tierStale > 1 ? 's' : '') + ' need updating';
+      statusMain.style.color = '#854F0B';
+    }
+  }
+  if (statusSub) {
+    statusSub.textContent = tierCurrent + ' of ' + group.sigs.length + ' current in this tier';
+  }
+
+  // Next/Enter button label
+  const isLast = (stepIdx === TOTAL_STEPS - 1);
+  if (nextBtn) {
+    nextBtn.textContent = isLast ? 'Enter dash →' : 'Next →';
+    nextBtn.className   = tierStale === 0
+      ? 'wakeup-enter-btn ready'
+      : 'wakeup-enter-btn';
+  }
+
+  // Build signal blocks for this tier
+  let html = '';
+  group.sigs.forEach(sig => {
+    const s          = checkSignalStaleness(sig.sig);
+    const blockClass = s.state;
+    const dotClass   = s.state === 'current' ? 'green' : s.state === 'stale' ? 'amber' : 'red';
+    const sigFields  = FIELDS.filter(f => f.sig === sig.sig);
+
+    let fieldRowsHtml = '';
+    if (s.stale) {
+      sigFields.forEach(f => {
+        fieldRowsHtml += `
+          <div class="wakeup-field-row" id="wakeup-fieldrow-${f.id}">
+            <div>
+              <div class="wakeup-field-label">${f.label}</div>
+              <div class="wakeup-field-instruction">${f.instruction}</div>
+            </div>
+            <div class="wakeup-field-center">
+              <input class="wakeup-inline-input" id="wakeup-input-${f.id}"
+                placeholder="${f.hint}"
+                onkeydown="if(event.key==='Enter')confirmSingleField('${f.id}')">
+            </div>
+            <div style="text-align:right;padding-left:8px;">
+              <a class="wakeup-get-data" href="${f.url}" target="_blank">Get data ↗</a>
+            </div>
+          </div>`;
+      });
+    }
+
+    const confirmRow = s.stale ? `
+      <div class="wakeup-sig-confirm">
+        <button class="wakeup-confirm-btn" id="wakeup-confirm-${sig.sig}"
+          onclick="confirmModalFields('${sig.sig}')">Lock ${sig.sig} fields</button>
+      </div>` : '';
+
+    html += `
+      <div class="wakeup-sig-block ${blockClass}" id="wakeup-row-${sig.sig}">
+        <div class="wakeup-sig-header">
+          <div class="wakeup-rag ${dotClass}"></div>
+          <div class="wakeup-sig-name">${sig.sig} — ${sig.name}</div>
+          <div class="wakeup-status-pill ${s.state}">${s.label} · ${sig.cadence}</div>
+        </div>
+        ${s.stale ? `<div class="wakeup-field-rows">${fieldRowsHtml}</div>${confirmRow}` : ''}
+      </div>`;
+  });
+
+  body.innerHTML = html;
+
+  // Auto-advance if tier is all current
+  if (tierStale === 0 && stepIdx < TOTAL_STEPS - 1) {
+    body.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:260px;gap:16px;">
+        <div style="font-size:56px;">✓</div>
+        <div style="font-family:var(--font-display);font-size:28px;letter-spacing:2px;color:#0F6E56;">ALL CURRENT</div>
+        <div style="font-family:var(--font-mono);font-size:14px;color:#999;">Advancing to next tier...</div>
+      </div>`;
+    setTimeout(() => advanceStep(), 1200);
+  }
+}
+
+function advanceStep() {
+  if (currentStep < TOTAL_STEPS - 1) {
+    currentStep++;
+    // Scroll modal to top
+    const overlay = document.getElementById('wakeupModal');
+    if (overlay) overlay.scrollTop = 0;
+    renderStep(currentStep);
+  } else {
+    // Final step — enter dash
+    enterDash();
+    setTimeout(showSuccessModal, 200);
+  }
+}
+
+function nextStep() {
+  advanceStep();
+}
+
+function confirmSingleField(id) {
+  const inp = document.getElementById('wakeup-input-' + id);
+  if (inp && inp.value.trim()) {
+    lockFieldFromModal(id, inp.value.trim());
+    inp.classList.add('confirmed');
+    inp.disabled = true;
+  }
+}
+
+function confirmModalFields(sigCode) {
+  const sigFields = FIELDS.filter(f => f.sig === sigCode);
+  let anyUpdated  = false;
+
+  sigFields.forEach(f => {
+    const inp = document.getElementById('wakeup-input-' + f.id);
+    if (inp && inp.value.trim() && !inp.disabled) {
+      lockFieldFromModal(f.id, inp.value.trim());
+      inp.classList.add('confirmed');
+      inp.disabled = true;
+      anyUpdated   = true;
+    }
+  });
+
+  if (!anyUpdated) { showToast('Enter at least one value to confirm'); return; }
+
+  // Update signal block UI
+  const block  = document.getElementById('wakeup-row-' + sigCode);
+  const dot    = block ? block.querySelector('.wakeup-rag')        : null;
+  const pill   = block ? block.querySelector('.wakeup-status-pill') : null;
+  const btn    = document.getElementById('wakeup-confirm-' + sigCode);
+
+  if (block) block.className     = 'wakeup-sig-block current';
+  if (dot)   dot.className       = 'wakeup-rag green';
+  if (pill)  { pill.textContent  = 'Updated · Just now'; pill.className = 'wakeup-status-pill current'; }
+  if (btn)   { btn.textContent   = '✓ Locked'; btn.className = 'wakeup-confirm-btn done'; btn.disabled = true; }
+
+  // Check if all signals in this tier are now updated — if so enable Next
+  const group    = SIGNAL_GROUPS[currentStep];
+  const allDone  = group.sigs.every(sig => {
+    const s = checkSignalStaleness(sig.sig);
+    // also count just-locked as current
+    const justLocked = document.getElementById('wakeup-confirm-' + sig.sig);
+    return !s.stale || (justLocked && justLocked.classList.contains('done'));
+  });
+
+  const nextBtn = document.getElementById('wakeup-enter-btn');
+  if (nextBtn && allDone) {
+    nextBtn.className = 'wakeup-enter-btn ready';
+  }
+}
+
+function enterDash() {
+  document.getElementById('wakeupModal').classList.remove('open');
+  saveSessionDate();
+}
+
+function showSuccessModal() {
+  const modal  = document.getElementById('successModal');
+  const detail = document.getElementById('success-detail');
+  const now    = new Date();
+  const data   = loadAll();
+  const locked = FIELDS.filter(f => data[f.id] && data[f.id].locked).length;
+
+  detail.innerHTML =
+    'AI Bear composite updated<br>' +
+    'Fields locked: ' + locked + ' / ' + FIELDS.length + '<br>' +
+    'Session: ' + now.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+
+  modal.classList.add('open');
+  setTimeout(() => { modal.classList.remove('open'); }, 3000);
+}
+
+function getLastSessionDate() {
+  try {
+    const d = localStorage.getItem('rooster_dash1_session');
+    if (!d) return null;
+    return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  } catch(e) { return null; }
+}
+
+function saveSessionDate() {
+  try { localStorage.setItem('rooster_dash1_session', new Date().toISOString()); } catch(e) {}
+}
+
+// ── HEALTH MODAL ──
+function openHealth() {
+  document.getElementById('healthModal').classList.add('open');
+  renderHealthRows();
+}
+
+function closeHealth() {
+  document.getElementById('healthModal').classList.remove('open');
+}
+
+function renderHealthRows() {
+  const container = document.getElementById('healthRows');
+  container.innerHTML = SOURCES.map(s => {
+    const broken = s.status === 'broken';
+    const warn   = s.status === 'warn';
+    const statusClass = broken ? 'broken' : warn ? 'warn' : 'ok';
+    const statusText  = broken ? '✕ BROKEN' : warn ? '⚠ STALE' : '✓ ACTIVE';
+    const searchQuery = encodeURIComponent(s.signal + ' data 2026');
+    return `
+      <div class="health-row">
+        <div class="health-signal-name">${s.signal}</div>
+        <div class="health-source">${s.label}</div>
+        <div class="health-status ${statusClass}">${statusText}</div>
+      </div>
+      ${broken ? `<div class="repair-instruction visible">
+        SOURCE BROKEN — <a href="https://www.google.com/search?q=${searchQuery}" target="_blank" style="color:var(--red)">Search for replacement →</a>
+      </div>` : ''}`;
+  }).join('');
+}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', () => {
+  populateFromStorage();
+  updateCompositeDisplay();
+
+  // Health modal — close on outside click
+  document.getElementById('healthModal').addEventListener('click', function(e) {
+    if (e.target === this) closeHealth();
+  });
+
+  // Show Wake Up modal on load (hard stop)
+  buildWakeUpModal();
+  document.getElementById('wakeupModal').classList.add('open');
+});
+
+</script>
+</body>
+</html>
