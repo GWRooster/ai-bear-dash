@@ -1681,7 +1681,7 @@ const FIELDS = [
     hint:'$890 / +4%' },
   { id:'orcl-cov', label:'ORACLE CAPEX COVERAGE',    sig:'SIG08', cadence:'quarterly',
     method:'manual-link',
-    url:'https://investor.oracle.com/investor-news/financial-data/quarterly-results/default.aspx',
+    url:'https://www.oracle.com/investor-relations/filings/quarterly-earnings.html',
     instruction:'Latest earnings → divide operating cash flow by capex for the quarter. Enter ratio.',
     hint:'1.2x' },
 
@@ -2009,6 +2009,11 @@ function renderStep(stepIdx) {
         const actionBtn   = isAskSystem
           ? `<button class="wakeup-get-data" style="cursor:pointer;" onclick="sendPrompt('${f.instruction.replace(/'/g,"\\'")}')">Ask system ↗</button>`
           : (f.url ? `<a class="wakeup-get-data" href="${f.url}" target="_blank">Get data ↗</a>` : '');
+        // Show last locked value + date as placeholder
+        const storedRec   = loadAll()[f.id];
+        const lastVal     = storedRec ? storedRec.value : '';
+        const lastDate    = storedRec ? ' · Locked ' + new Date(storedRec.locked).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+        const placeholder = lastVal ? lastVal + lastDate : f.hint;
         fieldRowsHtml += `
           <div class="wakeup-field-row" id="wakeup-fieldrow-${f.id}">
             <div>
@@ -2017,7 +2022,7 @@ function renderStep(stepIdx) {
             </div>
             <div class="wakeup-field-center">
               <input class="wakeup-inline-input" id="wakeup-input-${f.id}"
-                placeholder="${f.hint}"
+                placeholder="${placeholder}"
                 onkeydown="if(event.key==='Enter')confirmSingleField('${f.id}')">
             </div>
             <div style="text-align:right;padding-left:8px;">
