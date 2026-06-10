@@ -237,16 +237,16 @@
     </div>
   </div>
 
-  <!-- CONFIRMATION BAR -->
+  <!-- STATUS BAR -->
   <div class="confirm-bar">
-    <div class="confirm-lbl">T1 CONFIRMATION RULE</div>
-    <div class="confirm-text">Master composite ≥ 25 AND holds for 3 consecutive daily checks — OR — any single signal moves to RED. SIG05 already RED. One more RED = immediate T1 fire regardless of composite.</div>
+    <div class="confirm-lbl" style="color:var(--green)">T1 EXECUTED</div>
+    <div class="confirm-text">$200K moved to stable value May 2026 at S&P ~7,400. Collecting 4%. T1 re-enters last — only after full valuation reset confirmed. T2 watching for three-condition convergence.</div>
     <div class="confirm-checks">
-      <div class="chk"><div class="chk-box" id="chk1">—</div><span>DAY 1</span></div>
-      <div class="chk"><div class="chk-box" id="chk2">—</div><span>DAY 2</span></div>
-      <div class="chk"><div class="chk-box" id="chk3">—</div><span>DAY 3</span></div>
+      <div class="chk"><div class="chk-box" id="chk1" style="background:var(--green-dim);border-color:var(--green);color:var(--green)">✓</div><span style="color:var(--green)">T1 DONE</span></div>
+      <div class="chk"><div class="chk-box" id="chk2">—</div><span>T2</span></div>
+      <div class="chk"><div class="chk-box" id="chk3">—</div><span>T3</span></div>
     </div>
-    <div class="red-alert" id="redAlert" style="color:var(--amber)">SIG05 RED — 1 MORE RED = IMMEDIATE T1</div>
+    <div class="red-alert" id="redAlert" style="color:var(--text-dim)">T2 TRIGGER: S&P &lt; 50-day MA 3+ sessions AND AI Bear ≥35 AND Macro ≥35</div>
   </div>
 
   <!-- PORTFOLIO STRIP -->
@@ -255,69 +255,70 @@
     <div class="port-item"><div class="port-lbl">State Street S&P (40%)</div><div class="port-val" style="color:var(--red)">$400,000</div><div class="port-sub">37% Mag7 — primary AI risk<br>Proportional pull on execution</div></div>
     <div class="port-item"><div class="port-lbl">Blended Aggressive (40%)</div><div class="port-val" style="color:var(--amber)">$400,000</div><div class="port-sub">High equity / AI sector exposure<br>Proportional pull on execution</div></div>
     <div class="port-item"><div class="port-lbl">Bonds / Other (20%)</div><div class="port-val" style="color:var(--blue)">$200,000</div><div class="port-sub">Existing defensive allocation<br>Proportional pull on execution</div></div>
-    <div class="port-item"><div class="port-lbl">Currently Protected</div><div class="port-val" style="color:var(--green)" id="protTotal">$0</div><div class="port-sub" id="protPct">0% sidelined to stable fund</div></div>
+    <div class="port-item"><div class="port-lbl">Currently Protected</div><div class="port-val" style="color:var(--green)" id="protTotal">$200,000</div><div class="port-sub" id="protPct">T1 executed · 18% at 4% stable value</div></div>
   </div>
 
   <!-- TRANCHE GRID -->
   <div class="tranche-grid">
 
-    <div class="tc triggered" id="tc1">
+    <div class="tc done" id="tc1">
       <div class="tc-letter">T1</div>
       <div class="tc-amount">$200,000</div>
-      <div class="tc-pct">20% · EARLY DETERIORATION</div>
-      <div class="tc-badge b-trig" id="tb1">THRESHOLD NEAR</div>
+      <div class="tc-pct">18% · STABLE VALUE · 4% YIELD</div>
+      <div class="tc-badge b-done" id="tb1">✓ EXECUTED MAY 2026</div>
       <div class="tc-rules">
-        <div class="tc-rule"><div class="rd a"></div><div class="rt a">Master composite ≥ 25 — currently 23</div></div>
-        <div class="tc-rule"><div class="rd"></div><div class="rt">S&P closes below 50-day MA on volume</div></div>
-        <div class="tc-rule"><div class="rd"></div><div class="rt">VIX closes above 25 for 2 consecutive days</div></div>
-        <div class="tc-rule"><div class="rd a"></div><div class="rt a">10-yr yield closes above 4.60% — approaching</div></div>
-        <div class="tc-rule"><div class="rd r"></div><div class="rt r">AI Bear composite ≥ 30 — at 29, 1pt away</div></div>
+        <div class="tc-rule"><div class="rd" style="background:var(--green)"></div><div class="rt" style="color:var(--green)">Executed at S&P ~7,400 — May 2026</div></div>
+        <div class="tc-rule"><div class="rd"></div><div class="rt">Collecting 4% in stable value fund</div></div>
+        <div class="tc-rule"><div class="rd"></div><div class="rt">First out — last back in</div></div>
+        <div class="tc-rule"><div class="rd"></div><div class="rt">Re-enters only on full valuation reset</div></div>
+        <div class="tc-rule"><div class="rd"></div><div class="rt">S&P P/E back to historical avg + all signals green</div></div>
       </div>
-      <div class="tc-prog"><div class="tc-prog-fill" style="width:92%"></div></div>
+      <div class="tc-prog"><div class="tc-prog-fill" style="width:100%"></div></div>
     </div>
 
     <div class="tc watching" id="tc2">
       <div class="tc-letter">T2</div>
       <div class="tc-amount">$200,000</div>
-      <div class="tc-pct">20% · TREND CONFIRMATION</div>
+      <div class="tc-pct">18% · TRAJECTORY CONFIRMATION</div>
       <div class="tc-badge b-watch" id="tb2">WATCHING</div>
       <div class="tc-rules">
-        <div class="tc-rule"><div class="rd"></div><div class="rt">S&P closes below 5,800 (~10% correction)</div></div>
-        <div class="tc-rule"><div class="rd"></div><div class="rt">Death cross — 50-day MA below 200-day</div></div>
-        <div class="tc-rule"><div class="rd a"></div><div class="rt a">10-yr yield closes above 4.80% — approaching</div></div>
-        <div class="tc-rule"><div class="rd"></div><div class="rt">Jobs print below 75K — next release Jun 5</div></div>
-        <div class="tc-rule"><div class="rd"></div><div class="rt">AI Bear composite ≥ 40</div></div>
+        <div class="tc-rule"><div class="rd"></div><div class="rt">S&P sustained below 50-day MA — 3+ consecutive sessions</div></div>
+        <div class="tc-rule"><div class="rd a"></div><div class="rt a">AI Bear composite ≥ 35 — currently ~23</div></div>
+        <div class="tc-rule"><div class="rd a"></div><div class="rt a">Macro composite ≥ 35 — currently ~20</div></div>
+        <div class="tc-rule"><div class="rd"></div><div class="rt">ALL THREE required simultaneously — not any one alone</div></div>
+        <div class="tc-rule"><div class="rd"></div><div class="rt">Exits on downward trajectory — not trying to catch the top</div></div>
       </div>
-      <div class="tc-prog"><div class="tc-prog-fill" style="width:18%"></div></div>
+      <div class="tc-prog"><div class="tc-prog-fill" style="width:15%"></div></div>
     </div>
 
     <div class="tc watching" id="tc3">
       <div class="tc-letter">T3</div>
       <div class="tc-amount">$200,000</div>
-      <div class="tc-pct">20% · STRUCTURAL CONFIRMATION</div>
+      <div class="tc-pct">18% · BONUS PLAY</div>
       <div class="tc-badge b-watch" id="tb3">WATCHING</div>
       <div class="tc-rules">
-        <div class="tc-rule"><div class="rd"></div><div class="rt">AI Bear composite ≥ 60</div></div>
-        <div class="tc-rule"><div class="rd a"></div><div class="rt a">BLS productivity fails 2 qtrs &lt;1.5% — Q1 flagged</div></div>
-        <div class="tc-rule"><div class="rd"></div><div class="rt">Non-Mag7 EPS breadth below 8% — pending May 16</div></div>
-        <div class="tc-rule"><div class="rd"></div><div class="rt">Lower high confirmed — S&P below 5,450</div></div>
-        <div class="tc-rule"><div class="rd a"></div><div class="rt a">Treasury/Warsh catalyst — Aug 5 watch</div></div>
+        <div class="tc-rule"><div class="rd"></div><div class="rt">Only after T2 has exited and decline is sustained</div></div>
+        <div class="tc-rule"><div class="rd a"></div><div class="rt a">BLS productivity fails 2 consecutive qtrs &lt;1.5% — Q1 flagged. D-Day Aug 7.</div></div>
+        <div class="tc-rule"><div class="rd a"></div><div class="rt a">S&P 493 EPS growth declining QoQ — currently 10.1% Q1</div></div>
+        <div class="tc-rule"><div class="rd a"></div><div class="rt a">Treasury/Warsh catalyst confirmed — D-Day Aug 5</div></div>
+        <div class="tc-rule"><div class="rd"></div><div class="rt">Not required — bonus if thesis fully confirms</div></div>
       </div>
-      <div class="tc-prog"><div class="tc-prog-fill" style="width:10%"></div></div>
+      <div class="tc-prog"><div class="tc-prog-fill" style="width:8%"></div></div>
     </div>
 
     <div class="tc watching" id="tc4">
-      <div class="tc-letter">T4</div>
-      <div class="tc-amount">$200,000</div>
-      <div class="tc-pct">20% · FULL DEFENSIVE POSTURE</div>
-      <div class="tc-badge b-watch" id="tb4">WATCHING</div>
+      <div class="tc-letter" style="color:var(--blue)">RE</div>
+      <div class="tc-amount" style="color:var(--blue)">RE-ENTRY PLAN</div>
+      <div class="tc-pct">$500K long hold — untouched</div>
+      <div class="tc-badge" style="color:var(--blue);border-color:rgba(74,158,255,0.4);background:var(--blue-dim)" id="tb4">FUTURE STATE</div>
       <div class="tc-rules">
-        <div class="tc-rule"><div class="rd"></div><div class="rt">AI Bear composite ≥ 80</div></div>
-        <div class="tc-rule"><div class="rd"></div><div class="rt">AI Bear ≥ 60 AND 2+ T3 macro triggers fire</div></div>
-        <div class="tc-rule"><div class="rd"></div><div class="rt">Full cascade confirmed across both systems</div></div>
+        <div class="tc-rule"><div class="rd" style="background:var(--blue)"></div><div class="rt" style="color:var(--blue)">T3 re-enters: S&P stops making lower lows 3-4 weeks + 2 of 3 T2 conditions reversed</div></div>
+        <div class="tc-rule"><div class="rd" style="background:var(--blue)"></div><div class="rt" style="color:var(--blue)">T2 re-enters: T3 confirmed positive + trajectory reversal clear</div></div>
+        <div class="tc-rule"><div class="rd" style="background:var(--blue)"></div><div class="rt" style="color:var(--blue)">T1 re-enters: T2 positive + full valuation reset + all signals green</div></div>
+        <div class="tc-rule"><div class="rd"></div><div class="rt">Not timing bottoms — detecting trajectory reversal</div></div>
+        <div class="tc-rule"><div class="rd"></div><div class="rt">T1 collects 4% until then — no urgency</div></div>
       </div>
-      <div style="margin-top:14px;padding:8px;background:rgba(255,255,255,0.02);border:1px solid var(--border);font-family:var(--font-mono);font-size:16px;color:var(--text-dim);line-height:1.6;">At T4 — 80% of portfolio sidelined. $200K bonds remain. Maximum defensive posture.</div>
-      <div class="tc-prog"><div class="tc-prog-fill" style="width:5%"></div></div>
+      <div class="tc-prog"><div class="tc-prog-fill" style="width:0%;background:var(--blue)"></div></div>
     </div>
 
   </div>
@@ -325,65 +326,65 @@
   <!-- NEAR-IN SIGNALS -->
   <div class="mid-grid">
     <div class="near-panel">
-      <div class="near-title">NEAR-IN AI SIGNALS — NEXT 30 DAYS <span class="sys-tag ai">AI SYSTEM</span></div>
+      <div class="near-title">NEAR-IN AI SIGNALS — NEXT 90 DAYS <span class="sys-tag ai">AI SYSTEM</span></div>
 
       <div class="near-event">
         <div class="near-top">
-          <div class="near-cd im" id="nvdaDays">7</div>
+          <div class="near-cd fu" id="nvdaDays">—</div>
           <div class="near-days">DAYS</div>
-          <div class="near-date">MAY 20</div>
+          <div class="near-date">AUG 2026</div>
         </div>
-        <div class="near-name">NVDA Q1 FY2027 EARNINGS</div>
-        <div class="near-desc">Most critical near-term AI Bear event. Wall St expects 78% YoY growth and $1.77 EPS. Beat is priced in. Gross margin guidance and China revenue exclusion commentary are the signal-moving variables. A miss or margin cut moves SIG01 to RED — T1 fires immediately.</div>
+        <div class="near-name">NVDA Q2 FY2027 EARNINGS</div>
+        <div class="near-desc">Next NVDA earnings event. Q1 delivered GM 73.8% and DC Rev +56% YoY. Watch for gross margin compression and any guidance cut — both move SIG01. A guidance cut with AI Bear already at 23 would push composite toward T2 territory.</div>
         <div class="near-action">
-          <div class="near-action-lbl">⬡ MANUAL UPDATE REQUIRED AFTER THIS RELEASE</div>
-          Google Sheet RAW DATA: Row 2 (Gross Margin %), Row 3 (Guidance Delta), Row 4 (DC Revenue Growth %). Then update SIGNALS tab SIG01. If GM below 74% or guidance cut → SIG01 RED → T1 fires.
+          <div class="near-action-lbl">⬡ UPDATE DASH 1 AFTER RELEASE</div>
+          Dash 1 Wake Up modal → SIG01 fields → enter GM %, DC Revenue Growth %, Guidance Delta. Source: investor.nvidia.com quarterly results.
         </div>
       </div>
 
       <div class="near-event">
         <div class="near-top">
-          <div class="near-cd im" id="fomcDays">7</div>
+          <div class="near-cd fu" id="cloudDays">—</div>
           <div class="near-days">DAYS</div>
-          <div class="near-date">MAY 20</div>
+          <div class="near-date">JUL 2026</div>
         </div>
-        <div class="near-name">FOMC MINUTES — APR 28-29</div>
-        <div class="near-desc">If minutes reveal more hawkish language on rates or QT, 10-yr yield gets another leg higher — pushing SIG03 debt issuance score up and bringing 2C macro trigger closer to 4.80%.</div>
+        <div class="near-name">Q2 CLOUD EARNINGS — MSFT / AMZN / GOOGL</div>
+        <div class="near-desc">Azure, AWS, GCP Q2 growth rates. Q1 delivered Azure 40%, AWS 28%, GCP 63%. Three consecutive quarters of deceleration removes the timing gap excuse. Watch for any segment dropping below 30% YoY.</div>
         <div class="near-action">
-          <div class="near-action-lbl">⬡ MONITOR — UPDATE IF YIELD MOVES MATERIALLY</div>
-          Watch FRED DGS10 after release. 10-yr above 4.60% → T1 macro trigger active. Above 4.80% → T2 2C fires. Update inp_tnx_override in Macro Signals if FRED auto-fetch lags.
+          <div class="near-action-lbl">⬡ UPDATE DASH 1 AFTER ALL THREE REPORT</div>
+          Dash 1 Wake Up modal → SIG06 fields → enter Azure, AWS, GCP YoY % from each IR page. Sources linked in modal.
         </div>
       </div>
     </div>
 
     <div class="near-panel">
-      <div class="near-title">NEAR-IN MACRO SIGNALS — NEXT 30 DAYS <span class="sys-tag macro">MACRO SYSTEM</span></div>
+      <div class="near-title">NEAR-IN MACRO D-DAYS — NEXT 90 DAYS <span class="sys-tag macro">MACRO SYSTEM</span></div>
 
       <div class="near-event">
         <div class="near-top">
-          <div class="near-cd im" id="factsetDays">3</div>
+          <div class="near-cd so" id="treasuryDays">—</div>
           <div class="near-days">DAYS</div>
-          <div class="near-date">MAY 16</div>
+          <div class="near-date">AUG 5</div>
         </div>
-        <div class="near-name">FACTSET Q1 EARNINGS INSIGHT</div>
-        <div class="near-desc">Non-Mag7 blended EPS growth data — published every Friday. This is the 3B trigger input. Below 8% fires T3B immediately. Below 12% is a watch signal. Key read on whether earnings breadth supports the bull thesis beyond Mag7.</div>
+        <div class="near-name">TREASURY QUARTERLY REFUNDING — D-DAY</div>
+        <div class="near-desc">Treasury announces Q3 bond supply. If Q3 issuance is revised up materially from $189B Q2 estimate while 30-yr is already at 5%+, yields spike and M07 fires. Warsh confirmation hearings also expected in this window.</div>
         <div class="near-action">
-          <div class="near-action-lbl">⬡ MANUAL UPDATE REQUIRED AFTER THIS RELEASE</div>
-          Open Dash 5 Macro Signals → Manual Input Panel → enter Non-Mag7 EPS Growth % → press Update. Source: factset.com/earnings-insight every Friday.
+          <div class="near-action-lbl">⬡ UPDATE DASH 5 AFTER ANNOUNCEMENT</div>
+          Dash 5 Wake Up modal → M07 Warsh/Treasury field → enter status. If QT acceleration confirmed, enter FIRE. Source: ask system for latest Treasury refunding news.
         </div>
       </div>
 
       <div class="near-event">
         <div class="near-top">
-          <div class="near-cd fu" id="jobsDays">23</div>
+          <div class="near-cd so" id="blsDays">—</div>
           <div class="near-days">DAYS</div>
-          <div class="near-date">JUN 5</div>
+          <div class="near-date">AUG 7</div>
         </div>
-        <div class="near-name">MAY JOBS REPORT — BLS</div>
-        <div class="near-desc">Payrolls, unemployment, wage growth. Current: 115K jobs, 4.3% unemployment — both clear. T2A fires if jobs fall below 75K OR unemployment hits 4.4%. Watch for trend deterioration not single-month noise.</div>
+        <div class="near-name">BLS Q2 PRODUCTIVITY — D-DAY</div>
+        <div class="near-desc">Q1 came in at 0.8% — below the 1.5% threshold. If Q2 also prints below 1.5%, that is two consecutive quarters — M04 fires RED and the AI productivity supercycle thesis formally fails. This is the single most structurally significant data point remaining in 2026.</div>
         <div class="near-action">
-          <div class="near-action-lbl">⬡ MANUAL UPDATE REQUIRED AFTER THIS RELEASE</div>
-          Open Dash 5 Macro Signals → Manual Input → update Jobs Added, Unemployment Rate %, Wage Growth MoM % → press Update. Source: bls.gov → Employment Situation.
+          <div class="near-action-lbl">⬡ UPDATE DASH 5 IMMEDIATELY AFTER RELEASE</div>
+          Dash 5 Wake Up modal → M04 Q2 Productivity field → enter QoQ annualized %. If below 1.5%, T3 thesis confirms. Source: bls.gov/lpc — Productivity & Costs.
         </div>
       </div>
     </div>
@@ -393,32 +394,30 @@
   <div class="exec-panel">
     <div class="near-title" style="margin-bottom:0;padding-bottom:0;border-bottom:none;">TRANCHE EXECUTION STATUS — UPDATE AFTER EACH NET BENEFITS ACTION</div>
     <div class="exec-grid">
-      <div class="exec-tog"><label class="exec-lbl">Tranche 1 — $200K to Stable Fund</label>
+      <div class="exec-tog"><label class="exec-lbl">Tranche 1 — $200K · Stable Fund</label>
         <select class="exec-sel" id="t1sel" onchange="updateExec()">
           <option value="no">Watching — Not executed</option>
           <option value="triggered">Threshold crossed — considering</option>
           <option value="yes">✓ Executed — moved to stable fund</option>
         </select>
       </div>
-      <div class="exec-tog"><label class="exec-lbl">Tranche 2 — $200K to Stable Fund</label>
+      <div class="exec-tog"><label class="exec-lbl">Tranche 2 — $200K · Stable Fund</label>
         <select class="exec-sel" id="t2sel" onchange="updateExec()">
           <option value="no">Watching — Not executed</option>
           <option value="triggered">Threshold crossed — considering</option>
           <option value="yes">✓ Executed — moved to stable fund</option>
         </select>
       </div>
-      <div class="exec-tog"><label class="exec-lbl">Tranche 3 — $200K to Stable Fund</label>
+      <div class="exec-tog"><label class="exec-lbl">Tranche 3 — $200K · Stable Fund</label>
         <select class="exec-sel" id="t3sel" onchange="updateExec()">
           <option value="no">Watching — Not executed</option>
           <option value="triggered">Threshold crossed — considering</option>
           <option value="yes">✓ Executed — moved to stable fund</option>
         </select>
       </div>
-      <div class="exec-tog"><label class="exec-lbl">Tranche 4 — $200K to Stable Fund</label>
-        <select class="exec-sel" id="t4sel" onchange="updateExec()">
-          <option value="no">Watching — Not executed</option>
-          <option value="triggered">Threshold crossed — considering</option>
-          <option value="yes">✓ Executed — moved to stable fund</option>
+      <div class="exec-tog"><label class="exec-lbl">Long Hold — ~$500K · Never touched</label>
+        <select class="exec-sel" id="t4sel" style="color:var(--text-dim);border-color:var(--border);" disabled>
+          <option value="no">Permanent long-term hold — not in scope</option>
         </select>
       </div>
     </div>
@@ -444,24 +443,24 @@
 
 <script>
 const AI_SIGS = [
-  {id:'A01',name:'NVDA GUIDANCE',tier:'UPSTREAM',rag:'amber',score:45,dir:'↑',thresh:'GM cut OR guidance miss',status:'GM 72.7% — down 6pts YoY. DC Rev +56%.'},
-  {id:'A02',name:'OPENAI REVENUE',tier:'UPSTREAM',rag:'green',score:15,dir:'→',thresh:'Miss $20B 2026 target >20%',status:'No miss signal. Monitoring $20-26B target.'},
-  {id:'A03',name:'DEBT ISSUANCE',tier:'UPSTREAM',rag:'green',score:10,dir:'↑',thresh:'IG spreads widen >50bps/qtr',status:'IG spread 13bps — calm. 37bps buffer.'},
-  {id:'A04',name:'FCF COMPRESSION',tier:'MID-STREAM',rag:'amber',score:55,dir:'↑',thresh:'Big 4 FCF declines >15% QoQ',status:'AMZN FCF collapsed 71% YoY. Watch MSFT/GOOG.'},
-  {id:'A05',name:'CAPEX / REVENUE',tier:'MID-STREAM',rag:'red',score:70,dir:'↑',thresh:'Big 4 capex/rev exceeds 25%',status:'RED — 45-57% vs 25% threshold. $725B 2026.'},
-  {id:'A06',name:'CLOUD DECEL',tier:'DOWNSTREAM',rag:'green',score:20,dir:'↓',thresh:'Any hyperscaler AI <30% YoY',status:'Azure 40% / AWS 24% / GCP 28%. No 3-qtr pattern.'},
-  {id:'A07',name:'ENTERPRISE ROI',tier:'DOWNSTREAM',rag:'green',score:8,dir:'→',thresh:'ROI positive stalls below 30%',status:'29% report significant ROI. At threshold.'},
-  {id:'A08',name:'INFRA DEBT STRESS',tier:'DOWNSTREAM',rag:'green',score:5,dir:'→',thresh:'Rating action on REIT/credit',status:'No stress signals. CoreWeave stable.'},
+  {id:'A01',name:'NVDA GUIDANCE',tier:'UPSTREAM',rag:'amber',score:45,dir:'↑',thresh:'GM cut OR guidance miss',status:'GM 73.8% Q1 FY2027. DC Rev +56% YoY. Watch Aug earnings.'},
+  {id:'A02',name:'OPENAI REVENUE',tier:'UPSTREAM',rag:'green',score:15,dir:'→',thresh:'Miss $20B 2026 target >20%',status:'Run rate ~$4B/mo. $48B annualized vs $20-26B target — above.'},
+  {id:'A03',name:'DEBT ISSUANCE',tier:'UPSTREAM',rag:'green',score:10,dir:'↑',thresh:'IG spreads widen >50bps/qtr',status:'IG spread 74bps — stable. $54B Q1 issuance (Amazon alone).'},
+  {id:'A04',name:'FCF COMPRESSION',tier:'MID-STREAM',rag:'amber',score:40,dir:'↑',thresh:'Big 4 FCF declines >15% QoQ',status:'Big 4 combined FCF $285B TTM. Capex/rev 22% MSFT.'},
+  {id:'A05',name:'CAPEX / REVENUE',tier:'MID-STREAM',rag:'amber',score:55,dir:'↑',thresh:'Big 4 capex/rev exceeds 25%',status:'45-57% avg across Big 4 — well above 25% threshold.'},
+  {id:'A06',name:'CLOUD DECEL',tier:'DOWNSTREAM',rag:'green',score:20,dir:'↓',thresh:'Any hyperscaler AI <30% YoY',status:'Azure 40% / AWS 28% / GCP 63% Q1 2026. All above threshold.'},
+  {id:'A07',name:'ENTERPRISE ROI',tier:'DOWNSTREAM',rag:'green',score:8,dir:'→',thresh:'BTOS adoption stalls or reverses',status:'19.8% national adoption (May 2026). Pilot→production ~25%.'},
+  {id:'A08',name:'INFRA DEBT STRESS',tier:'DOWNSTREAM',rag:'green',score:5,dir:'→',thresh:'EQIX drops >15% vs 90d OR Oracle coverage <0.8x',status:'EQIX stable. CoreWeave $900M junk bond — monitoring.'},
 ];
 
 const MACRO_SIGS = [
-  {id:'M01',name:'LABOR MARKET (2A)',tier:'T2 TRIGGER',rag:'green',score:5,dir:'→',thresh:'Jobs <75K OR unemp ≥4.4%',status:'115K jobs / 4.3% unemp — both clear. Next Jun 5.'},
-  {id:'M02',name:'S&P TECHNICAL (2B)',tier:'T2 TRIGGER',rag:'green',score:5,dir:'→',thresh:'S&P closes below 5,800',status:'S&P at 7,444 — 1,644pts above trigger.'},
-  {id:'M03',name:'BOND MARKET (2C)',tier:'T2 TRIGGER',rag:'amber',score:45,dir:'↑',thresh:'10-yr yield closes ≥4.80%',status:'30-yr breached 5% intraday May 4. Warning active.'},
-  {id:'M04',name:'PRODUCTIVITY (3A)',tier:'T3 TRIGGER',rag:'yellow',score:25,dir:'↑',thresh:'2 consecutive qtrs below 1.5%',status:'Q1 flagged at 0.8%. 1 of 2 quarters. Aug 7 confirms.'},
-  {id:'M05',name:'EARNINGS BREADTH (3B)',tier:'T3 TRIGGER',rag:'blue',score:10,dir:'→',thresh:'Non-Mag7 EPS below 8%',status:'Pending — FactSet May 16.'},
-  {id:'M06',name:'LOWER HIGH (3C)',tier:'T3 TRIGGER',rag:'dim',score:5,dir:'→',thresh:'S&P below 5,450 after rally fails',status:'Not active — S&P in recovery above ATH zone.'},
-  {id:'M07',name:'TREASURY/WARSH (3D)',tier:'T3 TRIGGER',rag:'amber',score:25,dir:'↑',thresh:'Aug refunding revision OR Warsh QT',status:'$189B Q2 est — Aug 5 refunding key date.'},
+  {id:'M01',name:'LABOR MARKET',tier:'MARKET STRESS',rag:'green',score:5,dir:'→',thresh:'Jobs <75K OR unemp ≥4.4% — two consecutive',status:'Jobs strong Jun 2026. Unemp stable. Next release Jul 3.'},
+  {id:'M02',name:'S&P TECHNICAL',tier:'MARKET STRESS',rag:'green',score:5,dir:'→',thresh:'S&P sustained below 50-day MA 3+ sessions',status:'S&P 7,275 vs 50-day MA 7,174 — above by 101pts.'},
+  {id:'M03',name:'BOND MARKET',tier:'MARKET STRESS',rag:'amber',score:40,dir:'↑',thresh:'10-yr yield closes ≥4.80%',status:'10-yr 4.56%. 30-yr 5.03% — warning active. 24bps from T2.'},
+  {id:'M04',name:'PRODUCTIVITY',tier:'AI THESIS',rag:'yellow',score:25,dir:'↑',thresh:'2 consecutive qtrs below 1.5% — PENDING Aug 7',status:'Q1 at 0.8% — 1 of 2. D-Day Aug 7 BLS release.'},
+  {id:'M05',name:'MAG7 vs 493 SPREAD',tier:'AI THESIS',rag:'amber',score:30,dir:'↑',thresh:'493 EPS <8% OR trajectory gap >10pts',status:'493 Q1: 10.1% / FY est: 17.9% / Gap: 7.8pts — AMBER.'},
+  {id:'M06',name:'LOWER HIGH PATTERN',tier:'AI THESIS',rag:'green',score:5,dir:'→',thresh:'S&P sustained below 20-day MA after rally fails',status:'Not active — S&P above MAs. ATH 7,621 not yet failed.'},
+  {id:'M07',name:'TREASURY/WARSH',tier:'AI THESIS',rag:'amber',score:25,dir:'↑',thresh:'Aug 5 refunding revision OR Warsh confirms QT — PENDING',status:'D-Day Aug 5. $189B Q2 est. Warsh pending Senate confirmation.'},
 ];
 
 function calcAI(){return Math.round(AI_SIGS.reduce((a,s)=>a+s.score,0)/AI_SIGS.length);}
@@ -477,10 +476,10 @@ function daysUntil(d){
 
 function updateCountdowns(){
   const evts=[
-    {id:'nvdaDays',date:'2026-05-20'},
-    {id:'fomcDays',date:'2026-05-20'},
-    {id:'factsetDays',date:'2026-05-16'},
-    {id:'jobsDays',date:'2026-06-05'},
+    {id:'nvdaDays',date:'2026-08-20'},
+    {id:'cloudDays',date:'2026-07-25'},
+    {id:'treasuryDays',date:'2026-08-05'},
+    {id:'blsDays',date:'2026-08-07'},
   ];
   evts.forEach(e=>{
     const el=document.getElementById(e.id);
@@ -510,7 +509,8 @@ function loadD1Data(){
     // Update macro signal status with Dash 5 locked values
     if(d5.jobs)    MACRO_SIGS[0].status = d5.jobs.value+'K jobs / '+(d5.unemp?d5.unemp.value+'% unemp':'—');
     if(d5.tnx_ovr) MACRO_SIGS[2].status = '10-yr: '+d5.tnx_ovr.value+'% — '+(d5.t30?'30-yr: '+d5.t30.value+'%':'—');
-    if(d5.breadth && d5.breadth.value !== 'Pending') MACRO_SIGS[4].status = 'Non-Mag7 EPS: '+d5.breadth.value+'%';
+    const m05q = d5['m05_493_qtr']; const m05a = d5['m05_493_ann'];
+    if(m05q) MACRO_SIGS[4].status = '493 Q1: '+m05q.value+'% / FY est: '+(m05a?m05a.value+'%':'—');
     if(d5.warsh)   MACRO_SIGS[6].status = 'Warsh: '+d5.warsh.value;
   }catch(e){}
 }
@@ -562,10 +562,15 @@ function updateScores(){
   document.getElementById('masterScore').className='master-score '+cc(mas);
   document.getElementById('masterStatus').textContent=mas<25?'NOMINAL':mas<50?'WATCH':'ACT NOW';
   document.getElementById('masterStatus').className='master-status '+cc(mas);
-  const dist=Math.max(0,25-mas);
-  const prox=document.getElementById('t1prox');
-  if(mas>=25){prox.innerHTML='T1 THRESHOLD CROSSED<br>CONFIRM 3 DAYS';prox.style.color='var(--amber)';}
-  else{prox.innerHTML=`T1 TRIGGERS AT 25<br>${dist} PTS AWAY`;prox.style.color='var(--text-dim)';}
+  const t2dist = Math.max(0, 35 - mas);
+  const prox = document.getElementById('t1prox');
+  if(mas >= 35){
+    prox.innerHTML = 'T2 THRESHOLD CROSSED<br>ALL 3 CONDITIONS?';
+    prox.style.color = 'var(--amber)';
+  } else {
+    prox.innerHTML = 'T1 EXECUTED ✓<br>T2 WATCHES AT 35<br>' + t2dist + ' PTS AWAY';
+    prox.style.color = 'var(--green)';
+  }
 
   // Red signal alert
   const reds=AI_SIGS.filter(s=>s.rag==='red').length+MACRO_SIGS.filter(s=>s.rag==='red').length;
@@ -590,11 +595,16 @@ function saveTrancheState(){
 function loadTrancheState(){
   try{
     const s=JSON.parse(localStorage.getItem('rooster_tranches_v1'));
-    if(!s)return;
-    if(s.t1)document.getElementById('t1sel').value=s.t1;
-    if(s.t2)document.getElementById('t2sel').value=s.t2;
-    if(s.t3)document.getElementById('t3sel').value=s.t3;
-    if(s.t4)document.getElementById('t4sel').value=s.t4;
+    // T1 is always executed — set as default if not already saved
+    const t1val = (s && s.t1) ? s.t1 : 'yes';
+    document.getElementById('t1sel').value = t1val;
+    if(s && s.t2) document.getElementById('t2sel').value = s.t2;
+    if(s && s.t3) document.getElementById('t3sel').value = s.t3;
+    // Save T1 executed state if not already saved
+    if(!s || !s.t1){
+      const newState = {t1:'yes', t2:'no', t3:'no', t4:'no'};
+      localStorage.setItem('rooster_tranches_v1', JSON.stringify(newState));
+    }
   }catch(e){}
 }
 
@@ -631,35 +641,6 @@ function updateExec(){
   document.getElementById('protPct').textContent=Math.round(prot/10000)+'% sidelined to stable fund';
 }
 
-// Sheet feed
-const SHEET_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vQLlAdrK3AEKqZb8t8cttPGcR9zfw4W3LWkCLbrKuh_0VlmsJYyCK4bGmTl8Mk_JwPXxEqTEkGqYqBK/pub?gid=1005822355&single=true&output=csv";
-async function fetchSheet(){
-  try{
-    const r=await fetch(SHEET_URL);
-    if(!r.ok)throw new Error('fail');
-    const txt=await r.text();
-    const rows=txt.trim().split('\n').map(r=>r.split(','));
-    const d={};
-    rows.forEach(row=>{if(row.length>=2){d[row[0].trim().replace(/"/g,'')]=row[1].trim().replace(/"/g,'');}});
-    // Apply AI scores from sheet
-    const sm={'SIG01_SCORE':0,'SIG02_SCORE':1,'SIG03_SCORE':2,'SIG04_SCORE':3,'SIG05_SCORE':4,'SIG06_SCORE':5,'SIG07_SCORE':6,'SIG08_SCORE':7};
-    Object.entries(sm).forEach(([k,i])=>{
-      const v=parseInt(d[k]);
-      if(!isNaN(v))AI_SIGS[i].score=v;
-      const rk=k.replace('_SCORE','_RAG');
-      if(d[rk])AI_SIGS[i].rag=d[rk].toLowerCase();
-    });
-    loadD1Data();updateScores();buildTable();
-    document.getElementById('lastUpdated').textContent='LIVE — UPDATED: '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
-  }catch(e){
-    document.getElementById('lastUpdated').textContent='CACHED — SHEET OFFLINE';
-  }
-}
-
-document.addEventListener('DOMContentLoaded',()=>{
-  loadD1Data();updateScores();buildTable();updateCountdowns();loadTrancheState();updateExec();
-  document.getElementById('lastUpdated').textContent='UPDATED: '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
-  setTimeout(fetchSheet,500);
 });
 </script>
 </body>
