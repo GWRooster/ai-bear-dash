@@ -440,12 +440,12 @@
         <div class="lock-row"><button class="lock-btn" id="lock-wage" onclick="toggleLock('wage','inp_wage')">✓ LOCK</button><span class="lock-stamp" id="stamp-wage">Edit then LOCK to persist</span></div>
       </div>
       <div class="input-group">
-        <label class="input-label">⬡ S&P 50-Day MA · TradingView</label>
+        <label class="input-label">⬡ S&P 50-Day MA · Barchart</label>
         <input class="input-field" id="inp_ma50" type="number" placeholder="e.g. 5620">
         <div class="lock-row"><button class="lock-btn" id="lock-ma50" onclick="toggleLock('ma50','inp_ma50')">✓ LOCK</button><span class="lock-stamp" id="stamp-ma50">Edit then LOCK to persist</span></div>
       </div>
       <div class="input-group">
-        <label class="input-label">⬡ S&P 20-Day MA · TradingView</label>
+        <label class="input-label">⬡ S&P 20-Day MA · Barchart</label>
         <input class="input-field" id="inp_ma20" type="number" placeholder="e.g. 5580">
         <div class="lock-row"><button class="lock-btn" id="lock-ma20" onclick="toggleLock('ma20','inp_ma20')">✓ LOCK</button><span class="lock-stamp" id="stamp-ma20">Edit then LOCK to persist</span></div>
       </div>
@@ -996,7 +996,7 @@ function showToast(msg){
 }
 
 // ── LIVE STATE ──
-// SPX: manual override only — enter from TradingView (same page as MA values)
+// SPX: manual override only — enter from Barchart (same page as MA values)
 // TNX: auto-fetch from FRED public CSV — no API key required
 const STATE = { spx:null, tnx:null };
 
@@ -1005,21 +1005,37 @@ function loadSPXFromOverride(){
   const ovr = d['spx_ovr'] ? parseFloat(d['spx_ovr'].value) : NaN;
   if(!isNaN(ovr) && ovr > 0){
     STATE.spx = ovr;
-    // Update ticker bar
-    const el = document.getElementById('tickSPX');
+    const el  = document.getElementById('tickSPX');
     if(el) el.textContent = ovr.toLocaleString(undefined,{maximumFractionDigits:0});
     const src = document.getElementById('tickSPXsrc');
     if(src) src.textContent = 'Manual override';
     updateSignals();
   } else {
-    const el = document.getElementById('tickSPX');
+    const el  = document.getElementById('tickSPX');
     if(el) el.textContent = '—';
     const src = document.getElementById('tickSPXsrc');
     if(src) src.textContent = 'Enter in modal →';
   }
 }
 
+function loadTNXFromOverride(){
+  const d   = m5Load();
+  const ovr = d['tnx_ovr'] ? parseFloat(d['tnx_ovr'].value) : NaN;
+  if(!isNaN(ovr) && ovr > 0){
+    STATE.tnx = ovr;
+    const el  = document.getElementById('tickTNX');
+    if(el) el.textContent = ovr.toFixed(2)+'%';
+    const src = document.getElementById('tickTNXsrc');
+    if(src) src.textContent = 'Manual override';
+    updateSignals();
+    return true;
+  }
+  return false;
+}
+
 async function fetchTNX(){
+  // If locked override exists use it — skip fetch
+  if(loadTNXFromOverride()) return;
   const d   = m5Load();
   const ovr = d['tnx_ovr'] ? parseFloat(d['tnx_ovr'].value) : NaN;
   if(!isNaN(ovr) && ovr > 0){
@@ -1219,6 +1235,7 @@ function calcMacroComposite(jobs,unemp,tnx,t30,breadth,prodQ2,warsh,spx,ma50){
 document.addEventListener('DOMContentLoaded', ()=>{
   populateFromStorage();
   loadSPXFromOverride();
+  loadTNXFromOverride();
   fetchTNX();
   updateSignals();
   // Show Wake Up modal
