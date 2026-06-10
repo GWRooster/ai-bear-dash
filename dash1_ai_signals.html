@@ -1316,8 +1316,15 @@
             <div class="metric-value live" id="roi-pct">29%</div>
           </div>
           <div class="metric-row">
-            <div class="metric-label">FIRM ADOPTION RATE (BTOS)</div>
-            <div class="metric-value live" id="btos-rate">18%</div>
+            <div class="metric-row-inner">
+              <div class="metric-label">FIRM ADOPTION RATE (BTOS)</div>
+              <div style="display:flex;align-items:center;gap:0;">
+                <div class="metric-value" id="btos-rate">—</div>
+                <button class="lock-btn" id="lock-btn-btos-rate" onclick="lockField('btos-rate')">✓ LOCK</button>
+              </div>
+            </div>
+            <input class="lock-input" id="input-btos-rate" type="text" placeholder="19.8%" onkeydown="if(event.key==='Enter')lockField('btos-rate')">
+            <div class="lock-stamp" id="stamp-btos-rate">Type value above then click LOCK</div>
           </div>
           <div class="metric-row">
             <div class="metric-label">PILOT→PRODUCTION CONVERSION</div>
@@ -1657,9 +1664,12 @@ const FIELDS = [
     hint:'63%' },
 
   // SIG07 — ENTERPRISE ROI REALIZATION
-  // Card shows roi-pct, btos-rate, pilot-conv as display values (no lock buttons)
-  // All three are updated by human directly on card — none are modal inputs
-  // Keeping btos-rate in FIELDS for staleness tracking only — not surfaced in modal
+  // btos-rate is the one lockable modal input — direct source, biweekly cadence
+  { id:'btos-rate', label:'FIRM ADOPTION RATE (BTOS)', sig:'SIG07', cadence:'monthly',
+    method:'manual-link',
+    url:'https://www.census.gov/library/stories/2026/05/ai-use-businesses.html',
+    instruction:'National AI adoption rate % from Census BTOS AI use page. Current: 19.8% (May 2026)',
+    hint:'19.8%' },
 
   // SIG08 — INFRASTRUCTURE DEBT STRESS
   // Modal inputs: EQIX price/90d avg, Oracle capex coverage
