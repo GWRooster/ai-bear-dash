@@ -175,7 +175,7 @@
   /* ── DASH 5 WAKE UP MODAL — light mode ── */
   .m5-wakeup-overlay { display:none; position:fixed; inset:0; background:#f2f2f6; z-index:9999; overflow-y:auto; width:100vw; height:100vh; }
   .m5-wakeup-overlay.open { display:block; }
-  .m5-wakeup-modal { background:#f2f2f6; width:100%; min-height:100vh; max-width:900px; margin:0 auto; padding-bottom:88px; }
+  .m5-wakeup-modal { background:#f2f2f6; width:100%; min-height:100vh; max-width:900px; margin:0 auto; padding-bottom:88px; font-size:16px; }
   .m5-wakeup-header { background:#fff; border-bottom:1px solid #e0e0e8; padding:20px 32px 16px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:10; }
   .m5-wakeup-title { font-family:var(--font-display); font-size:32px; letter-spacing:2px; color:#1a1a2e; }
   .m5-wakeup-meta { font-family:var(--font-mono); font-size:12px; color:#888; margin-top:3px; letter-spacing:0.5px; }
@@ -199,11 +199,13 @@
   .wakeup-rag.green { background:#1D9E75; }
   .wakeup-rag.amber { background:#d4890a; }
   .wakeup-rag.red   { background:#cc3333; }
+  .wakeup-rag.pending { background:#4a7fe0; }
   .wakeup-sig-name { font-family:var(--font-body); font-size:15px; font-weight:500; color:#1a1a2e; flex:1; }
   .wakeup-status-pill { font-family:var(--font-mono); font-size:11px; padding:3px 10px; border-radius:99px; white-space:nowrap; }
   .wakeup-status-pill.current { background:#e1f5ee; color:#0F6E56; }
   .wakeup-status-pill.stale   { background:#faeeda; color:#854F0B; }
   .wakeup-status-pill.never   { background:#fceaea; color:#8b2020; }
+  .wakeup-status-pill.pending { background:#e8eefb; color:#2c5aa0; }
   .wakeup-field-rows { padding:4px 0; }
   .wakeup-field-row { display:grid; grid-template-columns:220px 1fr 120px; align-items:start; gap:0; padding:14px 18px; border-bottom:0.5px solid #f4f4f8; }
   .wakeup-field-row:last-child { border-bottom:none; }
@@ -361,19 +363,22 @@
           <div class="metric-row"><div class="metric-label">Q2 2026 (PENDING)</div><div class="metric-value" id="m04-q2">Pending Aug 7</div></div>
           <div class="metric-row"><div class="metric-label">LABOR SHARE</div><div class="metric-value" style="color:var(--red)">54.1% — Record low</div></div>
         </div>
-        <div class="trigger-line" id="trig-3a">YELLOW FLAG ACTIVE: Q1 at 0.8% — 1 of 2 quarters below 1.5%. T3 FIRE: Q2 also below 1.5% (two consecutive). Releases Aug 7 — BLS.gov → Productivity &amp; Costs.</div>
+        <div class="trigger-line" id="trig-3a">YELLOW FLAG ACTIVE: Q1 at 0.8% — 1 of 2 quarters below 1.5%. PENDING D-DAY: Aug 7, 2026 BLS release — modal will require update after this date. T3 FIRE: Q2 also below 1.5%.</div>
       </div>
 
       <div class="signal-card blue" id="card-3b">
         <div class="card-header"><div class="signal-number">M05 — EARNINGS BREADTH</div><div class="rag-dot" id="dot-m05"></div></div>
-        <div class="signal-name">NON-MAG7 EARNINGS BREADTH FAILS</div>
-        <div class="signal-edu">If only the Mag 7 are growing earnings while the rest of the S&P 500 stagnates, the market rally is a narrow illusion. Non-Mag7 EPS growth below 8% means the average American company is not benefiting from AI — the productivity story only works for the top seven. Market-wide valuation cannot be sustained on seven companies alone.</div>
+        <div class="signal-name">MAG7 vs S&P 493 EARNINGS SPREAD</div>
+        <div class="signal-edu">The gap between Mag7 and the other 493 companies is the real signal. Mag7 carries premium valuations with high growth expectations already priced in — a miss there gets a pass. The 493 are priced to realistic revenue. A small drop in 493 EPS hits multiples immediately. When 493 growth falls below 8%, the AI productivity thesis has failed for the broader economy.</div>
         <div class="signal-metrics">
-          <div class="metric-row"><div class="metric-label">NON-MAG7 EPS GROWTH</div><div class="metric-value live" id="m05-eps">Pending</div></div>
-          <div class="metric-row"><div class="metric-label">DATA SOURCE</div><div class="metric-value" style="font-size:15px;">FactSet Earnings Insight — weekly</div></div>
-          <div class="metric-row"><div class="metric-label">NEXT RELEASE</div><div class="metric-value" id="m05-next">May 16</div></div>
+          <div class="metric-row"><div class="metric-label">S&P 493 QTR ACTUAL</div><div class="metric-value" id="m05-493-qtr">—</div></div>
+          <div class="metric-row"><div class="metric-label">S&P 493 FULL YR EST</div><div class="metric-value" id="m05-493-ann">—</div></div>
+          <div class="metric-row"><div class="metric-label">MAG7 QTR ACTUAL</div><div class="metric-value" id="m05-mag7">—</div></div>
+          <div class="metric-row"><div class="metric-label">TRAJECTORY GAP</div><div class="metric-value" id="m05-gap">—</div></div>
+          <div class="metric-row"><div class="metric-label">PHASE</div><div class="metric-value" id="m05-phase">Ask system for current</div></div>
         </div>
-        <div class="trigger-line" id="trig-3b">PENDING DATA: Update every Friday from factset.com/earnings-insight. T3 FIRE: Non-Mag7 blended EPS growth below 8%.</div>
+        <div id="m05-history-table" style="margin-top:8px;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);"></div>
+        <div class="trigger-line" id="trig-3b">GREEN: 493 ≥15% AND gap ≤5pts · AMBER: 493 8-14% OR gap 5-10pts · RED: 493 &lt;8% OR gap &gt;10pts. Quarterly — ask system for current values.</div>
       </div>
 
     </div>
@@ -393,7 +398,7 @@
           <div class="metric-row"><div class="metric-label">CURRENT S&P</div><div class="metric-value live" id="m06-spx">—</div></div>
           <div class="metric-row"><div class="metric-label">20-DAY MA</div><div class="metric-value" id="m06-ma20">—</div></div>
         </div>
-        <div class="trigger-line" id="trig-3c">NOT ACTIVE: Rally must first stall below 6,147 ATH → confirm lower high → then break 5,450 on volume. T3 FIRE: Full sequence confirmed. Enter 20-day MA from TradingView.</div>
+        <div class="trigger-line" id="trig-3c">NOT ACTIVE: Rally must first stall below 6,147 ATH → confirm lower high → then break 5,450 on volume. T3 FIRE: Full sequence confirmed. Enter 20-day MA from Barchart.com/stocks/quotes/$SPX/technical-analysis</div>
       </div>
 
       <div class="signal-card amber" id="card-3d">
@@ -405,7 +410,7 @@
           <div class="metric-row"><div class="metric-label">WARSH STATUS</div><div class="metric-value" id="m07-warsh">Pending</div></div>
           <div class="metric-row"><div class="metric-label">CURRENT Q2 EST.</div><div class="metric-value" style="color:var(--amber)">$189B (+$122B vs Feb)</div></div>
         </div>
-        <div class="trigger-line" id="trig-3d">WATCH LIST: Aug 5 refunding shows further upward revision OR Warsh confirms accelerated QT at Senate hearings. T3 FIRE: Type "FIRE" in Warsh status input below.</div>
+        <div class="trigger-line" id="trig-3d">PENDING D-DAY: Aug 5, 2026 Treasury refunding announcement. Field goes from monitoring to must-update after Aug 5. T3 FIRE: Type "FIRE" in Warsh status input below when QT acceleration confirmed.</div>
       </div>
 
     </div>
@@ -450,9 +455,19 @@
         <div class="lock-row"><button class="lock-btn" id="lock-t30" onclick="toggleLock('t30','inp_t30')">✓ LOCK</button><span class="lock-stamp" id="stamp-t30">Edit then LOCK to persist</span></div>
       </div>
       <div class="input-group">
-        <label class="input-label">⬡ Non-Mag7 EPS Growth % · FactSet Fridays</label>
-        <input class="input-field" id="inp_breadth" type="number" step="0.1" placeholder="Pending May 16">
-        <div class="lock-row"><button class="lock-btn" id="lock-breadth" onclick="toggleLock('breadth','inp_breadth')">✓ LOCK</button><span class="lock-stamp" id="stamp-breadth">Edit then LOCK to persist</span></div>
+        <label class="input-label">⬡ S&P 493 Qtr EPS % · Ask system</label>
+        <input class="input-field" id="inp_m05_493_qtr" type="number" step="0.1" placeholder="e.g. 10.1">
+        <div class="lock-row"><button class="lock-btn" id="lock-m05_493_qtr" onclick="toggleLock('m05_493_qtr','inp_m05_493_qtr')">✓ LOCK</button><span class="lock-stamp" id="stamp-m05_493_qtr">Edit then LOCK to persist</span></div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬡ S&P 493 FY Estimate % · Ask system</label>
+        <input class="input-field" id="inp_m05_493_ann" type="number" step="0.1" placeholder="e.g. 17.9">
+        <div class="lock-row"><button class="lock-btn" id="lock-m05_493_ann" onclick="toggleLock('m05_493_ann','inp_m05_493_ann')">✓ LOCK</button><span class="lock-stamp" id="stamp-m05_493_ann">Edit then LOCK to persist</span></div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬡ Mag7 Qtr EPS % · Ask system</label>
+        <input class="input-field" id="inp_m05_mag7" type="number" step="0.1" placeholder="e.g. 22.8">
+        <div class="lock-row"><button class="lock-btn" id="lock-m05_mag7" onclick="toggleLock('m05_mag7','inp_m05_mag7')">✓ LOCK</button><span class="lock-stamp" id="stamp-m05_mag7">Edit then LOCK to persist</span></div>
       </div>
       <div class="input-group">
         <label class="input-label">⬡ Q2 Productivity QoQ% · BLS Aug 7</label>
@@ -571,22 +586,37 @@ const M5_MODAL_FIELDS = [
     instruction:'BLS Employment Situation → Table B → Average hourly earnings month-over-month %',
     hint:'e.g. 0.2%' },
   // TIER 3 — AI THESIS CONFIRMATION
-  { key:'breadth',  sig:'M05', label:'NON-MAG7 EPS GROWTH',   cadence:'weekly',
-    method:'manual-link',
-    url:'https://insight.factset.com/earnings-insight',
-    instruction:'FactSet Earnings Insight → published every Friday → find Non-Mag7 blended EPS growth % for S&P 493',
-    hint:'e.g. 9.2%' },
+  { key:'m05_493_qtr', sig:'M05', label:'S&P 493 QTR ACTUAL EPS GROWTH',  cadence:'quarterly',
+    pendingUntil: null,
+    method:'manual-ask-system',
+    url:'',
+    instruction:'What is the current blended actual EPS earnings growth rate for the S&P 493 ex-Magnificent 7 for the most recent completed quarter? Return the quarterly actual or blended figure only, not the full year estimate.',
+    hint:'e.g. 10.1% Q1 2026' },
+  { key:'m05_493_ann', sig:'M05', label:'S&P 493 FULL YEAR EPS ESTIMATE',  cadence:'quarterly',
+    pendingUntil: null,
+    method:'manual-ask-system',
+    url:'',
+    instruction:'What is the current full year 2026 EPS earnings growth estimate for the S&P 493 ex-Magnificent 7? Return the forward annual estimate only, not the quarterly actual figure.',
+    hint:'e.g. 17.9% FY2026' },
+  { key:'m05_mag7',    sig:'M05', label:'MAG7 QTR ACTUAL EPS GROWTH',      cadence:'quarterly',
+    pendingUntil: null,
+    method:'manual-ask-system',
+    url:'',
+    instruction:'What is the current blended actual EPS earnings growth rate for the Magnificent 7 companies for the most recent completed quarter? Use non-GAAP figures as that is what analyst consensus tracks.',
+    hint:'e.g. 22.8% Q1 2026' },
   { key:'prodQ2',   sig:'M04', label:'Q2 PRODUCTIVITY QOQ%',  cadence:'quarterly',
-    eventMonths:[2,5,8,11], // BLS releases Feb/May/Aug/Nov
+    pendingUntil:'2026-08-07',
+    eventMonths:[2,5,8,11],
     method:'manual-link',
     url:'https://www.bls.gov/lpc/',
     instruction:'BLS Productivity & Costs → latest release → Nonfarm business sector labor productivity QoQ annualized %',
     hint:'Pending Aug 7' },
   { key:'warsh',    sig:'M07', label:'WARSH / TREASURY STATUS', cadence:'monthly',
+    pendingUntil:'2026-08-05',
     method:'manual-ask-system',
     url:'',
-    instruction:'Ask system: "What is the latest Fed / Warsh / Treasury refunding news?" Enter FIRE if QT acceleration confirmed.',
-    hint:'Pending / FIRE' },
+    instruction:'What is the latest Federal Reserve, Warsh, or Treasury refunding news? Has QT acceleration been confirmed?',
+    hint:'Pending Aug 5 / FIRE' },
 ];
 
 // ── SIGNAL GROUPS for modal ──
@@ -620,6 +650,18 @@ function m5CheckStaleness(key){
   const d      = m5Load();
   const record = d[key];
   const field  = M5_MODAL_FIELDS.find(f => f.key === key);
+
+  // Pending state — event has not happened yet
+  if(field && field.pendingUntil){
+    const pendingDate = new Date(field.pendingUntil);
+    const now         = new Date();
+    if(now < pendingDate){
+      const dateStr = pendingDate.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      return { stale:false, label:'Pending — '+dateStr, state:'pending' };
+    }
+    // Past the pending date — now required
+  }
+
   if(!record || !record.locked) return { stale:true, label:'Never entered', state:'never' };
   const cadence   = field ? field.cadence : 'monthly';
   const threshold = M5_STALE_DAYS[cadence] || 35;
@@ -632,11 +674,14 @@ function m5CheckStaleness(key){
 
 function m5CheckSignalStaleness(sigCode){
   const sigFields = M5_MODAL_FIELDS.filter(f => f.sig === sigCode);
+  let hasPending = false;
   for(const f of sigFields){
     const s = m5CheckStaleness(f.key);
-    if(s.state === 'never')  return { stale:true, label:'Never entered', state:'never' };
-    if(s.state === 'stale')  return { stale:true, label:s.label, state:'stale' };
+    if(s.state === 'never')   return { stale:true,  label:'Never entered', state:'never' };
+    if(s.state === 'stale')   return { stale:true,  label:s.label,         state:'stale' };
+    if(s.state === 'pending') hasPending = true;
   }
+  if(hasPending) return { stale:false, label:'Pending future date', state:'pending' };
   const d     = m5Load();
   const dates = sigFields.filter(f => d[f.key] && d[f.key].locked).map(f => new Date(d[f.key].locked));
   if(!dates.length) return { stale:true, label:'Never entered', state:'never' };
@@ -700,7 +745,7 @@ function m5RenderStep(stepIdx){
   group.sigs.forEach(sig => {
     const s         = m5CheckSignalStaleness(sig.sig);
     const blockClass = s.state;
-    const dotClass   = s.state === 'current' ? 'green' : s.state === 'stale' ? 'amber' : 'red';
+    const dotClass   = s.state === 'current' ? 'green' : s.state === 'stale' ? 'amber' : s.state === 'pending' ? 'pending' : 'red';
     const sigFields  = M5_MODAL_FIELDS.filter(f => f.sig === sig.sig);
 
     let fieldRowsHtml = '';
@@ -856,7 +901,9 @@ const M5_FIELDS = [
   {key:'ma50',    id:'inp_ma50',         label:'50-Day MA'},
   {key:'ma20',    id:'inp_ma20',         label:'20-Day MA'},
   {key:'t30',     id:'inp_t30',          label:'30-yr High %'},
-  {key:'breadth', id:'inp_breadth',      label:'Non-Mag7 EPS %'},
+  {key:'m05_493_qtr', id:'inp_m05_493_qtr', label:'S&P 493 Qtr EPS %'},
+  {key:'m05_493_ann', id:'inp_m05_493_ann', label:'S&P 493 FY Est %'},
+  {key:'m05_mag7',    id:'inp_m05_mag7',    label:'Mag7 Qtr EPS %'},
   {key:'prodQ2',  id:'inp_prodQ2',       label:'Q2 Productivity %'},
   {key:'warsh',   id:'inp_warsh',        label:'Warsh Status'},
   {key:'spx_ovr', id:'inp_spx_override', label:'S&P Override'},
@@ -1016,7 +1063,7 @@ function updateSignals(){
   const ma50    = parseFloat(document.getElementById('inp_ma50').value);
   const ma20    = parseFloat(document.getElementById('inp_ma20').value);
   const t30     = parseFloat(document.getElementById('inp_t30').value);
-  const breadth = parseFloat(document.getElementById('inp_breadth').value);
+  // breadth field replaced by m05_493_qtr/ann/mag7 — loaded from localStorage directly
   const prodQ2  = parseFloat(document.getElementById('inp_prodQ2').value);
   const warsh   = document.getElementById('inp_warsh').value;
   const spx     = STATE.spx;
@@ -1033,7 +1080,21 @@ function updateSignals(){
   if(!isNaN(t30))    setVal('m03-t30',   t30.toFixed(2)+'%');
   if(tnx)            setVal('m03-gap',   (4.60-tnx>0?'-':'+')+(Math.abs(4.60-tnx)*100).toFixed(0)+' bps');
   if(!isNaN(prodQ2)) setVal('m04-q2',    prodQ2.toFixed(1)+'%');
-  if(!isNaN(breadth))setVal('m05-eps',   breadth.toFixed(1)+'%');
+  const m05_493_qtr = parseFloat(m5Load()['m05_493_qtr']?.value);
+  const m05_493_ann = parseFloat(m5Load()['m05_493_ann']?.value);
+  const m05_mag7    = parseFloat(m5Load()['m05_mag7']?.value);
+  if(!isNaN(m05_493_qtr)) setVal('m05-493-qtr', m05_493_qtr.toFixed(1)+'%');
+  if(!isNaN(m05_493_ann)) setVal('m05-493-ann', m05_493_ann.toFixed(1)+'%');
+  if(!isNaN(m05_mag7))    setVal('m05-mag7',    m05_mag7.toFixed(1)+'%');
+  if(!isNaN(m05_493_qtr) && !isNaN(m05_493_ann)){
+    const gap = (m05_493_ann - m05_493_qtr).toFixed(1);
+    setVal('m05-gap', (gap > 0 ? '+' : '')+gap+'pts');
+  }
+  // M05 phase from history
+  const m05phase = m5Load()['m05_493_qtr'];
+  if(m05phase) setVal('m05-phase', 'Q1 2026 — ask system for Q2');
+  // M05 history table
+  renderM05History();
   if(spx)            setVal('m06-spx',   spx.toLocaleString(undefined,{maximumFractionDigits:0}));
   if(!isNaN(ma20))   setVal('m06-ma20',  ma20.toLocaleString());
   if(warsh)          setVal('m07-warsh', warsh);
@@ -1074,16 +1135,19 @@ function updateSignals(){
     setDot('dot-m04', rag);
   }
 
-  // M05 Earnings Breadth — KEY FIX
-  if(!isNaN(breadth)){
-    const rag=breadth<8?'red':breadth<12?'amber':'green';
+  // M05 Earnings Breadth — trajectory-based RAG
+  const b493  = parseFloat(m5Load()['m05_493_qtr']?.value);
+  const b493a = parseFloat(m5Load()['m05_493_ann']?.value);
+  if(!isNaN(b493)){
+    const gap    = (!isNaN(b493a)) ? (b493a - b493) : 0;
+    const isRed  = b493 < 8  || gap > 10;
+    const isAmb  = b493 < 15 || gap > 5;
+    const rag    = isRed ? 'red' : isAmb ? 'amber' : 'green';
     setDot('dot-m05', rag);
-    // Also update the card background
-    const card=document.getElementById('card-3b');
+    const card = document.getElementById('card-3b');
     if(card){
-      card.className=card.className.replace(/\b(blue|green|amber|red|yellow|pending)\b/g,'').trim();
-      const cardRag=breadth<8?'red':breadth<12?'amber':'green';
-      card.className=(card.className+' '+cardRag).replace(/\s+/g,' ').trim();
+      card.className = card.className.replace(/\b(blue|green|amber|red|yellow|pending)\b/g,'').trim();
+      card.className = (card.className+' '+rag).replace(/\s+/g,' ').trim();
     }
   }
 
@@ -1094,7 +1158,7 @@ function updateSignals(){
   }
 
   // Update Macro composite header
-  const macroScore = calcMacroComposite(jobs,unemp,tnx,t30,breadth,prodQ2,warsh,spx,ma50);
+  const macroScore = calcMacroComposite(jobs,unemp,tnx,t30,b493,prodQ2,warsh,spx,ma50);
   const mEl = document.getElementById('macroComposite');
   if(mEl){ mEl.textContent = macroScore; mEl.className = 'composite-score '+cc(macroScore); }
 
@@ -1104,6 +1168,39 @@ function updateSignals(){
 function setVal(id, val){
   const el = document.getElementById(id);
   if(el) el.textContent = val;
+}
+
+function renderM05History(){
+  const el = document.getElementById('m05-history-table');
+  if(!el) return;
+  const d = m5Load();
+  const fields = ['m05_493_qtr','m05_493_ann','m05_mag7'];
+  const labels = ['493 Qtr','493 FY Est','Mag7 Qtr'];
+  // Get history entries — last 3 locks per field
+  let rows = '';
+  const current = {};
+  fields.forEach((key,i) => {
+    if(d[key]){
+      const val  = d[key].value;
+      const date = new Date(d[key].locked).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      current[key] = { val, date };
+    }
+  });
+  if(Object.keys(current).length === 0){ el.innerHTML = ''; return; }
+  rows = '<div style="display:grid;grid-template-columns:80px repeat(3,1fr);gap:4px;margin-top:6px;font-size:11px;">';
+  rows += '<div style="color:#999;">LOCKED</div>';
+  labels.forEach(l => { rows += `<div style="color:#666;letter-spacing:0.5px;">${l}</div>`; });
+  const keys = Object.keys(current);
+  if(keys.length){
+    const date = current[keys[0]]?.date || '—';
+    rows += `<div style="color:#aaa;">${date}</div>`;
+    fields.forEach(key => {
+      const v = current[key]?.val || '—';
+      rows += `<div style="color:#333;font-weight:500;">${v}</div>`;
+    });
+  }
+  rows += '</div>';
+  el.innerHTML = rows;
 }
 
 function calcMacroComposite(jobs,unemp,tnx,t30,breadth,prodQ2,warsh,spx,ma50){
