@@ -171,6 +171,18 @@
   .toolbar-import { border-color:var(--border); color:var(--text-dim); background:transparent; }
   .toolbar-import:hover { border-color:var(--blue); color:var(--blue); }
   .toolbar-label { font-family:var(--font-mono); font-size:10px; color:var(--text-dim); letter-spacing:1px; margin-left:auto; }
+
+  /* ── DASH 5 WAKE UP MODAL — light mode ── */
+  .m5-wakeup-overlay { display:none; position:fixed; inset:0; background:#f2f2f6; z-index:9999; overflow-y:auto; width:100vw; height:100vh; }
+  .m5-wakeup-overlay.open { display:block; }
+  .m5-wakeup-modal { background:#f2f2f6; width:100%; min-height:100vh; max-width:900px; margin:0 auto; padding-bottom:88px; }
+  .m5-wakeup-header { background:#fff; border-bottom:1px solid #e0e0e8; padding:20px 32px 16px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:10; }
+  .m5-wakeup-title { font-family:var(--font-display); font-size:32px; letter-spacing:2px; color:#1a1a2e; }
+  .m5-wakeup-meta { font-family:var(--font-mono); font-size:12px; color:#888; margin-top:3px; letter-spacing:0.5px; }
+  .m5-wakeup-footer { position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid #e0e0e8; padding:14px 32px; display:flex; justify-content:space-between; align-items:center; z-index:20; }
+  .m5-success-overlay { display:none; position:fixed; inset:0; background:rgba(240,240,245,0.96); z-index:10000; align-items:center; justify-content:center; }
+  .m5-success-overlay.open { display:flex; }
+  .m5-success-modal { background:#fff; border:1px solid #a0d8c0; border-radius:8px; padding:48px 56px; text-align:center; min-width:360px; animation:success-in 0.35s ease; }
 </style>
 </head>
 <body>
@@ -408,12 +420,12 @@
       </div>
       <div class="input-group">
         <label class="input-label">⬤ S&P Override (if auto-fetch fails)</label>
-        <input class="input-field" id="inp_spx_override" type="number" placeholder="Auto-fetched">
+        <input class="input-field" id="inp_spx_override" type="number" placeholder="e.g. 5842">
         <div class="lock-row"><button class="lock-btn" id="lock-spx_ovr" onclick="toggleLock('spx_ovr','inp_spx_override')">✓ LOCK</button><span class="lock-stamp" id="stamp-spx_ovr">Edit then LOCK to persist</span></div>
       </div>
       <div class="input-group">
-        <label class="input-label">⬤ 10-Yr Yield Override % · FRED</label>
-        <input class="input-field" id="inp_tnx_override" type="number" step="0.01" placeholder="Auto-fetched">
+        <label class="input-label">⬤ 10-Yr Yield Override % · FRED (if auto-fetch fails)</label>
+        <input class="input-field" id="inp_tnx_override" type="number" step="0.01" placeholder="e.g. 5842">
         <div class="lock-row"><button class="lock-btn" id="lock-tnx_ovr" onclick="toggleLock('tnx_ovr','inp_tnx_override')">✓ LOCK</button><span class="lock-stamp" id="stamp-tnx_ovr">Edit then LOCK to persist</span></div>
       </div>
     </div>
@@ -426,8 +438,370 @@
 
 </main>
 
+<!-- DASH 5 WAKE UP MODAL -->
+<div class="m5-wakeup-overlay" id="m5WakeupModal">
+  <div class="m5-wakeup-modal">
+    <div class="m5-wakeup-header">
+      <div>
+        <div class="m5-wakeup-title">🐓 MACRO WAKE UP</div>
+        <div class="m5-wakeup-meta" id="m5WakeupMeta">Checking macro signal status...</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-family:var(--font-mono);font-size:22px;color:#444;font-weight:500;" id="m5WakeupStatusMain"></div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:#999;margin-top:2px;" id="m5WakeupStatusSub"></div>
+      </div>
+    </div>
+    <div id="m5WakeupProgress"></div>
+    <div style="padding:20px 32px;" id="m5WakeupBody"></div>
+    <div class="m5-wakeup-footer">
+      <div style="font-family:var(--font-mono);font-size:11px;color:#aaa;">Enter values · Get data opens source in new tab · Skip moves to next tier</div>
+      <div style="display:flex;gap:10px;">
+        <button class="wakeup-skip-btn" onclick="m5AdvanceStep()">Skip tier →</button>
+        <button class="wakeup-enter-btn" id="m5WakeupNextBtn" onclick="m5AdvanceStep()">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DASH 5 SUCCESS MODAL -->
+<div class="m5-success-overlay" id="m5SuccessModal">
+  <div class="m5-success-modal">
+    <div style="font-size:44px;margin-bottom:16px;">✅</div>
+    <div style="font-family:var(--font-display);font-size:28px;letter-spacing:2px;color:#0F6E56;margin-bottom:16px;">MACRO CURRENT</div>
+    <div style="font-family:var(--font-mono);font-size:12px;color:#888;letter-spacing:0.5px;line-height:2;" id="m5SuccessDetail"></div>
+  </div>
+</div>
+
 <script>
 const M5_KEY = 'rooster_dash5_v1';
+
+// ── STALE THRESHOLDS ──
+const M5_STALE_DAYS = { weekly:9, monthly:35, quarterly:95, biweekly:16 };
+
+// ── DASH 5 FIELDS — cadence, source, event calendar ──
+const M5_MODAL_FIELDS = [
+  // TIER 1 — MARKET STRESS
+  { key:'spx_ovr',  sig:'M02', label:'S&P 500 CURRENT',       cadence:'weekly',
+    eventDays:[1,2,3,4,5], // every trading day
+    method:'manual-link',
+    url:'https://www.tradingview.com/chart/?symbol=SPX',
+    instruction:'TradingView → SPX chart → current price. Same page as MA values.',
+    hint:'e.g. 5842' },
+  { key:'ma50',     sig:'M02', label:'S&P 50-DAY MA',         cadence:'weekly',
+    method:'manual-link',
+    url:'https://www.tradingview.com/chart/?symbol=SPX',
+    instruction:'TradingView → SPX → Indicators → Moving Average 50 → value shown on right axis',
+    hint:'e.g. 5620' },
+  { key:'ma20',     sig:'M06', label:'S&P 20-DAY MA',         cadence:'weekly',
+    method:'manual-link',
+    url:'https://www.tradingview.com/chart/?symbol=SPX',
+    instruction:'TradingView → SPX → Indicators → Moving Average 20 → value shown on right axis',
+    hint:'e.g. 5580' },
+  { key:'tnx_ovr',  sig:'M03', label:'10-YR TREASURY YIELD',  cadence:'weekly',
+    method:'manual-link',
+    url:'https://fred.stlouisfed.org/series/DGS10',
+    instruction:'FRED → DGS10 → most recent data point on right of chart. Enter % e.g. 4.42',
+    hint:'e.g. 4.42%' },
+  { key:'t30',      sig:'M03', label:'30-YR WEEKLY HIGH',     cadence:'weekly',
+    method:'manual-link',
+    url:'https://fred.stlouisfed.org/series/DGS30',
+    instruction:'FRED → DGS30 → highest value this week. Enter % e.g. 5.02',
+    hint:'e.g. 5.02%' },
+  // TIER 2 — MACRO CONDITIONS
+  { key:'jobs',     sig:'M01', label:'JOBS ADDED (K)',         cadence:'monthly',
+    eventMonths:[1,2,3,4,5,6,7,8,9,10,11,12], eventDay:5, // first Friday each month
+    method:'manual-link',
+    url:'https://www.bls.gov/news.release/empsit.nr0.htm',
+    instruction:'BLS Employment Situation → Table A → Total nonfarm payroll employment change. Enter number in thousands.',
+    hint:'e.g. 115' },
+  { key:'unemp',    sig:'M01', label:'UNEMPLOYMENT RATE',     cadence:'monthly',
+    method:'manual-link',
+    url:'https://www.bls.gov/news.release/empsit.nr0.htm',
+    instruction:'BLS Employment Situation → Table A → Unemployment rate %',
+    hint:'e.g. 4.3%' },
+  { key:'wage',     sig:'M01', label:'WAGE GROWTH MOM %',     cadence:'monthly',
+    method:'manual-link',
+    url:'https://www.bls.gov/news.release/empsit.nr0.htm',
+    instruction:'BLS Employment Situation → Table B → Average hourly earnings month-over-month %',
+    hint:'e.g. 0.2%' },
+  // TIER 3 — AI THESIS CONFIRMATION
+  { key:'breadth',  sig:'M05', label:'NON-MAG7 EPS GROWTH',   cadence:'weekly',
+    method:'manual-link',
+    url:'https://insight.factset.com/earnings-insight',
+    instruction:'FactSet Earnings Insight → published every Friday → find Non-Mag7 blended EPS growth % for S&P 493',
+    hint:'e.g. 9.2%' },
+  { key:'prodQ2',   sig:'M04', label:'Q2 PRODUCTIVITY QOQ%',  cadence:'quarterly',
+    eventMonths:[2,5,8,11], // BLS releases Feb/May/Aug/Nov
+    method:'manual-link',
+    url:'https://www.bls.gov/lpc/',
+    instruction:'BLS Productivity & Costs → latest release → Nonfarm business sector labor productivity QoQ annualized %',
+    hint:'Pending Aug 7' },
+  { key:'warsh',    sig:'M07', label:'WARSH / TREASURY STATUS', cadence:'monthly',
+    method:'manual-ask-system',
+    url:'',
+    instruction:'Ask system: "What is the latest Fed / Warsh / Treasury refunding news?" Enter FIRE if QT acceleration confirmed.',
+    hint:'Pending / FIRE' },
+];
+
+// ── SIGNAL GROUPS for modal ──
+const M5_SIGNAL_GROUPS = [
+  {
+    tier: 'TIER 1 — MARKET STRESS',
+    sigs: [
+      { sig:'M02', name:'S&P 500 technical breakdown', cadence:'weekly',   eventMonths:null },
+      { sig:'M03', name:'Bond market acceleration',    cadence:'weekly',   eventMonths:null },
+      { sig:'M06', name:'Lower high confirmation',     cadence:'weekly',   eventMonths:null },
+    ]
+  },
+  {
+    tier: 'TIER 2 — MACRO CONDITIONS',
+    sigs: [
+      { sig:'M01', name:'Labor market deterioration',  cadence:'monthly',  eventMonths:[1,2,3,4,5,6,7,8,9,10,11,12] },
+    ]
+  },
+  {
+    tier: 'TIER 3 — AI THESIS CONFIRMATION',
+    sigs: [
+      { sig:'M04', name:'BLS productivity — AI supercycle fail', cadence:'quarterly', eventMonths:[2,5,8,11] },
+      { sig:'M05', name:'Non-Mag7 earnings breadth fails',       cadence:'weekly',    eventMonths:null },
+      { sig:'M07', name:'Treasury / Warsh catalyst',             cadence:'monthly',   eventMonths:null },
+    ]
+  }
+];
+
+// ── STALENESS CHECK ──
+function m5CheckStaleness(key){
+  const d      = m5Load();
+  const record = d[key];
+  const field  = M5_MODAL_FIELDS.find(f => f.key === key);
+  if(!record || !record.locked) return { stale:true, label:'Never entered', state:'never' };
+  const cadence   = field ? field.cadence : 'monthly';
+  const threshold = M5_STALE_DAYS[cadence] || 35;
+  const ageDays   = Math.floor((new Date() - new Date(record.locked)) / 86400000);
+  if(ageDays > threshold){
+    return { stale:true, label:'Stale '+ageDays+'d', state:'stale' };
+  }
+  return { stale:false, label:'Current — '+new Date(record.locked).toLocaleDateString('en-US',{month:'short',day:'numeric'}), state:'current' };
+}
+
+function m5CheckSignalStaleness(sigCode){
+  const sigFields = M5_MODAL_FIELDS.filter(f => f.sig === sigCode);
+  for(const f of sigFields){
+    const s = m5CheckStaleness(f.key);
+    if(s.state === 'never')  return { stale:true, label:'Never entered', state:'never' };
+    if(s.state === 'stale')  return { stale:true, label:s.label, state:'stale' };
+  }
+  const d     = m5Load();
+  const dates = sigFields.filter(f => d[f.key] && d[f.key].locked).map(f => new Date(d[f.key].locked));
+  if(!dates.length) return { stale:true, label:'Never entered', state:'never' };
+  const latest = new Date(Math.max(...dates));
+  return { stale:false, label:'Current — '+latest.toLocaleDateString('en-US',{month:'short',day:'numeric'}), state:'current' };
+}
+
+// ── WAKE UP MODAL ──
+let m5CurrentStep   = 0;
+const M5_TOTAL_STEPS = 3;
+
+function buildWakeUpModal(){
+  m5CurrentStep = 0;
+  m5RenderStep(0);
+  const now = new Date();
+  const lastSession = m5GetLastSession();
+  const meta = document.getElementById('m5WakeupMeta');
+  if(meta) meta.textContent = 'Session: '+now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) +
+    (lastSession ? ' · Last visit: '+lastSession : ' · First visit');
+}
+
+function m5RenderStep(stepIdx){
+  const group      = M5_SIGNAL_GROUPS[stepIdx];
+  const body       = document.getElementById('m5WakeupBody');
+  const statusMain = document.getElementById('m5WakeupStatusMain');
+  const statusSub  = document.getElementById('m5WakeupStatusSub');
+  const nextBtn    = document.getElementById('m5WakeupNextBtn');
+  const progress   = document.getElementById('m5WakeupProgress');
+
+  if(progress){
+    progress.innerHTML =
+      '<div style="display:flex;align-items:center;gap:16px;padding:12px 32px;background:#fff;border-bottom:1px solid #e0e0e8;">'+
+      '<div style="font-family:var(--font-mono);font-size:12px;color:#999;letter-spacing:1px;white-space:nowrap;">STEP '+(stepIdx+1)+' OF '+M5_TOTAL_STEPS+'</div>'+
+      '<div style="flex:1;height:4px;background:#e8e8f0;border-radius:2px;">'+
+      '<div style="width:'+(((stepIdx+1)/M5_TOTAL_STEPS)*100)+'%;height:100%;background:#1D9E75;border-radius:2px;transition:width 0.4s;"></div>'+
+      '</div>'+
+      '<div style="font-family:var(--font-mono);font-size:11px;color:#bbb;letter-spacing:1px;">'+group.tier+'</div>'+
+      '</div>';
+  }
+
+  let tierStale = 0, tierCurrent = 0;
+  group.sigs.forEach(sig => {
+    const s = m5CheckSignalStaleness(sig.sig);
+    if(s.stale) tierStale++; else tierCurrent++;
+  });
+
+  if(statusMain){
+    statusMain.textContent = tierStale === 0 ? 'All current' : tierStale+' signal'+(tierStale>1?'s':'')+' need updating';
+    statusMain.style.color = tierStale === 0 ? '#0F6E56' : '#854F0B';
+    statusMain.style.fontSize = '22px';
+  }
+  if(statusSub) statusSub.textContent = tierCurrent+' of '+group.sigs.length+' current in this tier';
+
+  const isLast = stepIdx === M5_TOTAL_STEPS - 1;
+  if(nextBtn){
+    nextBtn.textContent = isLast ? 'Enter dash →' : 'Next →';
+    nextBtn.className   = tierStale === 0 ? 'wakeup-enter-btn ready' : 'wakeup-enter-btn';
+  }
+
+  let html = '';
+  group.sigs.forEach(sig => {
+    const s         = m5CheckSignalStaleness(sig.sig);
+    const blockClass = s.state;
+    const dotClass   = s.state === 'current' ? 'green' : s.state === 'stale' ? 'amber' : 'red';
+    const sigFields  = M5_MODAL_FIELDS.filter(f => f.sig === sig.sig);
+
+    let fieldRowsHtml = '';
+    if(s.stale){
+      sigFields.forEach(f => {
+        const isAskSystem = f.method === 'manual-ask-system';
+        const actionBtn   = isAskSystem
+          ? `<button class="wakeup-get-data" style="cursor:pointer;" onclick="sendPrompt('${f.instruction.replace(/'/g,"\\'")}')">Ask system ↗</button>`
+          : (f.url ? `<a class="wakeup-get-data" href="${f.url}" target="_blank">Get data ↗</a>` : '');
+        const storedRec   = m5Load()[f.key];
+        const lastVal     = storedRec ? storedRec.value : '';
+        const lastDate    = storedRec ? ' · Locked '+new Date(storedRec.locked).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+        const placeholder = lastVal ? lastVal+lastDate : f.hint;
+        fieldRowsHtml += `
+          <div class="wakeup-field-row" id="m5-fieldrow-${f.key}">
+            <div>
+              <div class="wakeup-field-label">${f.label}</div>
+              <div class="wakeup-field-instruction">${f.instruction}</div>
+            </div>
+            <div class="wakeup-field-center">
+              <input class="wakeup-inline-input" id="m5-input-${f.key}"
+                placeholder="${placeholder}"
+                onkeydown="if(event.key==='Enter')m5ConfirmSingleField('${f.key}')">
+            </div>
+            <div style="text-align:right;padding-left:8px;">${actionBtn}</div>
+          </div>`;
+      });
+    }
+
+    const confirmRow = s.stale ? `
+      <div class="wakeup-sig-confirm">
+        <button class="wakeup-confirm-btn" id="m5-confirm-${sig.sig}"
+          onclick="m5ConfirmSigFields('${sig.sig}')">Lock ${sig.sig} fields</button>
+      </div>` : '';
+
+    html += `
+      <div class="wakeup-sig-block ${blockClass}" id="m5-row-${sig.sig}">
+        <div class="wakeup-sig-header">
+          <div class="wakeup-rag ${dotClass}"></div>
+          <div class="wakeup-sig-name">${sig.sig} — ${sig.name}</div>
+          <div class="wakeup-status-pill ${s.state}">${s.label} · ${sig.cadence}</div>
+        </div>
+        ${s.stale ? `<div class="wakeup-field-rows">${fieldRowsHtml}</div>${confirmRow}` : ''}
+      </div>`;
+  });
+
+  body.innerHTML = html;
+
+  if(tierStale === 0 && stepIdx < M5_TOTAL_STEPS - 1){
+    body.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:260px;gap:16px;">
+        <div style="font-size:56px;">✓</div>
+        <div style="font-family:var(--font-display);font-size:28px;letter-spacing:2px;color:#0F6E56;">ALL CURRENT</div>
+        <div style="font-family:var(--font-mono);font-size:14px;color:#999;">Advancing to next tier...</div>
+      </div>`;
+    setTimeout(() => m5AdvanceStep(), 1200);
+  }
+}
+
+function m5AdvanceStep(){
+  if(m5CurrentStep < M5_TOTAL_STEPS - 1){
+    m5CurrentStep++;
+    const overlay = document.getElementById('m5WakeupModal');
+    if(overlay) overlay.scrollTop = 0;
+    m5RenderStep(m5CurrentStep);
+  } else {
+    m5EnterDash();
+    setTimeout(m5ShowSuccess, 200);
+  }
+}
+
+function m5ConfirmSingleField(key){
+  const inp = document.getElementById('m5-input-'+key);
+  if(inp && inp.value.trim()){
+    m5LockFromModal(key, inp.value.trim());
+    inp.classList.add('confirmed');
+    inp.disabled = true;
+  }
+}
+
+function m5ConfirmSigFields(sigCode){
+  const sigFields = M5_MODAL_FIELDS.filter(f => f.sig === sigCode);
+  let anyUpdated  = false;
+  sigFields.forEach(f => {
+    const inp = document.getElementById('m5-input-'+f.key);
+    if(inp && inp.value.trim() && !inp.disabled){
+      m5LockFromModal(f.key, inp.value.trim());
+      inp.classList.add('confirmed');
+      inp.disabled = true;
+      anyUpdated   = true;
+    }
+  });
+  if(!anyUpdated){ showToast('Enter at least one value to confirm'); return; }
+
+  const block = document.getElementById('m5-row-'+sigCode);
+  const dot   = block ? block.querySelector('.wakeup-rag') : null;
+  const pill  = block ? block.querySelector('.wakeup-status-pill') : null;
+  const btn   = document.getElementById('m5-confirm-'+sigCode);
+  if(block) block.className = 'wakeup-sig-block current';
+  if(dot)   dot.className   = 'wakeup-rag green';
+  if(pill)  { pill.textContent = 'Updated · Just now'; pill.className = 'wakeup-status-pill current'; }
+  if(btn)   { btn.textContent  = '✓ Locked'; btn.className = 'wakeup-confirm-btn done'; btn.disabled = true; }
+}
+
+function m5LockFromModal(key, value){
+  const d       = m5Load();
+  const existing = d[key];
+  const history  = (existing && existing.history) ? [...existing.history] : [];
+  if(existing) history.push({ value:existing.value, locked:existing.locked });
+  d[key] = { value, locked:new Date().toISOString(), history };
+  m5Save(d);
+  // Update input field on the page
+  const inpId = M5_MODAL_FIELDS.find(f => f.key === key)?.id || ('inp_'+key);
+  const inp   = document.getElementById(inpId) || document.getElementById('inp_'+key);
+  const btn   = document.getElementById('lock-'+key);
+  const stamp = document.getElementById('stamp-'+key);
+  const ts    = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  if(inp)   { inp.value = value; inp.readOnly = true; inp.classList.add('locked'); }
+  if(btn)   { btn.textContent = '🔒 LOCKED'; btn.classList.add('locked'); }
+  if(stamp) { stamp.textContent = '🔒 Locked '+ts; }
+  // Reload SPX if that field was updated
+  if(key === 'spx_ovr') loadSPXFromOverride();
+  updateSignals();
+}
+
+function m5EnterDash(){
+  document.getElementById('m5WakeupModal').classList.remove('open');
+  m5SaveSession();
+}
+
+function m5ShowSuccess(){
+  const modal  = document.getElementById('m5SuccessModal');
+  const detail = document.getElementById('m5SuccessDetail');
+  const now    = new Date();
+  if(detail) detail.innerHTML =
+    'Macro signals updated<br>'+
+    'Session: '+now.toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  if(modal){ modal.classList.add('open'); setTimeout(()=>{ modal.classList.remove('open'); }, 3000); }
+}
+
+function m5GetLastSession(){
+  try{ const d = localStorage.getItem('rooster_dash5_session'); return d ? new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : null; }catch(e){ return null; }
+}
+
+function m5SaveSession(){
+  try{ localStorage.setItem('rooster_dash5_session', new Date().toISOString()); }catch(e){}
+}
 
 const M5_FIELDS = [
   {key:'jobs',    id:'inp_jobs',         label:'Jobs Added K'},
@@ -529,39 +903,61 @@ function showToast(msg){
 }
 
 // ── LIVE STATE ──
+// SPX: manual override only — enter from TradingView (same page as MA values)
+// TNX: auto-fetch from FRED public CSV — no API key required
 const STATE = { spx:null, tnx:null };
 
-async function fetchSPX(){
-  const ovr = parseFloat(document.getElementById('inp_spx_override').value);
-  if(!isNaN(ovr)&&ovr>0){ STATE.spx=ovr; updateSignals(); return; }
-  const yUrl='https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?interval=1d&range=5d';
-  const proxies=['https://api.allorigins.win/get?url='+encodeURIComponent(yUrl),'https://corsproxy.io/?'+encodeURIComponent(yUrl)];
-  for(const url of proxies){
-    try{
-      const r=await fetch(url,{signal:AbortSignal.timeout(7000)});
-      if(!r.ok)continue;
-      const w=await r.json();
-      const raw=typeof w.contents==='string'?JSON.parse(w.contents):w;
-      const closes=raw?.chart?.result?.[0]?.indicators?.quote?.[0]?.close;
-      if(closes?.length){ const v=closes.filter(x=>x!=null).pop(); if(v){ STATE.spx=v; updateSignals(); return; } }
-    }catch(e){}
+function loadSPXFromOverride(){
+  const d   = m5Load();
+  const ovr = d['spx_ovr'] ? parseFloat(d['spx_ovr'].value) : NaN;
+  if(!isNaN(ovr) && ovr > 0){
+    STATE.spx = ovr;
+    // Update ticker bar
+    const el = document.getElementById('tickSPX');
+    if(el) el.textContent = ovr.toLocaleString(undefined,{maximumFractionDigits:0});
+    const src = document.getElementById('tickSPXsrc');
+    if(src) src.textContent = 'Manual override';
+    updateSignals();
+  } else {
+    const el = document.getElementById('tickSPX');
+    if(el) el.textContent = '—';
+    const src = document.getElementById('tickSPXsrc');
+    if(src) src.textContent = 'Enter in modal →';
   }
 }
 
 async function fetchTNX(){
-  const ovr = parseFloat(document.getElementById('inp_tnx_override').value);
-  if(!isNaN(ovr)&&ovr>0){ STATE.tnx=ovr; updateSignals(); return; }
-  const fredUrl='https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&sort_order=desc&limit=5&file_type=json&api_key=a8e9b0af4d53fa60e1ecd46ef9b6aecf';
-  const proxies=[fredUrl,'https://api.allorigins.win/get?url='+encodeURIComponent(fredUrl)];
-  for(const url of proxies){
-    try{
-      const r=await fetch(url,{signal:AbortSignal.timeout(7000)});
-      if(!r.ok)continue;
-      const w=await r.json();
-      const raw=typeof w.contents==='string'?JSON.parse(w.contents):w;
-      const obs=raw?.observations;
-      if(obs?.length){ const l=obs.find(o=>o.value!=='.'); if(l){ STATE.tnx=parseFloat(l.value); updateSignals(); return; } }
-    }catch(e){}
+  const d   = m5Load();
+  const ovr = d['tnx_ovr'] ? parseFloat(d['tnx_ovr'].value) : NaN;
+  if(!isNaN(ovr) && ovr > 0){
+    STATE.tnx = ovr;
+    updateSignals();
+    return;
+  }
+  // FRED public CSV — no API key required
+  try{
+    const url = 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10';
+    const r   = await fetch(url, {signal:AbortSignal.timeout(8000)});
+    if(!r.ok) throw new Error();
+    const txt = await r.text();
+    const rows = txt.trim().split('\n').slice(1); // skip header
+    // Find last non-empty value
+    for(let i = rows.length-1; i >= 0; i--){
+      const parts = rows[i].split(',');
+      const val   = parseFloat(parts[1]);
+      if(!isNaN(val)){
+        STATE.tnx = val;
+        const el  = document.getElementById('tickTNX');
+        if(el) el.textContent = val.toFixed(2)+'%';
+        const src = document.getElementById('tickTNXsrc');
+        if(src) src.textContent = 'FRED live';
+        updateSignals();
+        return;
+      }
+    }
+  }catch(e){
+    const src = document.getElementById('tickTNXsrc');
+    if(src) src.textContent = 'Fetch failed — use override';
   }
 }
 
@@ -679,9 +1075,12 @@ function calcMacroComposite(jobs,unemp,tnx,t30,breadth,prodQ2,warsh,spx,ma50){
 
 document.addEventListener('DOMContentLoaded', ()=>{
   populateFromStorage();
-  updateSignals();
-  fetchSPX();
+  loadSPXFromOverride();
   fetchTNX();
+  updateSignals();
+  // Show Wake Up modal
+  buildWakeUpModal();
+  document.getElementById('m5WakeupModal').classList.add('open');
 });
 </script>
 </body>
