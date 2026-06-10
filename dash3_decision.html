@@ -152,8 +152,51 @@
   .exec-sel{background:var(--surface2);border:1px solid var(--border);padding:8px 10px;color:var(--text-primary);font-family:var(--font-mono);font-size:15px;width:100%;outline:none;cursor:pointer;transition:border-color 0.2s;}
   .exec-sel:focus{border-color:var(--amber);}
 
-  /* PRINCIPLE */
-  .principle{background:rgba(255,255,255,0.02);border:1px solid var(--border);padding:14px 18px;margin-bottom:16px;font-family:var(--font-mono);font-size:14px;color:var(--text-dim);line-height:1.8;}
+  /* UNIFIED ALLOCATION BAR */
+  .alloc-bar{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--border);margin-bottom:16px;background:var(--border);gap:1px;}
+  .alloc-item{background:var(--surface);padding:14px 18px;position:relative;}
+  .alloc-item.active{background:linear-gradient(180deg,var(--amber-dim) 0%,var(--surface) 60%);}
+  .alloc-item.done{background:linear-gradient(180deg,var(--green-dim) 0%,var(--surface) 60%);}
+  .alloc-item.future{background:var(--surface2);}
+  .alloc-lbl{font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;}
+  .alloc-amount{font-family:var(--font-display);font-size:26px;letter-spacing:1px;line-height:1;margin-bottom:3px;}
+  .alloc-amount.done{color:var(--green);}
+  .alloc-amount.active{color:var(--amber);}
+  .alloc-amount.watch{color:var(--text-secondary);}
+  .alloc-amount.hold{color:var(--blue);}
+  .alloc-sub{font-family:var(--font-mono);font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:8px;}
+  .alloc-sel{background:var(--surface2);border:1px solid var(--border);padding:5px 8px;color:var(--text-primary);font-family:var(--font-mono);font-size:12px;width:100%;outline:none;cursor:pointer;}
+  .alloc-sel:focus{border-color:var(--amber);}
+
+  /* NEAR-IN EVENTS */
+  .near-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+  .near-panel2{background:var(--surface);border:1px solid var(--border);}
+  .near-panel2-hdr{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);}
+  .near-panel2-title{font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;}
+  .near-sys-pill{font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:99px;}
+  .near-sys-pill.ai{background:var(--blue-dim);color:var(--blue);}
+  .near-sys-pill.macro{background:var(--amber-dim);color:var(--amber);}
+  .near-event2{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .near-event2:last-child{border-bottom:none;}
+  .near-event2-top{display:flex;align-items:baseline;gap:8px;margin-bottom:6px;}
+  .near-event2-days{font-family:var(--font-display);font-size:20px;line-height:1;}
+  .near-event2-days.urgent{color:var(--red);}
+  .near-event2-days.soon{color:var(--amber);}
+  .near-event2-days.future{color:var(--blue);}
+  .near-event2-unit{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;}
+  .near-event2-date-pill{font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:99px;margin-left:auto;}
+  .near-event2-date-pill.dday{background:var(--red-dim);color:var(--red);}
+  .near-event2-date-pill.watch{background:var(--amber-dim);color:var(--amber);}
+  .near-event2-date-pill.normal{background:var(--blue-dim);color:var(--blue);}
+  .near-event2-name{font-family:var(--font-display);font-size:14px;letter-spacing:1px;color:var(--text-primary);margin-bottom:5px;}
+  .near-event2-desc{font-family:var(--font-body);font-size:13px;color:var(--text-secondary);line-height:1.5;margin-bottom:8px;}
+  .near-event2-action{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);padding:7px 10px;}
+  .near-event2-action-lbl{font-family:var(--font-mono);font-size:10px;letter-spacing:1px;color:var(--text-dim);margin-bottom:2px;}
+  .near-event2-action-txt{font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);line-height:1.5;}
+  .near-event2-action.dday{border-color:rgba(255,64,96,0.2);background:rgba(255,64,96,0.04);}
+  .near-event2-action.dday .near-event2-action-txt{color:var(--red);}
+  .near-event2-action.watch{border-color:rgba(245,166,35,0.2);background:rgba(245,166,35,0.04);}
+  .near-event2-action.watch .near-event2-action-txt{color:var(--amber);}
 
   /* SIGNAL TABLE */
   .sig-table-wrap{background:var(--surface);border:1px solid var(--border);padding:20px;margin-bottom:20px;}
@@ -237,26 +280,48 @@
     </div>
   </div>
 
-  <!-- STATUS BAR -->
-  <div class="confirm-bar">
-    <div class="confirm-lbl" style="color:var(--green)">T1 EXECUTED</div>
-    <div class="confirm-text">$200K moved to stable value May 2026 at S&P ~7,400. Collecting 4%. T1 re-enters last — only after full valuation reset confirmed. T2 watching for three-condition convergence.</div>
-    <div class="confirm-checks">
-      <div class="chk"><div class="chk-box" id="chk1" style="background:var(--green-dim);border-color:var(--green);color:var(--green)">✓</div><span style="color:var(--green)">T1 DONE</span></div>
-      <div class="chk"><div class="chk-box" id="chk2">—</div><span>T2</span></div>
-      <div class="chk"><div class="chk-box" id="chk3">—</div><span>T3</span></div>
+  <!-- UNIFIED ALLOCATION BAR -->
+  <div class="alloc-bar">
+    <div class="alloc-item done">
+      <div class="alloc-lbl">T1 — Protected</div>
+      <div class="alloc-amount done" id="protTotal">$200,000</div>
+      <div class="alloc-sub" id="protPct">Stable value · 4% yield · May 2026<br>First out — last back in</div>
+      <select class="alloc-sel" id="t1sel" onchange="updateExec()">
+        <option value="no">Watching — Not executed</option>
+        <option value="triggered">Threshold crossed — considering</option>
+        <option value="yes">✓ Executed — moved to stable fund</option>
+      </select>
     </div>
-    <div class="red-alert" id="redAlert" style="color:var(--text-dim)">T2 TRIGGER: S&P &lt; 50-day MA 3+ sessions AND AI Bear ≥35 AND Macro ≥35</div>
+    <div class="alloc-item active">
+      <div class="alloc-lbl">T2 — Watching</div>
+      <div class="alloc-amount active">$200,000</div>
+      <div class="alloc-sub">Three conditions simultaneously<br>S&P below 50-day · AI ≥35 · Macro ≥35</div>
+      <select class="alloc-sel" id="t2sel" onchange="updateExec()">
+        <option value="no">Watching — Not executed</option>
+        <option value="triggered">Threshold crossed — considering</option>
+        <option value="yes">✓ Executed — moved to stable fund</option>
+      </select>
+    </div>
+    <div class="alloc-item">
+      <div class="alloc-lbl">T3 — Bonus play</div>
+      <div class="alloc-amount watch">$200,000</div>
+      <div class="alloc-sub">Only after T2 exits and decline sustained<br>D-Days: Aug 5 + Aug 7</div>
+      <select class="alloc-sel" id="t3sel" onchange="updateExec()">
+        <option value="no">Watching — Not executed</option>
+        <option value="triggered">Threshold crossed — considering</option>
+        <option value="yes">✓ Executed — moved to stable fund</option>
+      </select>
+    </div>
+    <div class="alloc-item future">
+      <div class="alloc-lbl">Long hold — permanent</div>
+      <div class="alloc-amount hold">~$500,000</div>
+      <div class="alloc-sub">Never touched · Not in scope<br>Ride it out regardless</div>
+      <select class="alloc-sel" id="t4sel" style="opacity:0.4;" disabled>
+        <option value="no">Permanent long-term hold</option>
+      </select>
+    </div>
   </div>
-
-  <!-- PORTFOLIO STRIP -->
-  <div class="port-strip">
-    <div class="port-item"><div class="port-lbl">Total 401K</div><div class="port-val" style="color:var(--amber)">$1,000,000</div><div class="port-sub">May 2026 balance</div></div>
-    <div class="port-item"><div class="port-lbl">State Street S&P (40%)</div><div class="port-val" style="color:var(--red)">$400,000</div><div class="port-sub">37% Mag7 — primary AI risk<br>Proportional pull on execution</div></div>
-    <div class="port-item"><div class="port-lbl">Blended Aggressive (40%)</div><div class="port-val" style="color:var(--amber)">$400,000</div><div class="port-sub">High equity / AI sector exposure<br>Proportional pull on execution</div></div>
-    <div class="port-item"><div class="port-lbl">Bonds / Other (20%)</div><div class="port-val" style="color:var(--blue)">$200,000</div><div class="port-sub">Existing defensive allocation<br>Proportional pull on execution</div></div>
-    <div class="port-item"><div class="port-lbl">Currently Protected</div><div class="port-val" style="color:var(--green)" id="protTotal">$200,000</div><div class="port-sub" id="protPct">T1 executed · 18% at 4% stable value</div></div>
-  </div>
+  <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-dim);padding:0 2px 12px;letter-spacing:0.5px;" id="redAlert">T2 TRIGGER: S&P sustained below 50-day MA 3+ sessions AND AI Bear composite ≥35 AND Macro composite ≥35 — all three simultaneously</div>
 
   <!-- TRANCHE GRID -->
   <div class="tranche-grid">
@@ -324,116 +389,81 @@
   </div>
 
   <!-- NEAR-IN SIGNALS -->
-  <div class="mid-grid">
-    <div class="near-panel">
-      <div class="near-title">NEAR-IN AI SIGNALS — NEXT 90 DAYS <span class="sys-tag ai">AI SYSTEM</span></div>
-
-      <div class="near-event">
-        <div class="near-top">
-          <div class="near-cd fu" id="nvdaDays">—</div>
-          <div class="near-days">DAYS</div>
-          <div class="near-date">AUG 2026</div>
+  <div class="near-grid">
+    <div class="near-panel2">
+      <div class="near-panel2-hdr">
+        <span class="near-panel2-title">Near-in AI signals — next 90 days</span>
+        <span class="near-sys-pill ai">AI system</span>
+      </div>
+      <div class="near-event2">
+        <div class="near-event2-top">
+          <div class="near-event2-days future" id="cloudDays">—</div>
+          <div class="near-event2-unit">days</div>
+          <div class="near-event2-date-pill normal">Jul 2026</div>
         </div>
-        <div class="near-name">NVDA Q2 FY2027 EARNINGS</div>
-        <div class="near-desc">Next NVDA earnings event. Q1 delivered GM 73.8% and DC Rev +56% YoY. Watch for gross margin compression and any guidance cut — both move SIG01. A guidance cut with AI Bear already at 23 would push composite toward T2 territory.</div>
-        <div class="near-action">
-          <div class="near-action-lbl">⬡ UPDATE DASH 1 AFTER RELEASE</div>
-          Dash 1 Wake Up modal → SIG01 fields → enter GM %, DC Revenue Growth %, Guidance Delta. Source: investor.nvidia.com quarterly results.
+        <div class="near-event2-name">Q2 CLOUD EARNINGS — MSFT / AMZN / GOOGL</div>
+        <div class="near-event2-desc">Azure 40%, AWS 28%, GCP 63% Q1. Three consecutive quarters of deceleration removes the timing gap excuse. Watch for any segment below 30% YoY.</div>
+        <div class="near-event2-action">
+          <div class="near-event2-action-lbl">Update Dash 1 after all three report</div>
+          <div class="near-event2-action-txt">Dash 1 Wake Up → SIG06 → Azure, AWS, GCP YoY%. Sources linked in modal.</div>
         </div>
       </div>
-
-      <div class="near-event">
-        <div class="near-top">
-          <div class="near-cd fu" id="cloudDays">—</div>
-          <div class="near-days">DAYS</div>
-          <div class="near-date">JUL 2026</div>
+      <div class="near-event2">
+        <div class="near-event2-top">
+          <div class="near-event2-days future" id="nvdaDays">—</div>
+          <div class="near-event2-unit">days</div>
+          <div class="near-event2-date-pill normal">Aug 2026</div>
         </div>
-        <div class="near-name">Q2 CLOUD EARNINGS — MSFT / AMZN / GOOGL</div>
-        <div class="near-desc">Azure, AWS, GCP Q2 growth rates. Q1 delivered Azure 40%, AWS 28%, GCP 63%. Three consecutive quarters of deceleration removes the timing gap excuse. Watch for any segment dropping below 30% YoY.</div>
-        <div class="near-action">
-          <div class="near-action-lbl">⬡ UPDATE DASH 1 AFTER ALL THREE REPORT</div>
-          Dash 1 Wake Up modal → SIG06 fields → enter Azure, AWS, GCP YoY % from each IR page. Sources linked in modal.
-        </div>
-      </div>
-    </div>
-
-    <div class="near-panel">
-      <div class="near-title">NEAR-IN MACRO D-DAYS — NEXT 90 DAYS <span class="sys-tag macro">MACRO SYSTEM</span></div>
-
-      <div class="near-event">
-        <div class="near-top">
-          <div class="near-cd so" id="treasuryDays">—</div>
-          <div class="near-days">DAYS</div>
-          <div class="near-date">AUG 5</div>
-        </div>
-        <div class="near-name">TREASURY QUARTERLY REFUNDING — D-DAY</div>
-        <div class="near-desc">Treasury announces Q3 bond supply. If Q3 issuance is revised up materially from $189B Q2 estimate while 30-yr is already at 5%+, yields spike and M07 fires. Warsh confirmation hearings also expected in this window.</div>
-        <div class="near-action">
-          <div class="near-action-lbl">⬡ UPDATE DASH 5 AFTER ANNOUNCEMENT</div>
-          Dash 5 Wake Up modal → M07 Warsh/Treasury field → enter status. If QT acceleration confirmed, enter FIRE. Source: ask system for latest Treasury refunding news.
-        </div>
-      </div>
-
-      <div class="near-event">
-        <div class="near-top">
-          <div class="near-cd so" id="blsDays">—</div>
-          <div class="near-days">DAYS</div>
-          <div class="near-date">AUG 7</div>
-        </div>
-        <div class="near-name">BLS Q2 PRODUCTIVITY — D-DAY</div>
-        <div class="near-desc">Q1 came in at 0.8% — below the 1.5% threshold. If Q2 also prints below 1.5%, that is two consecutive quarters — M04 fires RED and the AI productivity supercycle thesis formally fails. This is the single most structurally significant data point remaining in 2026.</div>
-        <div class="near-action">
-          <div class="near-action-lbl">⬡ UPDATE DASH 5 IMMEDIATELY AFTER RELEASE</div>
-          Dash 5 Wake Up modal → M04 Q2 Productivity field → enter QoQ annualized %. If below 1.5%, T3 thesis confirms. Source: bls.gov/lpc — Productivity & Costs.
+        <div class="near-event2-name">NVDA Q2 FY2027 EARNINGS</div>
+        <div class="near-event2-desc">Q1 GM 73.8%, DC Rev +56%. Watch for gross margin compression and guidance cut — both move SIG01. AI Bear at 23 — guidance cut pushes toward T2.</div>
+        <div class="near-event2-action">
+          <div class="near-event2-action-lbl">Update Dash 1 after release</div>
+          <div class="near-event2-action-txt">Dash 1 Wake Up → SIG01 → GM%, DC Revenue Growth%, Guidance Delta.</div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- EXECUTION TOGGLES -->
-  <div class="exec-panel">
-    <div class="near-title" style="margin-bottom:0;padding-bottom:0;border-bottom:none;">TRANCHE EXECUTION STATUS — UPDATE AFTER EACH NET BENEFITS ACTION</div>
-    <div class="exec-grid">
-      <div class="exec-tog"><label class="exec-lbl">Tranche 1 — $200K · Stable Fund</label>
-        <select class="exec-sel" id="t1sel" onchange="updateExec()">
-          <option value="no">Watching — Not executed</option>
-          <option value="triggered">Threshold crossed — considering</option>
-          <option value="yes">✓ Executed — moved to stable fund</option>
-        </select>
+    <div class="near-panel2">
+      <div class="near-panel2-hdr">
+        <span class="near-panel2-title">Macro D-days — next 90 days</span>
+        <span class="near-sys-pill macro">Macro system</span>
       </div>
-      <div class="exec-tog"><label class="exec-lbl">Tranche 2 — $200K · Stable Fund</label>
-        <select class="exec-sel" id="t2sel" onchange="updateExec()">
-          <option value="no">Watching — Not executed</option>
-          <option value="triggered">Threshold crossed — considering</option>
-          <option value="yes">✓ Executed — moved to stable fund</option>
-        </select>
+      <div class="near-event2">
+        <div class="near-event2-top">
+          <div class="near-event2-days soon" id="treasuryDays">—</div>
+          <div class="near-event2-unit">days</div>
+          <div class="near-event2-date-pill dday">D-Day Aug 5</div>
+        </div>
+        <div class="near-event2-name">TREASURY QUARTERLY REFUNDING — D-DAY</div>
+        <div class="near-event2-desc">If Q3 issuance revised up from $189B while 30-yr at 5%+, yields spike and M07 fires. Warsh confirmation hearings also expected in this window.</div>
+        <div class="near-event2-action watch">
+          <div class="near-event2-action-lbl">Update Dash 5 after announcement</div>
+          <div class="near-event2-action-txt">Dash 5 Wake Up → M07 → enter status. FIRE if QT acceleration confirmed.</div>
+        </div>
       </div>
-      <div class="exec-tog"><label class="exec-lbl">Tranche 3 — $200K · Stable Fund</label>
-        <select class="exec-sel" id="t3sel" onchange="updateExec()">
-          <option value="no">Watching — Not executed</option>
-          <option value="triggered">Threshold crossed — considering</option>
-          <option value="yes">✓ Executed — moved to stable fund</option>
-        </select>
-      </div>
-      <div class="exec-tog"><label class="exec-lbl">Long Hold — ~$500K · Never touched</label>
-        <select class="exec-sel" id="t4sel" style="color:var(--text-dim);border-color:var(--border);" disabled>
-          <option value="no">Permanent long-term hold — not in scope</option>
-        </select>
+      <div class="near-event2">
+        <div class="near-event2-top">
+          <div class="near-event2-days soon" id="blsDays">—</div>
+          <div class="near-event2-unit">days</div>
+          <div class="near-event2-date-pill dday">D-Day Aug 7</div>
+        </div>
+        <div class="near-event2-name">BLS Q2 PRODUCTIVITY — MOST CRITICAL 2026 DATA POINT</div>
+        <div class="near-event2-desc">Q1 at 0.8% — below 1.5% threshold. Q2 below 1.5% = two consecutive quarters = M04 fires RED = AI productivity supercycle thesis formally fails.</div>
+        <div class="near-event2-action dday">
+          <div class="near-event2-action-lbl">Update Dash 5 immediately after release</div>
+          <div class="near-event2-action-txt">Dash 5 Wake Up → M04 → Q2 productivity QoQ%. Below 1.5% = T3 thesis confirms.</div>
+        </div>
       </div>
     </div>
   </div>
-
-  <!-- PRINCIPLE -->
-  <div class="principle">DESIGN PRINCIPLE — Rules are pre-committed to remove judgment at the moment of highest emotional pressure. The dashboard signals when structural and technical conditions support moving capital to safety — not when the bottom will occur. Net Benefits reallocation is proportional across the entire portfolio — one action per tranche, not fund-level surgery. The 6–12 month initial revaluation window is the target protection zone.</div>
 
   <!-- FULL SIGNAL TABLE -->
   <div class="sig-table-wrap">
-    <div class="near-title" style="border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:14px;">FULL SIGNAL SUMMARY — ALL 15 SIGNALS ACROSS BOTH SYSTEMS — SORTED BY SEVERITY</div>
+    <div class="near-title" style="border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:14px;">FULL SIGNAL SUMMARY — ALL 15 SIGNALS SORTED BY SEVERITY</div>
     <table class="sig-table">
       <thead><tr>
-        <th>SIG</th><th>SYSTEM</th><th>NAME</th><th>TIER</th>
-        <th>STATE</th><th>SCORE</th><th>DIR</th>
-        <th>TRIGGER THRESHOLD</th><th>CURRENT STATUS</th>
+        <th>SIG</th><th>SYSTEM</th><th>NAME</th>
+        <th>STATE</th><th>TRIGGER</th><th>STATUS</th>
       </tr></thead>
       <tbody id="sigTableBody"></tbody>
     </table>
@@ -520,17 +550,15 @@ function buildTable(){
   const ord={red:0,amber:1,yellow:2,blue:3,green:4,dim:5,purple:6};
   all.sort((a,b)=>(ord[a.rag]||4)-(ord[b.rag]||4));
   const col={red:'var(--red)',amber:'var(--amber)',yellow:'var(--yellow)',blue:'var(--blue)',green:'var(--green)',dim:'var(--text-dim)',purple:'var(--purple)'};
+  const isGreen = s => ['green'].includes(s.rag);
   document.getElementById('sigTableBody').innerHTML=all.map(s=>`
-    <tr>
-      <td style="color:var(--text-dim);font-size:16px">${s.id}</td>
-      <td><span style="font-family:var(--font-mono);font-size:15px;padding:2px 6px;border:1px solid;color:${s.sys==='ai'?'var(--blue)':'var(--purple)'};border-color:${s.sys==='ai'?'rgba(74,158,255,0.3)':'rgba(167,139,250,0.3)'}">${s.sys.toUpperCase()}</span></td>
-      <td><span class="rb ${s.rag}"></span>${s.name}</td>
-      <td style="color:var(--text-dim);font-size:16px">${s.tier}</td>
-      <td><span style="font-family:var(--font-mono);font-size:15px;padding:2px 6px;border:1px solid;color:${col[s.rag]||'var(--text-dim)'};border-color:${col[s.rag]||'var(--border)'}">${s.rag.toUpperCase()}</span></td>
-      <td style="font-family:var(--font-display);font-size:16px;color:${col[s.rag]||'var(--text-dim)'}">${s.score}</td>
-      <td style="font-size:14px;color:${s.dir==='↑'?'var(--red)':s.dir==='↓'?'var(--green)':'var(--text-dim)'}">${s.dir}</td>
-      <td style="font-size:16px;color:var(--text-dim);max-width:180px">${s.thresh}</td>
-      <td style="font-size:16px;color:var(--text-secondary);max-width:200px">${s.status}</td>
+    <tr style="${isGreen(s)?'opacity:0.55':''}">
+      <td style="color:var(--text-dim);font-size:13px;white-space:nowrap">${s.id}</td>
+      <td><span style="font-family:var(--font-mono);font-size:11px;padding:2px 7px;border-radius:99px;color:${s.sys==='ai'?'var(--blue)':'var(--purple)'};background:${s.sys==='ai'?'var(--blue-dim)':'var(--purple-dim)'}">${s.sys.toUpperCase()}</span></td>
+      <td style="font-size:14px;color:var(--text-primary)">${s.name}</td>
+      <td><span style="font-family:var(--font-mono);font-size:11px;padding:2px 8px;border-radius:99px;color:${col[s.rag]||'var(--text-dim)'};background:${col[s.rag]?.replace(')',',0.12)')||'rgba(255,255,255,0.06)'}">${s.rag.toUpperCase()}</span></td>
+      <td style="font-size:13px;color:var(--text-dim);max-width:160px">${s.thresh}</td>
+      <td style="font-size:13px;color:${col[s.rag]||'var(--text-secondary)'};max-width:220px">${s.status}</td>
     </tr>
   `).join('');
 }
@@ -546,6 +574,15 @@ function updateScores(){
   document.getElementById('aiG').textContent=AI_SIGS.filter(s=>s.rag==='green').length;
   document.getElementById('aiA').textContent=AI_SIGS.filter(s=>s.rag==='amber').length;
   document.getElementById('aiR').textContent=AI_SIGS.filter(s=>s.rag==='red').length;
+  // Dynamic color-coded detail text
+  const col={red:'var(--red)',amber:'var(--amber)',yellow:'var(--yellow)',green:'var(--green)',blue:'var(--blue)',dim:'var(--text-dim)'};
+  const nonGreen=AI_SIGS.filter(s=>s.rag!=='green');
+  const aiDetailEl=document.getElementById('aiDetail');
+  if(aiDetailEl){
+    aiDetailEl.innerHTML = nonGreen.length
+      ? nonGreen.map(s=>`<span style="color:${col[s.rag]||'var(--text-dim)'}">${s.name} ${s.rag.toUpperCase()}</span>`).join(' · ') + ` · Composite ${ai}`
+      : `<span style="color:var(--green)">All signals nominal</span> · Composite ${ai}`;
+  }
 
   // Macro panel
   document.getElementById('macroScore').textContent=mac;
@@ -556,6 +593,14 @@ function updateScores(){
   document.getElementById('macG').textContent=MACRO_SIGS.filter(s=>s.rag==='green').length;
   document.getElementById('macA').textContent=MACRO_SIGS.filter(s=>['amber','yellow'].includes(s.rag)).length;
   document.getElementById('macR').textContent=MACRO_SIGS.filter(s=>s.rag==='red').length;
+  // Dynamic color-coded macro detail text
+  const macNonGreen=MACRO_SIGS.filter(s=>s.rag!=='green'&&s.rag!=='dim');
+  const macDetailEl=document.getElementById('macroDetail');
+  if(macDetailEl){
+    macDetailEl.innerHTML = macNonGreen.length
+      ? macNonGreen.map(s=>`<span style="color:${col[s.rag]||'var(--text-dim)'}">${s.name} ${s.rag.toUpperCase()}</span>`).join(' · ') + ` · Composite ${mac}`
+      : `<span style="color:var(--green)">All macro signals nominal</span> · Composite ${mac}`;
+  }
 
   // Master
   document.getElementById('masterScore').textContent=mas;
