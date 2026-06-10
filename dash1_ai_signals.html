@@ -1143,7 +1143,7 @@
           </div>
         </div>
         <div class="trigger-line" id="trigger-5">WATCH: IG spreads widen &gt;50bps in a quarter. RED LINE: Any hyperscaler issues &gt;$30B in a single quarter.</div>
-        <div class="data-source-tag"><span class="source-chip" id="src-5">FRED / SIFMA / SEC FILINGS</span></div>
+        <div class="data-source-tag"><span class="source-chip" id="src-5">FRED / REUTERS / GURUFOCUS</span></div>
       </div>
 
     </div>
@@ -1202,7 +1202,7 @@
           </div>
         </div>
         <div class="trigger-line" id="trigger-2">WATCH: Any Big 4 posts QoQ FCF decline &gt;15% while maintaining capex. RED LINE: Combined FCF drops below $250B annualized.</div>
-        <div class="data-source-tag"><span class="source-chip" id="src-2">SEC 10-Q / MACROTRENDS</span></div>
+        <div class="data-source-tag"><span class="source-chip" id="src-2">MACROTRENDS / GURUFOCUS</span></div>
       </div>
 
       <div class="signal-card amber" id="card-7">
@@ -1241,7 +1241,7 @@
           </div>
         </div>
         <div class="trigger-line" id="trigger-7">WATCH: Big 4 aggregate capex/revenue exceeds 25%. RED LINE: P/E compression begins even with stable earnings — multiple contraction signal.</div>
-        <div class="data-source-tag"><span class="source-chip" id="src-7">MACROTRENDS / WISESHEETS</span></div>
+        <div class="data-source-tag"><span class="source-chip" id="src-7">GURUFOCUS</span></div>
       </div>
 
     </div>
@@ -1338,13 +1338,13 @@
         <div class="signal-metrics">
           <div class="metric-row">
             <div class="metric-row-inner">
-              <div class="metric-label">DATACENTER REIT SPREAD</div>
+              <div class="metric-label">EQIX PRICE / 90D AVG</div>
               <div style="display:flex;align-items:center;gap:0;">
                 <div class="metric-value" id="dc-spread">—</div>
                 <button class="lock-btn" id="lock-btn-dc-spread" onclick="lockField('dc-spread')">✓ LOCK</button>
               </div>
             </div>
-            <input class="lock-input" id="input-dc-spread" type="text" placeholder="Stable / +15bps" onkeydown="if(event.key==='Enter')lockField('dc-spread')">
+            <input class="lock-input" id="input-dc-spread" type="text" placeholder="$890 / +4%" onkeydown="if(event.key==='Enter')lockField('dc-spread')">
             <div class="lock-stamp" id="stamp-dc-spread">Type value above then click LOCK</div>
           </div>
           <div class="metric-row">
@@ -1364,7 +1364,7 @@
           </div>
         </div>
         <div class="trigger-line" id="trigger-8">WATCH: Data center REITs or private credit vehicles show covenant stress or rating action. RED LINE: Any hyperscaler-adjacent entity misses debt service or seeks refinancing.</div>
-        <div class="data-source-tag"><span class="source-chip" id="src-8">BLOOMBERG / MOODY'S / S&amp;P</span></div>
+        <div class="data-source-tag"><span class="source-chip" id="src-8">YAHOO FINANCE / BLOOMBERG / ORACLE IR</span></div>
       </div>
 
     </div>
@@ -1504,165 +1504,182 @@ const STORAGE_KEY = 'rooster_dash1_v1';
 // ── STALE THRESHOLDS (days) ──
 const STALE_DAYS = { weekly: 9, monthly: 35, quarterly: 95 };
 
+// ── SOURCES — health monitor (8 data sources) ──
+const SOURCES = [
+  { signal:'SIG 01 — NVDA GUIDANCE',       id:'src-6', url:'https://www.macrotrends.net/stocks/charts/NVDA/nvidia/gross-profit-margin', label:'MACROTRENDS/NVDA',  status:'ok' },
+  { signal:'SIG 02 — OPENAI REVENUE',      id:'src-1', url:'https://www.reuters.com/technology/artificial-intelligence/',               label:'REUTERS/AI',        status:'ok' },
+  { signal:'SIG 03 — DEBT ISSUANCE',       id:'src-5', url:'https://fred.stlouisfed.org/series/BAMLC0A0CM',                             label:'FRED/SPREADS',      status:'ok' },
+  { signal:'SIG 04 — FCF COMPRESSION',     id:'src-2', url:'https://www.macrotrends.net/stocks/charts/MSFT/microsoft/free-cash-flow',   label:'MACROTRENDS/FCF',   status:'ok' },
+  { signal:'SIG 05 — CAPEX/REVENUE',       id:'src-7', url:'https://www.gurufocus.com/term/capex-to-revenue/MSFT',                      label:'GURUFOCUS/CAPEX',   status:'ok' },
+  { signal:'SIG 06 — CLOUD DECEL',         id:'src-3', url:'https://ir.microsoft.com/financial-information/quarterly-earnings',         label:'MSFT/AWS/GCP IR',   status:'ok' },
+  { signal:'SIG 07 — ENTERPRISE ROI',      id:'src-4', url:'https://www.census.gov/programs-surveys/btos.html',                         label:'CENSUS BTOS',       status:'ok' },
+  { signal:'SIG 08 — INFRA DEBT STRESS',   id:'src-8', url:'https://finance.yahoo.com/quote/EQIX/',                                     label:'YAHOO/EQIX',        status:'ok' },
+];
+
 // ── SIGNAL GROUPINGS for Wake Up modal ──
-// Signal groups match card HTML exactly — names from signal-name divs, cadence from slowest field
+// ── SIGNAL GROUPS — match card HTML tier structure ──
 const SIGNAL_GROUPS = [
   {
     tier: 'TIER 1 — UPSTREAM ORIGINATION',
     sigs: [
-      { sig:'SIG01', name:'NVIDIA FORWARD GUIDANCE',        cadence:'quarterly' },
-      { sig:'SIG02', name:'OPENAI REVENUE vs COMMITMENT',   cadence:'quarterly' },
-      { sig:'SIG03', name:'HYPERSCALER DEBT ISSUANCE',      cadence:'weekly'    },
+      { sig:'SIG01', name:'Nvidia forward guidance',       cadence:'quarterly', eventMonths:[2,5,8,11] },
+      { sig:'SIG02', name:'OpenAI revenue vs commitment',  cadence:'monthly',   eventMonths:null },
+      { sig:'SIG03', name:'Hyperscaler debt issuance',     cadence:'weekly',    eventMonths:null },
     ]
   },
   {
     tier: 'TIER 2 — MID-STREAM TRANSMISSION',
     sigs: [
-      { sig:'SIG04', name:'FREE CASH FLOW COMPRESSION',     cadence:'quarterly' },
-      { sig:'SIG05', name:'CAPEX / REVENUE EXPANSION',      cadence:'quarterly' },
+      { sig:'SIG04', name:'Free cash flow compression',    cadence:'quarterly', eventMonths:[1,4,7,10] },
+      { sig:'SIG05', name:'Capex / revenue expansion',     cadence:'quarterly', eventMonths:[1,4,7,10] },
     ]
   },
   {
     tier: 'TIER 3 — DOWNSTREAM CONFIRMATION',
     sigs: [
-      { sig:'SIG06', name:'CLOUD REVENUE DECELERATION',     cadence:'quarterly' },
-      { sig:'SIG07', name:'ENTERPRISE ROI REALIZATION',     cadence:'monthly'   },
-      { sig:'SIG08', name:'INFRASTRUCTURE DEBT STRESS',     cadence:'weekly'    },
+      { sig:'SIG06', name:'Cloud revenue deceleration',    cadence:'quarterly', eventMonths:[1,4,7,10] },
+      { sig:'SIG07', name:'Enterprise ROI realization',    cadence:'monthly',   eventMonths:null },
+      { sig:'SIG08', name:'Infrastructure debt stress',    cadence:'weekly',    eventMonths:[1,4,7,10] },
     ]
   }
 ];
 
-// ── FIELDS — instructions derived directly from card HTML, trigger lines, and metric labels ──
+// ── EVENT CALENDAR — known real-world data events by month ──
+// eventMonths: months (1-indexed) when new data is expected for that signal
+// After an event month passes and the signal has not been updated → surface in modal
+// regardless of day count threshold
+function isPostEventStale(sig) {
+  const now       = new Date();
+  const thisMonth = now.getMonth() + 1; // 1-indexed
+  const thisDay   = now.getDate();
+
+  // Find the signal group entry
+  let sigEntry = null;
+  SIGNAL_GROUPS.forEach(g => g.sigs.forEach(s => { if (s.sig === sig) sigEntry = s; }));
+  if (!sigEntry || !sigEntry.eventMonths) return false;
+
+  // Check if we are 14+ days into an event month and signal fields not updated this month
+  const inEventMonth = sigEntry.eventMonths.includes(thisMonth);
+  if (!inEventMonth || thisDay < 14) return false;
+
+  // Check if any field for this signal was locked this month
+  const data      = loadAll();
+  const sigFields = FIELDS.filter(f => f.sig === sig);
+  const updatedThisMonth = sigFields.some(f => {
+    if (!data[f.id] || !data[f.id].locked) return false;
+    const locked = new Date(data[f.id].locked);
+    return locked.getMonth() + 1 === thisMonth && locked.getFullYear() === now.getFullYear();
+  });
+
+  return !updatedThisMonth;
+}
+
+// ── STALE THRESHOLDS (days) ──
+const STALE_DAYS = { weekly: 9, monthly: 35, quarterly: 95 };
+
+
+
+// ── FIELDS — derived from card HTML · confirmed data architecture table ──
+// Methods: manual-link | manual-ask-system | derived (not a modal input)
 const FIELDS = [
 
-  // ── SIG01 — NVDA GUIDANCE ──
-  // Card trigger: "WATCH: Guidance cut OR gross margin compression >300bps."
-  // Source chip: MACROTRENDS / EARNINGS
-  { id:'nvda-dcgrowth', label:'DC REVENUE GROWTH',  sig:'SIG01', cadence:'quarterly',
+  // SIG01 — NVDA GUIDANCE
+  // Modal inputs: DC revenue growth, Gross margin only
+  // Guidance delta = derived, not modal input
+  { id:'nvda-dcgrowth', label:'DC REVENUE GROWTH',   sig:'SIG01', cadence:'quarterly',
+    method:'manual-link',
     url:'https://www.macrotrends.net/stocks/charts/NVDA/nvidia/revenue',
-    instruction:'Macrotrends → NVDA → Revenue → select Quarterly → find Data Center segment YoY% growth vs same quarter prior year',
+    instruction:'Quarterly tab → Data Center segment YoY% vs same quarter prior year',
     hint:'+56% YoY' },
-  { id:'nvda-gm',       label:'GROSS MARGIN',        sig:'SIG01', cadence:'quarterly',
+  { id:'nvda-gm', label:'GROSS MARGIN %',            sig:'SIG01', cadence:'quarterly',
+    method:'manual-link',
     url:'https://www.macrotrends.net/stocks/charts/NVDA/nvidia/gross-profit-margin',
-    instruction:'Macrotrends → NVDA → Gross Profit Margin → most recent quarter % — use quarterly column not TTM. Watch for >300bps compression vs prior quarter',
+    instruction:'Most recent quarter gross margin % — quarterly column, not TTM',
     hint:'73.8%' },
-  { id:'nvda-guidance', label:'GUIDANCE DELTA',      sig:'SIG01', cadence:'quarterly',
-    url:'https://investor.nvidia.com/financial-information/quarterly-results/default.aspx',
-    instruction:'NVDA investor relations → latest earnings press release → next quarter revenue guidance vs analyst consensus. Enter: Raised / Inline / Cut',
-    hint:'Raised / Inline / Cut' },
 
-  // ── SIG02 — OPENAI REVENUE vs COMMITMENT ──
-  // Card trigger: "WATCH: Miss on $20B 2026 target by >20%."
-  // Source chip: BLOOMBERG / WSJ / REUTERS
-  // Reframed as AI Monetization Ratio per session audit
-  { id:'openai-rev',   label:'AI MONETIZATION RATIO', sig:'SIG02', cadence:'quarterly',
-    url:'https://www.reuters.com/technology/artificial-intelligence/',
-    instruction:'Combined AI-attributed revenue (MSFT Azure AI + AWS AI + Google Cloud) divided by combined quarterly capex for same three companies. Q1 2026 baseline: $33B / $114.8B = 0.29x. Rising toward 1.0x = bull. Flat or falling = bear',
-    hint:'0.29x' },
-  { id:'openai-ratio', label:'COMMITMENT COVERAGE',   sig:'SIG02', cadence:'quarterly',
-    url:'https://www.reuters.com/technology/artificial-intelligence/',
-    instruction:'Search Reuters or WSJ for any renegotiated, deferred, or cancelled infrastructure commitments between OpenAI and MSFT / ORCL / AWS. Enter: No Changes / Watch / Renegotiated',
-    hint:'No Changes / Watch / Renegotiated' },
+  // SIG02 — OPENAI REVENUE vs COMMITMENT
+  // Modal input: Current run rate only
+  // Commitment coverage ratio = derived/calculated, not modal input
+  { id:'openai-rev', label:'CURRENT RUN RATE',       sig:'SIG02', cadence:'monthly',
+    method:'manual-ask-system',
+    url:'',
+    instruction:'Ask the system: "What is OpenAI's most recently reported monthly revenue run rate?"',
+    hint:'$4B/mo' },
 
-  // ── SIG03 — HYPERSCALER DEBT ISSUANCE ──
-  // Card trigger: "WATCH: IG spreads widen >50bps in a quarter. RED LINE: Any hyperscaler issues >$30B in single quarter."
-  // Source chip: FRED / SIFMA / SEC FILINGS
-  { id:'hy-spread',  label:'MSFT / AMZN / GOOGL SPREAD', sig:'SIG03', cadence:'weekly',
+  // SIG03 — HYPERSCALER DEBT ISSUANCE
+  // Modal inputs: IG spread, Qtr issuance volume
+  // Debt/EBITDA trend = derived, not modal input
+  { id:'hy-spread', label:'IG SPREAD BPS',           sig:'SIG03', cadence:'weekly',
+    method:'manual-link',
     url:'https://fred.stlouisfed.org/series/BAMLC0A0CM',
-    instruction:'FRED → ICE BofA US Corporate Index OAS → most recent data point on right of chart. This is Investment Grade spread in basis points. Watch trigger: >50bps widening in a single quarter',
+    instruction:'Most recent data point on right of chart. Enter number in basis points.',
     hint:'74bps' },
-  { id:'hy-volume',  label:'QTR ISSUANCE VOLUME',         sig:'SIG03', cadence:'quarterly',
-    url:'https://www.reuters.com/markets/rates-bonds/',
-    instruction:'Reuters Markets → search "hyperscaler bond issuance" for current quarter. Enter combined $ volume of new IG bond deals by MSFT + AMZN + GOOGL + META. Red line: any single company >$30B in one quarter',
-    hint:'~$54B (AMZN Q1 alone)' },
-  { id:'hy-ratio',   label:'DEBT / EBITDA TREND',         sig:'SIG03', cadence:'quarterly',
-    url:'https://www.gurufocus.com/term/debt-to-ebitda/MSFT',
-    instruction:'Gurufocus → toggle MSFT / AMZN / GOOGL → check Debt/EBITDA vs prior quarter and 10-year average. Enter trend direction: Rising / Stable / Declining',
-    hint:'Stable' },
+  { id:'hy-volume', label:'QTR ISSUANCE VOLUME',     sig:'SIG03', cadence:'quarterly',
+    method:'manual-ask-system',
+    url:'',
+    instruction:'Ask the system: "What is the latest hyperscaler bond issuance total this quarter?"',
+    hint:'~$54B Q1 2026' },
 
-  // ── SIG04 — FREE CASH FLOW COMPRESSION ──
-  // Card trigger: "WATCH: Combined FCF drops >15% QoQ. RED LINE: Any single company FCF goes negative."
-  // Source chip: EARNINGS / MACROTRENDS
-  { id:'fcf-combined', label:'BIG 4 COMBINED FCF (TTM)', sig:'SIG04', cadence:'quarterly',
-    url:'https://www.macrotrends.net/stocks/charts/MSFT/microsoft/free-cash-flow',
-    instruction:'Macrotrends → pull TTM FCF for MSFT + AMZN + GOOGL + META → add all four → enter combined $B total. Watch: drop >15% QoQ',
+  // SIG04 — FREE CASH FLOW COMPRESSION
+  // Modal inputs: Big 4 combined FCF, Capex/revenue ratio
+  // QoQ change = derived from prior vs current FCF, not modal input
+  { id:'fcf-combined', label:'BIG 4 COMBINED FCF',   sig:'SIG04', cadence:'quarterly',
+    method:'manual-ask-system',
+    url:'',
+    instruction:'Ask the system: "What is the current combined TTM free cash flow for MSFT, AMZN, GOOGL, and META?"',
     hint:'$285B' },
-  { id:'fcf-qoq',      label:'QOQ CHANGE',               sig:'SIG04', cadence:'quarterly',
-    url:'https://www.macrotrends.net/stocks/charts/MSFT/microsoft/free-cash-flow',
-    instruction:'Compare most recent quarter combined Big 4 FCF vs prior quarter → calculate % change. Negative = compression. Red line: any single company FCF goes negative',
-    hint:'-8%' },
-  { id:'capex-rev',    label:'CAPEX / REVENUE RATIO',    sig:'SIG04', cadence:'quarterly',
+  { id:'capex-rev', label:'CAPEX / REVENUE RATIO',   sig:'SIG04', cadence:'quarterly',
+    method:'manual-link',
     url:'https://www.gurufocus.com/term/capex-to-revenue/MSFT',
-    instruction:'Gurufocus → toggle MSFT / AMZN / GOOGL / META → note capex as % of revenue for each. Enter MSFT ratio as primary — flag if others diverging significantly',
+    instruction:'Toggle MSFT ticker in URL → most recent quarter capex/revenue ratio %',
     hint:'22%' },
 
-  // ── SIG05 — CAPEX / REVENUE EXPANSION ──
-  // Card trigger: "WATCH: Ratio expands >5pts QoQ across 3+ companies."
-  // Source chip: EARNINGS / MACROTRENDS
-  { id:'capex-pct',    label:'BIG TECH CAPEX/REV %',     sig:'SIG05', cadence:'quarterly',
+  // SIG05 — CAPEX / REVENUE EXPANSION
+  // Modal input: Big tech capex/rev avg only
+  // P/E vs sector = retired
+  { id:'capex-pct', label:'BIG TECH CAPEX/REV AVG',  sig:'SIG05', cadence:'quarterly',
+    method:'manual-link',
     url:'https://www.gurufocus.com/term/capex-to-revenue/MSFT',
-    instruction:'Gurufocus → pull capex/revenue % for MSFT + AMZN + GOOGL + META → average the four. Watch: sustained above 25% is warning threshold. Toggle tickers in URL',
+    instruction:'Pull capex/revenue for MSFT / AMZN / GOOGL / META (swap ticker in URL) → average the four → enter avg %',
     hint:'45-57%' },
 
-  // ── SIG06 — CLOUD REVENUE DECELERATION ──
-  // Card trigger: "WATCH: Any hyperscaler AI growth decelerates 3+ consecutive points QoQ. RED LINE: Any segment drops below 30% YoY."
-  // Source chip: EARNINGS TRANSCRIPTS / IR SITES
-  { id:'azure-growth', label:'AZURE AI YOY GROWTH',      sig:'SIG06', cadence:'quarterly',
+  // SIG06 — CLOUD REVENUE DECELERATION
+  // Modal inputs: Azure, AWS, GCP YoY growth
+  { id:'azure-growth', label:'AZURE YOY GROWTH',     sig:'SIG06', cadence:'quarterly',
+    method:'manual-link',
     url:'https://ir.microsoft.com/financial-information/quarterly-earnings',
-    instruction:'MSFT IR → latest earnings press release → Intelligent Cloud segment → Azure and other cloud services YoY% growth figure stated in the release. Q1 2026: 40%',
+    instruction:'Latest press release → Intelligent Cloud segment → Azure and other cloud services YoY%',
     hint:'40%' },
-  { id:'aws-growth',   label:'AWS AI YOY GROWTH',        sig:'SIG06', cadence:'quarterly',
+  { id:'aws-growth', label:'AWS YOY GROWTH',         sig:'SIG06', cadence:'quarterly',
+    method:'manual-link',
     url:'https://ir.aboutamazon.com/quarterly-results/default.aspx',
-    instruction:'Amazon IR → latest earnings release → AWS net sales YoY growth % from segment table. Q1 2026: 28%',
+    instruction:'Latest press release → AWS net sales YoY growth % from segment table',
     hint:'28%' },
-  { id:'gcp-growth',   label:'GCP AI YOY GROWTH',        sig:'SIG06', cadence:'quarterly',
+  { id:'gcp-growth', label:'GCP YOY GROWTH',         sig:'SIG06', cadence:'quarterly',
+    method:'manual-link',
     url:'https://abc.xyz/investor/',
-    instruction:'Alphabet IR → latest earnings release → Google Cloud revenue YoY growth % from segment table. Q1 2026: 63%',
+    instruction:'Latest press release → Google Cloud revenue YoY growth % from segment table',
     hint:'63%' },
 
-  // ── SIG07 — ENTERPRISE ROI REALIZATION ──
-  // Card trigger: "WATCH: BTOS adoption stalls or reverses; ROI % stays below 30%. RED LINE: Enterprise AI budget growth decelerates while conversion stays below 30%."
-  // Source chip: CENSUS BTOS / DELOITTE / WRITER
-  { id:'roi-pct',    label:'ENTERPRISE ROI % (SIGNIFICANT)', sig:'SIG07', cadence:'quarterly',
-    url:'https://www.census.gov/library/stories/2026/05/ai-use-businesses.html',
-    instruction:'Census BTOS AI use story page → find % of businesses reporting significant ROI or cost savings from AI. Watch: stalls or declines below 29% baseline',
-    hint:'29%' },
-  { id:'btos-rate',  label:'FIRM ADOPTION RATE (BTOS)',       sig:'SIG07', cadence:'monthly',
-    url:'https://www.census.gov/programs-surveys/btos.html',
-    instruction:'Census BTOS → AI Use at US Businesses → current national AI adoption rate %. Current: 19.8% (May 2026). Watch: stalls or reverses',
-    hint:'19.8%' },
-  { id:'pilot-conv', label:'PILOT→PRODUCTION CONVERSION',     sig:'SIG07', cadence:'quarterly',
-    url:'https://www.deloitte.com/global/en/issues/generative-ai/state-of-ai-in-enterprise.html',
-    instruction:'Deloitte State of AI report (annual, download from page) → find pilot-to-production conversion %. Current: ~25%. Updated once per year when new report publishes',
-    hint:'~25%' },
+  // SIG07 — ENTERPRISE ROI REALIZATION
+  // Card shows roi-pct, btos-rate, pilot-conv as display values (no lock buttons)
+  // All three are updated by human directly on card — none are modal inputs
+  // Keeping btos-rate in FIELDS for staleness tracking only — not surfaced in modal
 
-  // ── SIG08 — INFRASTRUCTURE DEBT STRESS ──
-  // Card trigger: "WATCH: Data center REITs or private credit show covenant stress or rating action. RED LINE: Any hyperscaler-adjacent entity misses debt service or seeks refinancing."
-  // Source chip: BLOOMBERG / MOODY'S / S&P
-  { id:'dc-spread',  label:'DATACENTER REIT SPREAD',    sig:'SIG08', cadence:'weekly',
-    url:'https://www.bloomberg.com/markets/rates-bonds/government-bonds/us',
-    instruction:'Bloomberg or search "data center REIT credit spread" → compare current spread vs 52-week average. Enter basis point reading or: Stable / Widening +Xbps / Tightening. Watch: any covenant stress or rating action on DC REITs',
-    hint:'Stable / +15bps' },
-  { id:'pc-status',  label:'COREWEAVE / PRIVATE CREDIT', sig:'SIG08', cadence:'monthly',
-    url:'https://www.bloomberg.com/news/articles/2026-06-02/coreweave-tied-data-center-raises-900-million-in-junk-bond-sale',
-    instruction:'Bloomberg → search CoreWeave debt or AI private credit. Current news: CoreWeave-tied data center raised $900M in junk bond sale (Jun 2, 2026). Enter: Stable / Watch / Stress. Red line: missed debt service or refinancing request',
-    hint:'Stable / Watch / Stress' },
-  { id:'orcl-cov',   label:'ORACLE CAPEX COVERAGE',     sig:'SIG08', cadence:'quarterly',
+  // SIG08 — INFRASTRUCTURE DEBT STRESS
+  // Modal inputs: EQIX price/90d avg, Oracle capex coverage
+  // CoreWeave/private credit = manual-ask-system, enter on card
+  { id:'dc-spread', label:'EQIX PRICE / 90D AVG',    sig:'SIG08', cadence:'weekly',
+    method:'manual-link',
+    url:'https://finance.yahoo.com/quote/EQIX/',
+    instruction:'Current price and 3-month % change shown on quote page. Enter e.g. $890 / +4%',
+    hint:'$890 / +4%' },
+  { id:'orcl-cov', label:'ORACLE CAPEX COVERAGE',    sig:'SIG08', cadence:'quarterly',
+    method:'manual-link',
     url:'https://investor.oracle.com/investor-news/financial-data/quarterly-results/default.aspx',
-    instruction:'Oracle IR → latest earnings → divide quarterly operating cash flow by quarterly capex. Enter the ratio. Below 1.0x means capex exceeds operating cash — watch signal. Red line: below 0.8x',
+    instruction:'Latest earnings → divide operating cash flow by capex for the quarter. Enter ratio.',
     hint:'1.2x' },
-];
 
-// ── SOURCES — health monitor (8 data sources, one per signal) ──
-const SOURCES = [
-  { signal:'SIG 01 — NVDA GUIDANCE',         id:'src-6', url:'https://www.macrotrends.net/stocks/charts/NVDA/nvidia/gross-profit-margin', label:'MACROTRENDS/NVDA',   status:'ok' },
-  { signal:'SIG 02 — OPENAI REVENUE',        id:'src-1', url:'https://www.reuters.com/technology/artificial-intelligence/',               label:'REUTERS/AI',         status:'ok' },
-  { signal:'SIG 03 — DEBT ISSUANCE',         id:'src-5', url:'https://fred.stlouisfed.org/series/BAMLC0A0CM',                             label:'FRED/SPREADS',       status:'ok' },
-  { signal:'SIG 04 — FCF COMPRESSION',       id:'src-2', url:'https://www.macrotrends.net/stocks/charts/MSFT/microsoft/free-cash-flow',   label:'MACROTRENDS/FCF',    status:'ok' },
-  { signal:'SIG 05 — CAPEX/REVENUE',         id:'src-7', url:'https://www.gurufocus.com/term/capex-to-revenue/MSFT',                      label:'GURUFOCUS/CAPEX',    status:'ok' },
-  { signal:'SIG 06 — CLOUD DECEL',           id:'src-3', url:'https://ir.microsoft.com/financial-information/quarterly-earnings',         label:'MSFT/AWS/GCP IR',    status:'ok' },
-  { signal:'SIG 07 — ENTERPRISE ROI',        id:'src-4', url:'https://www.census.gov/programs-surveys/btos.html',                         label:'CENSUS BTOS',        status:'ok' },
-  { signal:'SIG 08 — INFRA DEBT STRESS',     id:'src-8', url:'https://www.bloomberg.com/markets/rates-bonds/government-bonds/us',         label:'BLOOMBERG/BONDS',    status:'ok' },
 ];
 
 // ── STORAGE ──
@@ -1697,20 +1714,24 @@ function checkStaleness(fieldId) {
   return { stale: false, label: 'CURRENT — ' + lockedDate.toLocaleDateString('en-US',{month:'short',day:'numeric'}), state: 'current' };
 }
 
-// Check staleness at signal level — stale if ANY field in that signal is stale
+// Check staleness at signal level — stale if ANY field stale OR post-event calendar check
 function checkSignalStaleness(sigCode) {
   const sigFields = FIELDS.filter(f => f.sig === sigCode);
   for (const f of sigFields) {
     const s = checkStaleness(f.id);
-    if (s.state === 'never') return { stale: true, label: 'NEVER ENTERED', state: 'never' };
+    if (s.state === 'never') return { stale: true, label: 'Never entered', state: 'never' };
     if (s.state === 'stale') return { stale: true, label: s.label, state: 'stale' };
   }
-  // Find most recent lock
-  const data = loadAll();
+  // Event calendar check — new data available since last lock?
+  if (isPostEventStale(sigCode)) {
+    return { stale: true, label: 'New data available', state: 'stale' };
+  }
+  // All current — find most recent lock date
+  const data  = loadAll();
   const dates = sigFields.filter(f => data[f.id] && data[f.id].locked).map(f => new Date(data[f.id].locked));
-  if (!dates.length) return { stale: true, label: 'NEVER ENTERED', state: 'never' };
+  if (!dates.length) return { stale: true, label: 'Never entered', state: 'never' };
   const latest = new Date(Math.max(...dates));
-  return { stale: false, label: 'CURRENT — ' + latest.toLocaleDateString('en-US',{month:'short',day:'numeric'}), state: 'current' };
+  return { stale: false, label: 'Current — ' + latest.toLocaleDateString('en-US',{month:'short',day:'numeric'}), state: 'current' };
 }
 
 // ── LOCK FIELD (v2 — with history logging) ──
@@ -1900,10 +1921,6 @@ function updateCompositeDisplay() {
     'LOCAL — ' + new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
 }
 
-// ── WAKE UP MODAL ──
-
-let wakeupQueue = [];
-
 // ── STEPPED WAKE UP MODAL ──
 let wakeupQueue   = [];
 let currentStep   = 0;   // 0-based index into SIGNAL_GROUPS
@@ -1983,6 +2000,10 @@ function renderStep(stepIdx) {
     let fieldRowsHtml = '';
     if (s.stale) {
       sigFields.forEach(f => {
+        const isAskSystem = f.method === 'manual-ask-system';
+        const actionBtn   = isAskSystem
+          ? `<button class="wakeup-get-data" style="cursor:pointer;" onclick="sendPrompt('${f.instruction.replace(/'/g,"\\'")}')">Ask system ↗</button>`
+          : (f.url ? `<a class="wakeup-get-data" href="${f.url}" target="_blank">Get data ↗</a>` : '');
         fieldRowsHtml += `
           <div class="wakeup-field-row" id="wakeup-fieldrow-${f.id}">
             <div>
@@ -1995,7 +2016,7 @@ function renderStep(stepIdx) {
                 onkeydown="if(event.key==='Enter')confirmSingleField('${f.id}')">
             </div>
             <div style="text-align:right;padding-left:8px;">
-              <a class="wakeup-get-data" href="${f.url}" target="_blank">Get data ↗</a>
+              ${actionBtn}
             </div>
           </div>`;
       });
