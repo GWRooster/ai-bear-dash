@@ -1574,11 +1574,6 @@ function isPostEventStale(sig) {
   return !updatedThisMonth;
 }
 
-// ── STALE THRESHOLDS (days) ──
-const STALE_DAYS = { weekly: 9, monthly: 35, quarterly: 95 };
-
-
-
 // ── FIELDS — derived from card HTML · confirmed data architecture table ──
 // Methods: manual-link | manual-ask-system | derived (not a modal input)
 const FIELDS = [
