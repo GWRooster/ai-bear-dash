@@ -154,6 +154,7 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
   <a href="dash5_macro_signals.html" class="nav-link">MACRO SIGNALS</a>
   <a href="dash_summary.html" class="nav-link">SUMMARY</a>
 </nav>
+<div id="d4StaleBanner" style="display:none;"></div>
 <main class="main">
 
   <!-- HERO -->
@@ -324,12 +325,12 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 
       <div class="sig-row-compact">
         <div class="sig-dot green" style="margin-top:5px;"></div>
-        <div><div class="sig-name-compact">Lower High / Chart (3C)</div><div class="sig-desc-compact">S&P currently above Feb 6,147 ATH. Rally sequence not active. Fires if rally stalls below ATH and S&P breaks back below 5,450 with volume confirmation.</div></div>
+        <div><div class="sig-name-compact">Lower High / Chart (3C)</div><div class="sig-desc-compact">S&P currently above Feb 6,147 ATH. Rally sequence not active. Fires if rally stalls below ATH and S&P breaks back below the 20-day MA with volume confirmation.</div></div>
         <div class="sig-state-compact">CLEAR</div>
         <div class="sig-score-compact">5</div>
         <div class="sig-dir" style="color:var(--text-dim);font-size:16px;text-align:center;">→</div>
         <div class="sig-metric-compact">Not active — S&P above ATH</div>
-        <div class="sig-trigger-compact">S&P below 5,450 after rally fails</div>
+        <div class="sig-trigger-compact">S&P sustained below 20-day MA after rally fails to hold</div>
       </div>
 
     </div>
@@ -348,74 +349,101 @@ function calcGaugeArc(score){
   return`M20 100 A80 80 0 ${largeArc} 1 ${ex.toFixed(1)} ${ey.toFixed(1)}`;
 }
 
-async function fetchLiveData(){
-  const yUrl='https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?interval=1d&range=5d';
-  const proxies=['https://api.allorigins.win/get?url='+encodeURIComponent(yUrl),'https://corsproxy.io/?'+encodeURIComponent(yUrl)];
-  for(const url of proxies){
-    try{
-      const r=await fetch(url,{signal:AbortSignal.timeout(7000)});
-      if(!r.ok)continue;
-      const w=await r.json();
-      const raw=typeof w.contents==='string'?JSON.parse(w.contents):w;
-      const closes=raw?.chart?.result?.[0]?.indicators?.quote?.[0]?.close;
-      if(closes?.length){const v=closes.filter(x=>x!=null).pop();if(v){document.getElementById('mSpx').textContent=v.toLocaleString(undefined,{maximumFractionDigits:0});return;}}
-    }catch(e){}
-  }
-  document.getElementById('mSpx').textContent='—';
-}
-
+// SPX: reads from Dash 5 locked override (manual — same source as Dash 5)
+// TNX: auto-fetch from FRED public CSV — no API key required
 async function fetchTnx(){
-  const fredUrl='https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&sort_order=desc&limit=5&file_type=json&api_key=a8e9b0af4d53fa60e1ecd46ef9b6aecf';
-  const proxies=[fredUrl,'https://api.allorigins.win/get?url='+encodeURIComponent(fredUrl)];
-  for(const url of proxies){
-    try{
-      const r=await fetch(url,{signal:AbortSignal.timeout(7000)});
-      if(!r.ok)continue;
-      const w=await r.json();
-      const raw=typeof w.contents==='string'?JSON.parse(w.contents):w;
-      const obs=raw?.observations;
-      if(obs?.length){const l=obs.find(o=>o.value!=='.');if(l){document.getElementById('mTnx').textContent=parseFloat(l.value).toFixed(2)+'%';return;}}
-    }catch(e){}
+  let d5={};
+  try{ d5=JSON.parse(localStorage.getItem('rooster_dash5_v1'))||{}; }catch(e){}
+  if(d5.tnx_ovr && d5.tnx_ovr.value){
+    const el=document.getElementById('mTnx');
+    if(el) el.textContent=parseFloat(d5.tnx_ovr.value).toFixed(2)+'%';
+    return;
   }
-  document.getElementById('mTnx').textContent='—';
+  try{
+    const r=await fetch('https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10',{signal:AbortSignal.timeout(8000)});
+    if(!r.ok) throw new Error();
+    const txt=await r.text();
+    const rows=txt.trim().split('\n').slice(1);
+    for(let i=rows.length-1;i>=0;i--){
+      const v=parseFloat(rows[i].split(',')[1]);
+      if(!isNaN(v)){
+        const el=document.getElementById('mTnx');
+        if(el) el.textContent=v.toFixed(2)+'%';
+        return;
+      }
+    }
+  }catch(e){
+    const el=document.getElementById('mTnx');
+    if(el) el.textContent='—';
+  }
 }
 
+const D4_STALE_DAYS=35;
+function d4CheckStale(isoDate){
+  if(!isoDate) return true;
+  return Math.floor((new Date()-new Date(isoDate))/86400000)>D4_STALE_DAYS;
+}
 
 function loadMacroLocked(){
-  try{
-    const d5=JSON.parse(localStorage.getItem('rooster_dash5_v1'))||{};
-    const map={
-      'jobs':  'mJobs',
-      'unemp': 'mUnemp',
-      'breadth':'mBreadth',
-    };
-    Object.entries(map).forEach(([key,elId])=>{
-      if(d5[key]){
-        const el=document.getElementById(elId);
-        if(el) el.textContent=d5[key].value+(key==='jobs'?'K':key==='unemp'||key==='breadth'?'%':'');
-      }
-    });
-    if(d5.tnx_ovr){
-      const el=document.getElementById('mTnx');
-      if(el) el.textContent=parseFloat(d5.tnx_ovr.value).toFixed(2)+'%';
+  let d5={};
+  try{ d5=JSON.parse(localStorage.getItem('rooster_dash5_v1'))||{}; }catch(e){}
+
+  // Stale banner check
+  const keyFields=['jobs','unemp','spx_ovr','tnx_ovr'];
+  const anyLocked=keyFields.some(k=>d5[k]&&d5[k].locked);
+  const anyStale=keyFields.some(k=>!d5[k]||d4CheckStale(d5[k]?.locked));
+  const banner=document.getElementById('d4StaleBanner');
+  if(banner){
+    if(!anyLocked){
+      banner.style.cssText='display:flex;padding:8px 20px;font-family:var(--font-mono);font-size:12px;color:var(--red);border-bottom:1px solid rgba(255,64,96,0.3);background:rgba(255,64,96,0.05);';
+      banner.textContent='⚠ No Dash 5 data locked — open Dash 5 to enter macro values';
+    } else if(anyStale){
+      banner.style.cssText='display:flex;padding:8px 20px;font-family:var(--font-mono);font-size:12px;color:var(--amber);border-bottom:1px solid rgba(245,166,35,0.3);background:rgba(245,166,35,0.05);';
+      banner.textContent='⚠ Some Dash 5 signals are stale — open Dash 5 to update';
+    } else {
+      banner.style.display='none';
     }
-    if(d5.t30){
-      // already shown as 5.02% hardcoded — update if locked
+  }
+
+  // Map Dash 5 keys to display elements — updated with new M05 keys
+  const map={
+    'jobs':        {id:'mJobs',    suffix:'K'},
+    'unemp':       {id:'mUnemp',   suffix:'%'},
+    'spx_ovr':     {id:'mSpx',     suffix:''},
+    'tnx_ovr':     {id:'mTnx',     suffix:'%'},
+    't30':         {id:'mT30',     suffix:'%'},
+    'm05_493_qtr': {id:'mBreadth', suffix:'%'},
+    'prodQ2':      {id:'mProd',    suffix:'%'},
+    'warsh':       {id:'mWarsh',   suffix:''},
+    'ma50':        {id:'mMa50',    suffix:''},
+    'ma20':        {id:'mMa20',    suffix:''},
+  };
+
+  Object.entries(map).forEach(([key,cfg])=>{
+    const el=document.getElementById(cfg.id);
+    if(!el||!d5[key]) return;
+    const val=d5[key].value;
+    if(val){
+      el.textContent=val+(cfg.suffix&&!val.includes(cfg.suffix)?cfg.suffix:'');
+      if(d4CheckStale(d5[key].locked)) el.style.color='var(--amber)';
     }
-  }catch(e){}
+  });
+
+  // Update last-locked timestamp
+  const dates=Object.values(d5).filter(v=>v?.locked).map(v=>new Date(v.locked)).sort((a,b)=>b-a);
+  const lu=document.getElementById('lastUpdated');
+  if(lu&&dates.length) lu.textContent='DATA: '+dates[0].toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  else if(lu) lu.textContent='NO DASH 5 DATA — open Dash 5 first';
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
   loadMacroLocked();
+  fetchTnx();
   const fill=document.getElementById('gaugeFill');
   if(fill){
     fill.setAttribute('d',calcGaugeArc(23));
     fill.setAttribute('stroke','#a78bfa');
   }
-  document.getElementById('lastUpdated').textContent='UPDATED: '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
-  fetchLiveData();
-  fetchTnx();
 });
 </script>
 </body>
-</html>
