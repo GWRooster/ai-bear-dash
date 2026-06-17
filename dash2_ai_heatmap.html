@@ -132,6 +132,15 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 
 @media(max-width:1200px){.hero-grid{grid-template-columns:1fr;min-height:auto}.hero-left,.hero-right{gap:24px}.list-header,.sig-row-elevated,.sig-row-compact{grid-template-columns:16px 2fr 70px 50px 40px 1fr}.main{padding:16px}}
 @media(max-width:768px){.header{flex-wrap:wrap;gap:12px}.nav-link{padding:8px 10px;font-size:10px}}
+
+  /* THESIS MODAL */
+  .thesis-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.82); z-index:8000; align-items:flex-start; justify-content:center; overflow-y:auto; padding:40px 16px 60px; }
+  .thesis-overlay.open { display:flex; }
+  .thesis-modal { background:var(--surface); border:1px solid var(--border); width:100%; max-width:860px; padding:32px; position:relative; }
+  .thesis-close { position:absolute; top:16px; right:20px; background:none; border:none; color:var(--text-dim); font-size:20px; cursor:pointer; font-family:var(--font-mono); }
+  .thesis-close:hover { color:var(--text-primary); }
+  .thesis-title { font-family:var(--font-display); font-size:26px; letter-spacing:2px; color:var(--text-primary); margin-bottom:6px; }
+  .thesis-sub { font-family:var(--font-mono); font-size:11px; color:var(--text-dim); letter-spacing:1px; margin-bottom:28px; }
 </style>
 </head>
 <body>
@@ -149,6 +158,7 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
   <a href="dash4_macro_heatmap.html" class="nav-link">MACRO HEAT MAP</a>
   <a href="dash5_macro_signals.html" class="nav-link">MACRO SIGNALS</a>
   <a href="dash_summary.html" class="nav-link">SUMMARY</a>
+  <button onclick="openThesis()" style="font-family:var(--font-mono);font-size:12px;letter-spacing:2px;padding:6px 14px;border:1px solid rgba(245,166,35,0.4);color:var(--amber);background:transparent;cursor:pointer;margin-left:auto;" onmouseover="this.style.background='var(--amber-dim)'" onmouseout="this.style.background='transparent'">THESIS</button>
 </nav>
 <div id="d2StaleBanner" style="display:none;"></div>
 <main class="main">
@@ -438,5 +448,21 @@ document.addEventListener('DOMContentLoaded',()=>{
   loadLockedData();
 });
 </script>
+
+<div class="thesis-overlay" id="thesisModal">
+  <div class="thesis-modal">
+    <button class="thesis-close" onclick="closeThesis()">✕</button>
+    <div class="thesis-title">🐓 AI BEAR HEAT MAP</div>
+    <div class="thesis-sub">SIGNAL VISUALIZATION · READS FROM DASH 1</div>
+    <p style="font-family:var(--font-body);font-size:15px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px;">This heat map visualizes the current RAG state and composite score of the eight AI Bear signals. All data is read directly from Dash 1 locked values. Open Dash 1 to update signals and enter new data.</p>
+    <p style="font-family:var(--font-body);font-size:13px;color:var(--text-dim);line-height:1.7;margin:0;">For the full AI signal thesis and infrastructure loop explanation — open Dash 1 and click THESIS.</p>
+  </div>
+</div>
+<script>
+function openThesis(){ document.getElementById('thesisModal').classList.add('open'); document.body.style.overflow='hidden'; }
+function closeThesis(){ document.getElementById('thesisModal').classList.remove('open'); document.body.style.overflow=''; }
+document.getElementById('thesisModal').addEventListener('click', function(e){ if(e.target===this) closeThesis(); });
+</script>
+
 </body>
 </html>
