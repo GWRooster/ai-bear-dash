@@ -989,6 +989,15 @@
     .wakeup-footer { padding: 12px 16px; }
   }
 
+
+  /* THESIS MODAL */
+  .thesis-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.82); z-index:8000; align-items:flex-start; justify-content:center; overflow-y:auto; padding:40px 16px 60px; }
+  .thesis-overlay.open { display:flex; }
+  .thesis-modal { background:var(--surface); border:1px solid var(--border); width:100%; max-width:860px; padding:32px; position:relative; }
+  .thesis-close { position:absolute; top:16px; right:20px; background:none; border:none; color:var(--text-dim); font-size:20px; cursor:pointer; font-family:var(--font-mono); }
+  .thesis-close:hover { color:var(--text-primary); }
+  .thesis-title { font-family:var(--font-display); font-size:26px; letter-spacing:2px; color:var(--text-primary); margin-bottom:6px; }
+  .thesis-sub { font-family:var(--font-mono); font-size:11px; color:var(--text-dim); letter-spacing:1px; margin-bottom:28px; }
 </style>
 </head>
 <body>
@@ -1018,6 +1027,7 @@
   <a href="dash4_macro_heatmap.html" class="nav-link">MACRO HEAT MAP</a>
   <a href="dash5_macro_signals.html" class="nav-link">MACRO SIGNALS</a>
   <a href="dash_summary.html" class="nav-link">SUMMARY</a>
+  <button onclick="openThesis()" style="font-family:var(--font-mono);font-size:12px;letter-spacing:2px;padding:6px 14px;border:1px solid rgba(245,166,35,0.4);color:var(--amber);background:transparent;cursor:pointer;margin-left:auto;" onmouseover="this.style.background='var(--amber-dim)'" onmouseout="this.style.background='transparent'">THESIS</button>
 </nav>
 
 
@@ -2357,5 +2367,55 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 </script>
+
+<div class="thesis-overlay" id="thesisModal">
+  <div class="thesis-modal">
+    <button class="thesis-close" onclick="closeThesis()">✕</button>
+    <div class="thesis-title">🐓 AI BEAR SIGNAL SYSTEM</div>
+    <div class="thesis-sub">THE INFRASTRUCTURE LOOP · DASH 1 PURPOSE</div>
+    <svg width="100%" viewBox="0 0 680 480" style="margin-bottom:24px;">
+      <defs><marker id="tarrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <text font-family="var(--font-mono)" font-size="11" fill="var(--text-dim)" x="340" y="24" text-anchor="middle">Capital flows down · Revenue must flow back up · Signals detect where the loop breaks</text>
+      <rect x="210" y="44" width="260" height="58" rx="8" fill="var(--amber-dim)" stroke="rgba(245,166,35,0.4)" stroke-width="0.5"/>
+      <text font-family="var(--font-display)" font-size="14" fill="var(--amber)" x="340" y="66" text-anchor="middle">UPSTREAM ORIGINATION</text>
+      <text font-family="var(--font-mono)" font-size="11" fill="var(--text-dim)" x="340" y="86" text-anchor="middle">NVDA · OpenAI · Hyperscaler debt</text>
+      <text font-family="var(--font-mono)" font-size="10" fill="rgba(245,166,35,0.7)" x="486" y="58">SIG01 NVDA guidance</text>
+      <text font-family="var(--font-mono)" font-size="10" fill="rgba(245,166,35,0.7)" x="486" y="72">SIG02 OpenAI revenue</text>
+      <text font-family="var(--font-mono)" font-size="10" fill="rgba(245,166,35,0.7)" x="486" y="86">SIG03 Debt issuance</text>
+      <path d="M340 102 L340 144" fill="none" stroke="var(--amber)" stroke-width="1.5" marker-end="url(#tarrow)" opacity="0.6"/>
+      <text font-family="var(--font-mono)" font-size="10" fill="var(--text-dim)" x="348" y="128">$650B capex</text>
+      <rect x="210" y="144" width="260" height="58" rx="8" fill="rgba(255,100,70,0.08)" stroke="rgba(255,100,70,0.3)" stroke-width="0.5"/>
+      <text font-family="var(--font-display)" font-size="14" fill="#ff6446" x="340" y="166" text-anchor="middle">MID-STREAM TRANSMISSION</text>
+      <text font-family="var(--font-mono)" font-size="11" fill="var(--text-dim)" x="340" y="186" text-anchor="middle">FCF compression · Capex / revenue ratio</text>
+      <text font-family="var(--font-mono)" font-size="10" fill="rgba(255,100,70,0.7)" x="486" y="162">SIG04 FCF compression</text>
+      <text font-family="var(--font-mono)" font-size="10" fill="rgba(255,100,70,0.7)" x="486" y="178">SIG05 Capex / revenue</text>
+      <path d="M340 202 L340 244" fill="none" stroke="#ff6446" stroke-width="1.5" marker-end="url(#tarrow)" opacity="0.6"/>
+      <text font-family="var(--font-mono)" font-size="10" fill="var(--text-dim)" x="348" y="228">Infrastructure built</text>
+      <rect x="210" y="244" width="260" height="58" rx="8" fill="var(--green-dim)" stroke="rgba(0,212,160,0.3)" stroke-width="0.5"/>
+      <text font-family="var(--font-display)" font-size="14" fill="var(--green)" x="340" y="266" text-anchor="middle">DOWNSTREAM CONFIRMATION</text>
+      <text font-family="var(--font-mono)" font-size="11" fill="var(--text-dim)" x="340" y="286" text-anchor="middle">Cloud · Enterprise ROI · Infra debt stress</text>
+      <text font-family="var(--font-mono)" font-size="10" fill="rgba(0,212,160,0.7)" x="486" y="256">SIG06 Cloud decel</text>
+      <text font-family="var(--font-mono)" font-size="10" fill="rgba(0,212,160,0.7)" x="486" y="270">SIG07 Enterprise ROI</text>
+      <text font-family="var(--font-mono)" font-size="10" fill="rgba(0,212,160,0.7)" x="486" y="284">SIG08 Infra debt stress</text>
+      <path d="M340 302 L340 340" fill="none" stroke="var(--green)" stroke-width="1.5" marker-end="url(#tarrow)" opacity="0.6"/>
+      <text font-family="var(--font-mono)" font-size="10" fill="var(--text-dim)" x="348" y="326">Revenue realized?</text>
+      <rect x="210" y="340" width="260" height="50" rx="8" fill="var(--blue-dim)" stroke="rgba(74,158,255,0.3)" stroke-width="0.5"/>
+      <text font-family="var(--font-display)" font-size="14" fill="var(--blue)" x="340" y="362" text-anchor="middle">ENTERPRISE CUSTOMERS</text>
+      <text font-family="var(--font-mono)" font-size="11" fill="var(--text-dim)" x="340" y="380" text-anchor="middle">Adoption · ROI · Spend</text>
+      <path d="M210 365 C120 365 90 290 90 232 C90 174 120 92 210 73" fill="none" stroke="var(--green)" stroke-width="1.5" marker-end="url(#tarrow)" opacity="0.5" stroke-dasharray="5 3"/>
+      <text font-family="var(--font-mono)" font-size="10" fill="var(--green)" x="56" y="224" text-anchor="middle">Revenue</text>
+      <text font-family="var(--font-mono)" font-size="10" fill="var(--green)" x="56" y="238" text-anchor="middle">back up</text>
+      <rect x="60" y="412" width="560" height="52" rx="6" fill="none" stroke="var(--border)" stroke-width="0.5" stroke-dasharray="4 3"/>
+      <text font-family="var(--font-mono)" font-size="11" fill="var(--text-secondary)" x="340" y="432" text-anchor="middle">The bear thesis: if enterprise revenue does not justify $650B+ annual capex,</text>
+      <text font-family="var(--font-mono)" font-size="11" fill="var(--text-secondary)" x="340" y="452" text-anchor="middle">the loop breaks — spreads widen, FCF compresses, multiples reprice. Fast.</text>
+    </svg>
+  </div>
+</div>
+<script>
+function openThesis(){ document.getElementById('thesisModal').classList.add('open'); document.body.style.overflow='hidden'; }
+function closeThesis(){ document.getElementById('thesisModal').classList.remove('open'); document.body.style.overflow=''; }
+document.getElementById('thesisModal').addEventListener('click', function(e){ if(e.target===this) closeThesis(); });
+</script>
+
 </body>
 </html>
