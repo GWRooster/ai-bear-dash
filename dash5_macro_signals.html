@@ -231,6 +231,15 @@
   @keyframes pulse-green-light { 0%,100%{box-shadow:0 0 0 0 rgba(29,158,117,0);} 50%{box-shadow:0 0 0 4px rgba(29,158,117,0.15);} }
   @keyframes success-in { from{opacity:0;transform:scale(0.96);} to{opacity:1;transform:scale(1);} }
   @media(max-width:768px){ .wakeup-field-row{grid-template-columns:1fr;gap:8px;} }
+
+  /* THESIS MODAL */
+  .thesis-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.82); z-index:8000; align-items:flex-start; justify-content:center; overflow-y:auto; padding:40px 16px 60px; }
+  .thesis-overlay.open { display:flex; }
+  .thesis-modal { background:var(--surface); border:1px solid var(--border); width:100%; max-width:860px; padding:32px; position:relative; }
+  .thesis-close { position:absolute; top:16px; right:20px; background:none; border:none; color:var(--text-dim); font-size:20px; cursor:pointer; font-family:var(--font-mono); }
+  .thesis-close:hover { color:var(--text-primary); }
+  .thesis-title { font-family:var(--font-display); font-size:26px; letter-spacing:2px; color:var(--text-primary); margin-bottom:6px; }
+  .thesis-sub { font-family:var(--font-mono); font-size:11px; color:var(--text-dim); letter-spacing:1px; margin-bottom:28px; }
 </style>
 </head>
 <body>
@@ -257,6 +266,7 @@
   <a href="dash4_macro_heatmap.html" class="nav-link">MACRO HEAT MAP</a>
   <a href="#" class="nav-link active">MACRO SIGNALS</a>
   <a href="dash_summary.html" class="nav-link">SUMMARY</a>
+  <button onclick="openThesis()" style="font-family:var(--font-mono);font-size:12px;letter-spacing:2px;padding:6px 14px;border:1px solid rgba(245,166,35,0.4);color:var(--amber);background:transparent;cursor:pointer;margin-left:auto;" onmouseover="this.style.background='var(--amber-dim)'" onmouseout="this.style.background='transparent'">THESIS</button>
 </nav>
 
 <div class="data-toolbar">
@@ -1272,5 +1282,50 @@ document.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('m5WakeupModal').classList.add('open');
 });
 </script>
+
+<div class="thesis-overlay" id="thesisModal">
+  <div class="thesis-modal">
+    <button class="thesis-close" onclick="closeThesis()">✕</button>
+    <div class="thesis-title">🌐 MACRO ECONOMIC SYSTEM</div>
+    <div class="thesis-sub">WHY MACRO MATTERS · DASH 5 PURPOSE</div>
+    <p style="font-family:var(--font-body);font-size:15px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px;">The AI signals in Dash 1 detect stress inside the infrastructure loop. But the loop exists inside a broader economy. Macro conditions determine whether that stress becomes a correction or a crisis. Dash 5 monitors the weather system the loop is operating in.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+      <div style="border:1px solid var(--border);padding:14px;">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px;">M01 — LABOR MARKET</div>
+        <p style="font-family:var(--font-body);font-size:13px;color:var(--text-secondary);line-height:1.6;margin:0;">Jobs above 75K means consumers are spending. A deteriorating labor market removes the revenue tailwind that makes AI productivity gains look compelling. Watch: sub-75K prints or unemployment above 4.4%.</p>
+      </div>
+      <div style="border:1px solid var(--border);padding:14px;">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px;">M02 — S&P TECHNICAL</div>
+        <p style="font-family:var(--font-body);font-size:13px;color:var(--text-secondary);line-height:1.6;margin:0;">The 50-day MA is watched by every institutional fund simultaneously. A sustained breach (3+ sessions) triggers systematic selling. This is the first T2 condition. One day is noise. Three days is signal.</p>
+      </div>
+      <div style="border:1px solid var(--border);padding:14px;">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px;">M03 — BOND MARKET</div>
+        <p style="font-family:var(--font-body);font-size:13px;color:var(--text-secondary);line-height:1.6;margin:0;">Rising yields compress equity valuations directly. The 30-yr breaching 5% signals the bond market does not believe inflation is contained. Already active. Watch: 10-yr above 4.80%.</p>
+      </div>
+      <div style="border:1px solid var(--border);padding:14px;">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px;">M04 — PRODUCTIVITY · D-DAY AUG 7</div>
+        <p style="font-family:var(--font-body);font-size:13px;color:var(--text-secondary);line-height:1.6;margin:0;">The AI supercycle thesis depends on economy-wide productivity gains. Q1 at 0.8% — below 1.5% threshold. If Q2 (Aug 7) also misses, two consecutive quarters formally disprove the productivity argument.</p>
+      </div>
+      <div style="border:1px solid var(--border);padding:14px;">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px;">M05 — MAG7 vs 493 SPREAD</div>
+        <p style="font-family:var(--font-body);font-size:13px;color:var(--text-secondary);line-height:1.6;margin:0;">Mag7 has premium valuations baked in — a miss gets a pass. The 493 are priced to realistic revenue. A small 493 drop hits multiples immediately. Q1: 493 at 10.1%, gap 7.8pts — already amber.</p>
+      </div>
+      <div style="border:1px solid var(--border);padding:14px;">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--amber);letter-spacing:1px;margin-bottom:6px;">M07 — TREASURY / WARSH · D-DAY AUG 5</div>
+        <p style="font-family:var(--font-body);font-size:13px;color:var(--text-secondary);line-height:1.6;margin:0;">If Q3 Treasury refunding is revised up while 30-yr is at 5%+, yields spike and M07 fires. Warsh hearings in the same window could signal accelerated QT — adding supply while demand is uncertain.</p>
+      </div>
+    </div>
+    <div style="border:1px solid var(--border);padding:14px;background:rgba(255,255,255,0.02);">
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px;">HOW MACRO AND AI COMBINE</div>
+      <p style="font-family:var(--font-body);font-size:13px;color:var(--text-secondary);line-height:1.6;margin:0;">T2 requires convergence across three independent streams: S&P sustained below 50-day MA (M02) AND AI Bear ≥35 (Dash 1) AND Macro ≥35 (Dash 5). Any single signal could be noise. All three simultaneously means trajectory has shifted — not just volatility.</p>
+    </div>
+  </div>
+</div>
+<script>
+function openThesis(){ document.getElementById('thesisModal').classList.add('open'); document.body.style.overflow='hidden'; }
+function closeThesis(){ document.getElementById('thesisModal').classList.remove('open'); document.body.style.overflow=''; }
+document.getElementById('thesisModal').addEventListener('click', function(e){ if(e.target===this) closeThesis(); });
+</script>
+
 </body>
 </html>
