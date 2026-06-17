@@ -214,6 +214,15 @@
 
   @media(max-width:1200px){.dual-banner{grid-template-columns:1fr}.tranche-grid{grid-template-columns:1fr 1fr}.mid-grid{grid-template-columns:1fr}.port-strip{grid-template-columns:repeat(3,1fr)}.exec-grid{grid-template-columns:1fr 1fr}.main{padding:16px}}
   @media(max-width:768px){.tranche-grid{grid-template-columns:1fr}.header{flex-wrap:wrap;gap:12px}.nav-link{padding:8px 10px;font-size:16px}}
+
+  /* THESIS MODAL */
+  .thesis-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.82); z-index:8000; align-items:flex-start; justify-content:center; overflow-y:auto; padding:40px 16px 60px; }
+  .thesis-overlay.open { display:flex; }
+  .thesis-modal { background:var(--surface); border:1px solid var(--border); width:100%; max-width:860px; padding:32px; position:relative; }
+  .thesis-close { position:absolute; top:16px; right:20px; background:none; border:none; color:var(--text-dim); font-size:20px; cursor:pointer; font-family:var(--font-mono); }
+  .thesis-close:hover { color:var(--text-primary); }
+  .thesis-title { font-family:var(--font-display); font-size:26px; letter-spacing:2px; color:var(--text-primary); margin-bottom:6px; }
+  .thesis-sub { font-family:var(--font-mono); font-size:11px; color:var(--text-dim); letter-spacing:1px; margin-bottom:28px; }
 </style>
 </head>
 <body>
@@ -233,6 +242,7 @@
   <a href="dash4_macro_heatmap.html" class="nav-link">MACRO HEAT MAP</a>
   <a href="dash5_macro_signals.html" class="nav-link">MACRO SIGNALS</a>
   <a href="dash_summary.html" class="nav-link">SUMMARY</a>
+  <button onclick="openThesis()" style="font-family:var(--font-mono);font-size:12px;letter-spacing:2px;padding:6px 14px;border:1px solid rgba(245,166,35,0.4);color:var(--amber);background:transparent;cursor:pointer;margin-left:auto;" onmouseover="this.style.background='var(--amber-dim)'" onmouseout="this.style.background='transparent'">THESIS</button>
 </nav>
 
 <main class="main">
@@ -688,5 +698,74 @@ function updateExec(){
 
 });
 </script>
+
+<div class="thesis-overlay" id="thesisModal">
+  <div class="thesis-modal">
+    <button class="thesis-close" onclick="closeThesis()">✕</button>
+    <div class="thesis-title">🐓 MASTER THESIS</div>
+    <div class="thesis-sub">WHAT THIS SYSTEM IS · WHERE THE MONEY IS · WHEN TRANCHES MOVE</div>
+    <p style="font-family:var(--font-body);font-size:15px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px;">This is not a trading system. It monitors a specific thesis — that the AI infrastructure buildout of 2024–2026 may not generate sufficient revenue to justify its cost — and detects when that thesis is confirming or breaking down. The goal: protect a portion of a 401k from a potential 30–40% drawdown by detecting trajectory shifts, not timing tops or bottoms.</p>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;">
+      <div style="border:1px solid rgba(0,212,160,0.3);background:var(--green-dim);padding:14px;">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--green);letter-spacing:1px;margin-bottom:6px;">T1 — EXECUTED</div>
+        <div style="font-family:var(--font-display);font-size:22px;color:var(--green);margin-bottom:4px;">$200K</div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-dim);">Stable value · 4%<br>May 2026 · S&P 7,400<br>First out — last back</div>
+      </div>
+      <div style="border:1px solid rgba(245,166,35,0.3);background:var(--amber-dim);padding:14px;">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--amber);letter-spacing:1px;margin-bottom:6px;">T2 — WATCHING</div>
+        <div style="font-family:var(--font-display);font-size:22px;color:var(--amber);margin-bottom:4px;">$200K</div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-dim);">Three conditions req.<br>Exits on trajectory<br>Not timing the top</div>
+      </div>
+      <div style="border:1px solid var(--border);padding:14px;">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px;">T3 — BONUS PLAY</div>
+        <div style="font-family:var(--font-display);font-size:22px;color:var(--text-secondary);margin-bottom:4px;">$200K</div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-dim);">After T2 exits only<br>D-Days: Aug 5+7<br>Not required</div>
+      </div>
+      <div style="border:1px solid rgba(74,158,255,0.3);background:var(--blue-dim);padding:14px;">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--blue);letter-spacing:1px;margin-bottom:6px;">LONG HOLD</div>
+        <div style="font-family:var(--font-display);font-size:22px;color:var(--blue);margin-bottom:4px;">~$500K</div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-dim);">Never touched<br>Ride it out<br>Not in scope</div>
+      </div>
+    </div>
+    <div style="border:1px solid var(--border);padding:14px;margin-bottom:12px;">
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:10px;">T2 TRIGGER — ALL THREE REQUIRED SIMULTANEOUSLY</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;gap:12px;padding:8px;background:rgba(255,255,255,0.02);">
+          <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);min-width:24px;">01</span>
+          <span style="font-family:var(--font-body);font-size:13px;color:var(--text-secondary);">S&P 500 sustained below 50-day moving average — 3+ consecutive sessions. Systematic fund selling begins at session 3.</span>
+        </div>
+        <div style="display:flex;gap:12px;padding:8px;background:rgba(255,255,255,0.02);">
+          <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);min-width:24px;">02</span>
+          <span style="font-family:var(--font-body);font-size:13px;color:var(--text-secondary);">AI Bear composite at 35+ (Dash 1). Currently ~23. Requires multiple signals turning amber/red simultaneously.</span>
+        </div>
+        <div style="display:flex;gap:12px;padding:8px;background:rgba(255,255,255,0.02);">
+          <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);min-width:24px;">03</span>
+          <span style="font-family:var(--font-body);font-size:13px;color:var(--text-secondary);">Macro composite at 35+ (Dash 5). Currently ~22. Requires bond market, labor, and earnings signals confirming.</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+      <div style="border:1px solid var(--border);padding:12px;">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px;">T3 RE-ENTERS FIRST</div>
+        <p style="font-family:var(--font-body);font-size:12px;color:var(--text-secondary);line-height:1.5;margin:0;">S&P stops making lower lows 3–4 weeks + 2 of 3 T2 conditions reversed</p>
+      </div>
+      <div style="border:1px solid var(--border);padding:12px;">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px;">T2 RE-ENTERS SECOND</div>
+        <p style="font-family:var(--font-body);font-size:12px;color:var(--text-secondary);line-height:1.5;margin:0;">T3 confirmed positive + trajectory reversal clear + 1 quarter of signal improvement</p>
+      </div>
+      <div style="border:1px solid var(--border);padding:12px;">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px;">T1 RE-ENTERS LAST</div>
+        <p style="font-family:var(--font-body);font-size:12px;color:var(--text-secondary);line-height:1.5;margin:0;">T2 positive + full valuation reset + all signals green + P/E back to historical avg. Collecting 4% until then.</p>
+      </div>
+    </div>
+    <div style="border:1px solid var(--border);padding:12px;font-family:var(--font-mono);font-size:11px;color:var(--text-dim);line-height:1.7;">Rules are pre-committed to remove judgment at the moment of highest emotional pressure. The $500K long-term hold is never touched. The goal is to protect 40% of the portfolio from a potential drawdown — not to outperform on the way up.</div>
+  </div>
+</div>
+<script>
+function openThesis(){ document.getElementById('thesisModal').classList.add('open'); document.body.style.overflow='hidden'; }
+function closeThesis(){ document.getElementById('thesisModal').classList.remove('open'); document.body.style.overflow=''; }
+document.getElementById('thesisModal').addEventListener('click', function(e){ if(e.target===this) closeThesis(); });
+</script>
+
 </body>
 </html>
