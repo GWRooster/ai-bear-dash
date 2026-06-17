@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DASH 2 — AI HEAT MAP</title>
+<title>DASH 4 — MACRO HEAT MAP</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a0a0f;--surface:#16161f;--surface2:#0e0e16;--border:#2a2a3e;--text-primary:#ffffff;--text-secondary:#d8d8f0;--text-dim:#a8a8c8;--green:#00d4a0;--green-dim:rgba(0,212,160,0.12);--amber:#f5a623;--amber-dim:rgba(245,166,35,0.12);--red:#ff4060;--red-dim:rgba(255,64,96,0.12);--blue:#4a9eff;--blue-dim:rgba(74,158,255,0.12);--font-display:'Bebas Neue',sans-serif;--font-mono:'IBM Plex Mono',monospace;--font-body:'IBM Plex Sans',sans-serif;}
+:root{--bg:#0a0a0f;--surface:#16161f;--surface2:#0e0e16;--border:#2a2a3e;--text-primary:#ffffff;--text-secondary:#d8d8f0;--text-dim:#a8a8c8;--green:#00d4a0;--green-dim:rgba(0,212,160,0.12);--amber:#f5a623;--amber-dim:rgba(245,166,35,0.12);--red:#ff4060;--red-dim:rgba(255,64,96,0.12);--yellow:#f9e040;--yellow-dim:rgba(249,224,64,0.12);--blue:#4a9eff;--blue-dim:rgba(74,158,255,0.12);--purple:#a78bfa;--purple-dim:rgba(167,139,250,0.12);--font-display:'Bebas Neue',sans-serif;--font-mono:'IBM Plex Mono',monospace;--font-body:'IBM Plex Sans',sans-serif;}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text-primary);font-family:var(--font-body);font-size:17px;min-height:100vh;}
 body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:999;}
@@ -18,109 +18,113 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 .nav-bar{display:flex;padding:0 28px;border-bottom:1px solid var(--border);background:var(--bg);overflow-x:auto;}
 .nav-link{font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:10px 18px;color:var(--text-dim);text-decoration:none;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;}
 .nav-link:hover{color:var(--text-secondary);}
-.nav-link.active{color:var(--text-primary);border-bottom-color:var(--blue);}
+.nav-link.active{color:var(--text-primary);border-bottom-color:var(--purple);}
 .main{padding:24px 28px;max-width:1500px;margin:0 auto;}
 
 /* HERO */
-.hero{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--blue);padding:32px 28px;margin-bottom:24px;position:relative;overflow:hidden;}
-.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 100%,rgba(74,158,255,0.05) 0%,transparent 70%);pointer-events:none;}
+.hero{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--purple);padding:28px;margin-bottom:24px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 100%,rgba(167,139,250,0.05) 0%,transparent 70%);pointer-events:none;}
+.hero-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:32px;align-items:start;}
+.hero-label{font-family:var(--font-mono);font-size:12px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:12px;}
 
-/* THREE COLUMN HERO GRID — equal height columns */
-.hero-grid{display:grid;grid-template-columns:1fr 260px 1fr;gap:32px;align-items:stretch;min-height:320px;}
+/* LEFT — Key Macro Metrics */
+.metric-table{width:100%;}
+.metric-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-family:var(--font-mono);font-size:14px;}
+.metric-row:last-child{border-bottom:none;}
+.metric-lbl{color:var(--text-dim);}
+.metric-val{font-weight:500;}
+.metric-val.green{color:var(--green);}
+.metric-val.amber{color:var(--amber);}
+.metric-val.red{color:var(--red);}
+.metric-val.yellow{color:var(--yellow);}
+.metric-val.neutral{color:var(--text-secondary);}
 
-/* LEFT COLUMN — distribution top, trend bottom */
-.hero-left{display:flex;flex-direction:column;justify-content:space-between;}
-.hero-label{font-family:var(--font-mono);font-size:12px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:14px;}
-
-.sig-counts{display:flex;gap:10px;justify-content:center;}
-.sig-c{display:flex;flex-direction:column;align-items:center;padding:14px 18px;border:1px solid var(--border);background:var(--surface2);min-width:64px;}
-.sig-c-num{font-family:var(--font-display);font-size:36px;line-height:1;}
-.sig-c-num.green{color:var(--green);}
-.sig-c-num.amber{color:var(--amber);}
-.sig-c-num.red{color:var(--red);}
-.sig-c-num.dim{color:var(--text-dim);}
-.sig-c-lbl{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-top:4px;}
-
-.trend-area{margin-top:auto;}
-.trend-label{font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;}
-.trend-svg{width:100%;height:72px;}
-
-/* CENTER COLUMN — gauge dominant and vertically centered */
-.hero-center{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;}
-.gauge-wrap{position:relative;width:240px;height:134px;}
+/* CENTER — Gauge + distribution */
+.gauge-wrap{position:relative;width:200px;height:112px;}
 .gauge-svg{width:100%;height:100%;}
 .gauge-score-display{position:absolute;bottom:0;left:50%;transform:translateX(-50%);text-align:center;}
-.gauge-number{font-family:var(--font-display);font-size:72px;line-height:1;transition:color 0.5s;}
-.gauge-number.green{color:var(--green);}
+.gauge-number{font-family:var(--font-display);font-size:52px;line-height:1;transition:color 0.5s;}
+.gauge-number.purple{color:var(--purple);}
 .gauge-number.amber{color:var(--amber);}
 .gauge-number.red{color:var(--red);}
-.gauge-sub{font-family:var(--font-mono);font-size:13px;color:var(--text-dim);letter-spacing:2px;text-align:center;}
-.gauge-status{font-family:var(--font-display);font-size:22px;letter-spacing:3px;text-align:center;}
-.gauge-status.green{color:var(--green);}
+.gauge-sub{font-family:var(--font-mono);font-size:12px;color:var(--text-dim);letter-spacing:2px;text-align:center;margin-top:6px;}
+.gauge-status{font-family:var(--font-display);font-size:17px;letter-spacing:3px;text-align:center;margin-top:4px;}
+.gauge-status.purple{color:var(--purple);}
 .gauge-status.amber{color:var(--amber);}
 .gauge-status.red{color:var(--red);}
 
-/* RIGHT COLUMN — history top, divergence chart bottom */
-.hero-right{display:flex;flex-direction:column;justify-content:space-between;}
+.sig-counts{display:flex;gap:8px;margin-top:18px;}
+.sig-c{display:flex;flex-direction:column;align-items:center;padding:8px 10px;border:1px solid var(--border);background:var(--surface2);min-width:46px;}
+.sig-c-num{font-family:var(--font-display);font-size:24px;line-height:1;}
+.sig-c-num.green{color:var(--green);}
+.sig-c-num.amber{color:var(--amber);}
+.sig-c-num.yellow{color:var(--yellow);}
+.sig-c-num.red{color:var(--red);}
+.sig-c-num.dim{color:var(--text-dim);}
+.sig-c-lbl{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-top:2px;}
+
+/* RIGHT — Macro History */
 .history-table{width:100%;}
-.hist-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-family:var(--font-mono);font-size:13px;}
+.hist-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-family:var(--font-mono);font-size:13px;}
 .hist-row:last-child{border-bottom:none;}
 .hist-lbl{color:var(--text-dim);}
 .hist-val{color:var(--text-secondary);}
 .hist-val.rising{color:var(--amber);}
+.hist-val.purple{color:var(--purple);}
 
-.div-area{margin-top:auto;}
-.div-label{font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;}
-.div-svg{width:100%;height:72px;}
-.div-legend{display:flex;gap:16px;margin-top:6px;}
-.div-leg-item{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;color:var(--text-dim);}
-.div-leg-dot{width:20px;height:2px;border-radius:1px;}
-
-/* SIGNAL LIST */
+/* SIGNAL LIST — same pattern as Dash 2 */
 .signal-section{margin-bottom:24px;}
 .section-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-.section-lbl{font-family:var(--font-mono);font-size:11px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;border-left:2px solid var(--blue);padding-left:10px;}
+.section-lbl{font-family:var(--font-mono);font-size:11px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;border-left:2px solid var(--purple);padding-left:10px;}
 .section-badge{font-family:var(--font-mono);font-size:11px;padding:3px 10px;border:1px solid;border-radius:2px;}
 .badge-elevated{color:var(--amber);border-color:rgba(245,166,35,0.4);background:var(--amber-dim);}
 .badge-stable{color:var(--green);border-color:rgba(0,212,160,0.4);background:var(--green-dim);}
 
 .signal-list{background:var(--surface);border:1px solid var(--border);overflow:hidden;}
 .list-header{display:grid;grid-template-columns:16px 2fr 80px 60px 44px 1.2fr 150px;gap:10px;padding:8px 20px;background:var(--surface2);font-family:var(--font-mono);font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;align-items:center;}
-.list-header span:nth-child(3),.list-header span:nth-child(4),.list-header span:nth-child(5){text-align:center;}
 
 .sig-row-elevated{display:grid;grid-template-columns:16px 2fr 80px 60px 44px 1.2fr 150px;gap:10px;padding:14px 20px;border-top:1px solid var(--border);align-items:start;}
-.sig-row-elevated.red-row{background:linear-gradient(135deg,rgba(255,64,96,0.08),rgba(255,64,96,0.03));}
 .sig-row-elevated.amber-row{background:linear-gradient(135deg,rgba(245,166,35,0.08),rgba(245,166,35,0.03));}
+.sig-row-elevated.yellow-row{background:linear-gradient(135deg,rgba(249,224,64,0.08),rgba(249,224,64,0.03));}
+.sig-row-elevated.blue-row{background:linear-gradient(135deg,rgba(74,158,255,0.08),rgba(74,158,255,0.03));}
 
 .sig-dot{border-radius:50%;flex-shrink:0;margin-top:4px;}
-.sig-dot.red{width:11px;height:11px;background:var(--red);box-shadow:0 0 6px var(--red);}
 .sig-dot.amber{width:11px;height:11px;background:var(--amber);box-shadow:0 0 6px var(--amber);}
+.sig-dot.yellow{width:11px;height:11px;background:var(--yellow);box-shadow:0 0 5px var(--yellow);}
+.sig-dot.blue{width:11px;height:11px;background:var(--blue);}
 .sig-dot.green{width:9px;height:9px;background:var(--green);box-shadow:0 0 4px var(--green);}
 
 .sig-name-elevated{font-family:var(--font-display);font-size:18px;letter-spacing:1px;margin-bottom:4px;line-height:1;}
-.sig-name-elevated.red{color:var(--red);}
 .sig-name-elevated.amber{color:var(--amber);}
+.sig-name-elevated.yellow{color:var(--yellow);}
+.sig-name-elevated.blue{color:var(--blue);}
 .sig-desc{font-family:var(--font-body);font-size:13px;line-height:1.6;}
-.sig-desc.red{color:rgba(255,64,96,0.85);}
 .sig-desc.amber{color:rgba(245,166,35,0.85);}
+.sig-desc.yellow{color:rgba(249,224,64,0.8);}
+.sig-desc.blue{color:rgba(74,158,255,0.85);}
 
 .sig-state{font-family:var(--font-mono);font-size:12px;font-weight:500;text-align:center;padding-top:3px;}
-.sig-state.red{color:var(--red);}
 .sig-state.amber{color:var(--amber);}
+.sig-state.yellow{color:var(--yellow);}
+.sig-state.blue{color:var(--blue);}
+
 .sig-score{font-family:var(--font-display);font-size:24px;text-align:center;}
-.sig-score.red{color:var(--red);}
 .sig-score.amber{color:var(--amber);}
+.sig-score.yellow{color:var(--yellow);}
+.sig-score.blue{color:var(--blue);}
+
 .sig-dir{font-size:18px;text-align:center;}
 .sig-metric{font-family:var(--font-mono);font-size:13px;padding-top:3px;}
-.sig-metric.red{color:rgba(255,64,96,0.9);}
 .sig-metric.amber{color:rgba(245,166,35,0.9);}
+.sig-metric.yellow{color:rgba(249,224,64,0.85);}
+.sig-metric.blue{color:rgba(74,158,255,0.9);}
 .sig-trigger{font-family:var(--font-mono);font-size:12px;padding-top:3px;}
-.sig-trigger.red{color:rgba(255,64,96,0.7);}
 .sig-trigger.amber{color:rgba(245,166,35,0.7);}
+.sig-trigger.yellow{color:rgba(249,224,64,0.65);}
+.sig-trigger.blue{color:rgba(74,158,255,0.7);}
 
 .stable-divider{display:flex;justify-content:space-between;align-items:center;padding:8px 20px;background:var(--surface2);border-top:1px solid var(--border);font-family:var(--font-mono);font-size:11px;}
 .stable-lbl{color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;}
-.stable-badge{color:var(--green);border:1px solid rgba(0,212,160,0.3);background:var(--green-dim);padding:2px 8px;}
 
 .sig-row-compact{display:grid;grid-template-columns:16px 2fr 80px 60px 44px 1.2fr 150px;gap:10px;padding:12px 20px;border-top:1px solid rgba(255,255,255,0.04);align-items:start;}
 .sig-name-compact{font-family:var(--font-body);font-size:15px;color:var(--text-primary);margin-bottom:2px;}
@@ -130,7 +134,7 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 .sig-metric-compact{font-family:var(--font-mono);font-size:12px;color:var(--text-dim);padding-top:3px;}
 .sig-trigger-compact{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);padding-top:3px;}
 
-@media(max-width:1200px){.hero-grid{grid-template-columns:1fr;min-height:auto}.hero-left,.hero-right{gap:24px}.list-header,.sig-row-elevated,.sig-row-compact{grid-template-columns:16px 2fr 70px 50px 40px 1fr}.main{padding:16px}}
+@media(max-width:1200px){.hero-grid{grid-template-columns:1fr}.list-header,.sig-row-elevated,.sig-row-compact{grid-template-columns:16px 2fr 70px 50px 40px 1fr}.main{padding:16px}}
 @media(max-width:768px){.header{flex-wrap:wrap;gap:12px}.nav-link{padding:8px 10px;font-size:10px}}
 
   /* THESIS MODAL */
@@ -146,90 +150,82 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 <body>
 <header class="header">
   <div class="header-left">
-    <div class="dash-id">DASH 02</div>
-    <div class="dash-sub">AI HEAT MAP — SEVERITY INDEX</div>
+    <div class="dash-id">DASH 04</div>
+    <div class="dash-sub">MACRO HEAT MAP — TRIGGER SEVERITY INDEX</div>
   </div>
   <div class="last-updated" id="lastUpdated">LOADING...</div>
 </header>
 <nav class="nav-bar">
   <a href="dash1_ai_signals.html" class="nav-link">AI SIGNALS</a>
-  <a href="#" class="nav-link active">AI HEAT MAP</a>
+  <a href="dash2_ai_heatmap.html" class="nav-link">AI HEAT MAP</a>
   <a href="dash3_decision.html" class="nav-link">DECISION ENGINE</a>
-  <a href="dash4_macro_heatmap.html" class="nav-link">MACRO HEAT MAP</a>
+  <a href="#" class="nav-link active">MACRO HEAT MAP</a>
   <a href="dash5_macro_signals.html" class="nav-link">MACRO SIGNALS</a>
   <a href="dash_summary.html" class="nav-link">SUMMARY</a>
   <button onclick="openThesis()" style="font-family:var(--font-mono);font-size:12px;letter-spacing:2px;padding:6px 14px;border:1px solid rgba(245,166,35,0.4);color:var(--amber);background:transparent;cursor:pointer;margin-left:auto;" onmouseover="this.style.background='var(--amber-dim)'" onmouseout="this.style.background='transparent'">THESIS</button>
 </nav>
-<div id="d2StaleBanner" style="display:none;"></div>
+<div id="d4StaleBanner" style="display:none;"></div>
 <main class="main">
 
   <!-- HERO -->
   <div class="hero">
     <div class="hero-grid">
 
-      <!-- LEFT: signal distribution top, trend line bottom -->
-      <div class="hero-left">
-        <div>
-          <div class="hero-label">SIGNAL STATUS DISTRIBUTION</div>
-          <div class="sig-counts">
-            <div class="sig-c"><div class="sig-c-num green" id="cntGreen">5</div><div class="sig-c-lbl">GREEN</div></div>
-            <div class="sig-c"><div class="sig-c-num amber" id="cntAmber">2</div><div class="sig-c-lbl">AMBER</div></div>
-            <div class="sig-c"><div class="sig-c-num red" id="cntRed">1</div><div class="sig-c-lbl">RED</div></div>
-            <div class="sig-c"><div class="sig-c-num dim">8</div><div class="sig-c-lbl">TOTAL</div></div>
-          </div>
-        </div>
-        <div class="trend-area">
-          <div class="trend-label">COMPOSITE SCORE TREND</div>
-          <svg class="trend-svg" id="trendSvg" viewBox="0 0 300 72" preserveAspectRatio="none"></svg>
-          <div style="display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);margin-top:4px;letter-spacing:1px;">
-            <span>-8 WKS</span><span>-6</span><span>-4</span><span>-2</span><span>NOW</span>
-          </div>
+      <!-- LEFT: Key Macro Metrics -->
+      <div>
+        <div class="hero-label">KEY MACRO METRICS</div>
+        <div class="metric-table">
+          <div class="metric-row"><span class="metric-lbl">JOBS ADDED (APR)</span><span class="metric-val green" id="mJobs">115K</span></div>
+          <div class="metric-row"><span class="metric-lbl">UNEMPLOYMENT RATE</span><span class="metric-val amber" id="mUnemp">4.3%</span></div>
+          <div class="metric-row"><span class="metric-lbl">10-YR TREASURY</span><span class="metric-val yellow" id="mTnx">Fetching...</span></div>
+          <div class="metric-row"><span class="metric-lbl">30-YR HIGH (WK)</span><span class="metric-val red">5.02%</span></div>
+          <div class="metric-row"><span class="metric-lbl">S&P 500</span><span class="metric-val green" id="mSpx">Fetching...</span></div>
+          <div class="metric-row"><span class="metric-lbl">Q1 PRODUCTIVITY QoQ</span><span class="metric-val red">0.8% ⚠</span></div>
+          <div class="metric-row"><span class="metric-lbl">NON-MAG7 EPS</span><span class="metric-val neutral">Pending May 16</span></div>
         </div>
       </div>
 
-      <!-- CENTER: gauge large and dominant -->
-      <div class="hero-center">
-        <div class="hero-label" style="text-align:center;margin-bottom:0;">COMPOSITE SEVERITY</div>
+      <!-- CENTER: Gauge + distribution -->
+      <div style="display:flex;flex-direction:column;align-items:center;">
+        <div class="hero-label" style="text-align:center;">MACRO COMPOSITE SEVERITY</div>
         <div class="gauge-wrap">
           <svg class="gauge-svg" viewBox="0 0 200 110" fill="none">
-            <path d="M20 100 A80 80 0 0 1 180 100" stroke="#2a2a3e" stroke-width="14" fill="none" stroke-linecap="round"/>
-            <path d="M20 100 A80 80 0 0 1 43.4 43.4" stroke="rgba(0,212,160,0.25)" stroke-width="14" fill="none" stroke-linecap="butt"/>
-            <path d="M43.4 43.4 A80 80 0 0 1 100.0 20.0" stroke="rgba(245,166,35,0.25)" stroke-width="14" fill="none" stroke-linecap="butt"/>
-            <path d="M100.0 20.0 A80 80 0 0 1 180 100" stroke="rgba(255,64,96,0.25)" stroke-width="14" fill="none" stroke-linecap="butt"/>
-            <path d="M20 100 A80 80 0 0 1 20 100" stroke="#f5a623" stroke-width="14" fill="none" stroke-linecap="round" id="gaugeFill" opacity="0.9"/>
-            <text x="12" y="118" font-family="monospace" font-size="8" fill="#a8a8c8">0</text>
-            <text x="91" y="10" font-family="monospace" font-size="8" fill="#a8a8c8">50</text>
+            <path d="M20 100 A80 80 0 0 1 180 100" stroke="#2a2a3e" stroke-width="12" fill="none" stroke-linecap="round"/>
+            <path d="M20 100 A80 80 0 0 1 60 35" stroke="rgba(0,212,160,0.25)" stroke-width="12" fill="none" stroke-linecap="butt"/>
+            <path d="M60 35 A80 80 0 0 1 140 35" stroke="rgba(245,166,35,0.25)" stroke-width="12" fill="none" stroke-linecap="butt"/>
+            <path d="M140 35 A80 80 0 0 1 180 100" stroke="rgba(255,64,96,0.25)" stroke-width="12" fill="none" stroke-linecap="butt"/>
+            <path d="M20 100 A80 80 0 0 1 20 100" stroke="#a78bfa" stroke-width="12" fill="none" stroke-linecap="round" id="gaugeFill" opacity="0.9"/>
+            <text x="14" y="118" font-family="monospace" font-size="8" fill="#a8a8c8">0</text>
+            <text x="92" y="10" font-family="monospace" font-size="8" fill="#a8a8c8">50</text>
             <text x="178" y="118" font-family="monospace" font-size="8" fill="#a8a8c8">100</text>
           </svg>
           <div class="gauge-score-display">
-            <div class="gauge-number amber" id="gaugeNum">29</div>
+            <div class="gauge-number purple">23</div>
           </div>
         </div>
-        <div class="gauge-sub">/ 100 SEVERITY</div>
-        <div class="gauge-status amber" id="gaugeStatus">EARLY WATCH</div>
+        <div class="gauge-sub">/ 100 MACRO SEVERITY</div>
+        <div class="gauge-status purple">SYSTEM NOMINAL</div>
+        <div class="hero-label" style="margin-top:18px;text-align:center;">SIGNAL DISTRIBUTION</div>
+        <div class="sig-counts">
+          <div class="sig-c"><div class="sig-c-num green">3</div><div class="sig-c-lbl">CLEAR</div></div>
+          <div class="sig-c"><div class="sig-c-num amber">2</div><div class="sig-c-lbl">WATCH</div></div>
+          <div class="sig-c"><div class="sig-c-num yellow">1</div><div class="sig-c-lbl">FLAG</div></div>
+          <div class="sig-c"><div class="sig-c-num dim">1</div><div class="sig-c-lbl">PEND</div></div>
+          <div class="sig-c"><div class="sig-c-num red">0</div><div class="sig-c-lbl">FIRED</div></div>
+        </div>
       </div>
 
-      <!-- RIGHT: history top, divergence chart bottom — no box -->
-      <div class="hero-right">
-        <div>
-          <div class="hero-label">COMPOSITE HISTORY</div>
-          <div class="history-table">
-            <div class="hist-row"><span class="hist-lbl">1 WEEK AGO</span><span class="hist-val" id="h1wk">—</span></div>
-            <div class="hist-row"><span class="hist-lbl">2 WEEKS AGO</span><span class="hist-val" id="h2wk">—</span></div>
-            <div class="hist-row"><span class="hist-lbl">1 MONTH AGO</span><span class="hist-val" id="h1mo">—</span></div>
-            <div class="hist-row"><span class="hist-lbl">DIRECTION</span><span class="hist-val rising">↑ RISING</span></div>
-            <div class="hist-row"><span class="hist-lbl">WK CHANGE</span><span class="hist-val rising">+3 PTS</span></div>
-            <div class="hist-row"><span class="hist-lbl">MO CHANGE</span><span class="hist-val">—</span></div>
-            <div class="hist-row" style="border-bottom:none;"><span class="hist-lbl">QTR CHANGE</span><span class="hist-val">—</span></div>
-          </div>
-        </div>
-        <div class="div-area">
-          <div class="div-label">AI BEAR vs S&P 500 — DIVERGENCE</div>
-          <svg class="div-svg" id="divSvg" viewBox="0 0 300 72" preserveAspectRatio="none"></svg>
-          <div class="div-legend">
-            <div class="div-leg-item"><div class="div-leg-dot" style="background:var(--amber);"></div>AI BEAR</div>
-            <div class="div-leg-item"><div class="div-leg-dot" style="background:var(--blue);"></div>S&P 500</div>
-          </div>
+      <!-- RIGHT: Macro History -->
+      <div>
+        <div class="hero-label">MACRO COMPOSITE HISTORY</div>
+        <div class="history-table">
+          <div class="hist-row"><span class="hist-lbl">CURRENT</span><span class="hist-val purple">23</span></div>
+          <div class="hist-row"><span class="hist-lbl">1 WEEK AGO</span><span class="hist-val">—</span></div>
+          <div class="hist-row"><span class="hist-lbl">1 MONTH AGO</span><span class="hist-val">—</span></div>
+          <div class="hist-row"><span class="hist-lbl">DIRECTION</span><span class="hist-val rising">↑ RISING</span></div>
+          <div class="hist-row"><span class="hist-lbl">T1 TRIGGER AT</span><span class="hist-val">25 MASTER</span></div>
+          <div class="hist-row"><span class="hist-lbl">DISTANCE TO T1</span><span class="hist-val rising">2 PTS</span></div>
+          <div class="hist-row" style="border-bottom:none;"><span class="hist-lbl">CONFIRMATION RULE</span><span class="hist-val" style="font-size:11px;">HOLD 3 DAYS OR RED SIGNAL</span></div>
         </div>
       </div>
 
@@ -239,223 +235,264 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
   <!-- ELEVATED SIGNALS -->
   <div class="signal-section">
     <div class="section-bar">
-      <div class="section-lbl">ELEVATED SIGNALS — RED · AMBER</div>
-      <div class="section-badge badge-elevated">3 ACTIVE</div>
+      <div class="section-lbl">ELEVATED SIGNALS — AMBER · WATCH · PENDING</div>
+      <div class="section-badge badge-elevated">4 ACTIVE</div>
     </div>
     <div class="signal-list">
       <div class="list-header">
         <span></span><span>Signal + context</span><span style="text-align:center">State</span><span style="text-align:center">Score</span><span style="text-align:center">Dir</span><span>Key metric</span><span>Trigger threshold</span>
       </div>
-      <div class="sig-row-elevated red-row">
-        <div class="sig-dot red" style="margin-top:5px;"></div>
-        <div>
-          <div class="sig-name-elevated red">CAPEX / REVENUE</div>
-          <div class="sig-desc red">Big tech capex intensity at 45–57%. 25% red line far exceeded. $725B combined 2026 capex planned. Multiple compression risk — asset-light premium eroding structurally.</div>
-        </div>
-        <div class="sig-state red">RED</div>
-        <div class="sig-score red">70</div>
-        <div class="sig-dir" style="color:var(--red);">↑</div>
-        <div class="sig-metric red">45–57% vs 25% red line</div>
-        <div class="sig-trigger red">Capex/rev exceeds 25%</div>
-      </div>
+
+      <!-- AMBER: Bond Market -->
       <div class="sig-row-elevated amber-row">
         <div class="sig-dot amber" style="margin-top:5px;"></div>
         <div>
-          <div class="sig-name-elevated amber">NVDA GUIDANCE</div>
-          <div class="sig-desc amber">GM 72.7% — down 6pts YoY. DC Revenue +56% YoY. Earnings May 20 after close — most critical near-term AI Bear event. GM below 74% moves SIG01 to RED immediately.</div>
+          <div class="sig-name-elevated amber">BOND MARKET (2C)</div>
+          <div class="sig-desc amber">30-yr breached 5% intraday May 4 — warning active. 10-yr approaching 4.60% T1 trigger. Rising yields compress equity valuations by increasing the discount rate applied to future earnings.</div>
         </div>
-        <div class="sig-state amber">AMBER</div>
+        <div class="sig-state amber">WARN</div>
         <div class="sig-score amber">45</div>
         <div class="sig-dir" style="color:var(--amber);">↑</div>
-        <div class="sig-metric amber">GM 72.7% / DC Rev +56%</div>
-        <div class="sig-trigger amber">GM cut or guidance miss</div>
+        <div class="sig-metric amber">30-yr 5.02% — warning</div>
+        <div class="sig-trigger amber">10-yr closes ≥4.80%</div>
       </div>
+
+      <!-- YELLOW: Productivity -->
+      <div class="sig-row-elevated yellow-row">
+        <div class="sig-dot yellow" style="margin-top:5px;"></div>
+        <div>
+          <div class="sig-name-elevated yellow">PRODUCTIVITY (3A)</div>
+          <div class="sig-desc yellow">Q1 at 0.8% QoQ annualized — yellow flag. One of two consecutive quarters needed to fire 3A. If AI is not generating productivity gains the entire AI capex justification collapses. Q2 confirmation Aug 7 from BLS.</div>
+        </div>
+        <div class="sig-state yellow">WATCH</div>
+        <div class="sig-score yellow">25</div>
+        <div class="sig-dir" style="color:var(--amber);">↑</div>
+        <div class="sig-metric yellow">Q1 0.8% — 1 of 2 flagged</div>
+        <div class="sig-trigger yellow">2 consecutive qtrs &lt;1.5%</div>
+      </div>
+
+      <!-- BLUE: Earnings Breadth -->
+      <div class="sig-row-elevated blue-row">
+        <div class="sig-dot blue" style="margin-top:5px;"></div>
+        <div>
+          <div class="sig-name-elevated blue">EARNINGS BREADTH (3B)</div>
+          <div class="sig-desc blue">FactSet Q1 Earnings Insight due May 16 — 3 days. Non-Mag7 blended EPS growth data. If only the Mag7 are growing earnings while the rest of the S500 stagnates the rally is a narrow illusion.</div>
+        </div>
+        <div class="sig-state blue">PENDING</div>
+        <div class="sig-score blue">10</div>
+        <div class="sig-dir" style="color:var(--text-dim);">→</div>
+        <div class="sig-metric blue">Data due May 16</div>
+        <div class="sig-trigger blue">Non-Mag7 EPS below 8%</div>
+      </div>
+
+      <!-- AMBER: Treasury/Warsh -->
       <div class="sig-row-elevated amber-row">
         <div class="sig-dot amber" style="margin-top:5px;"></div>
         <div>
-          <div class="sig-name-elevated amber">FCF COMPRESSION</div>
-          <div class="sig-desc amber">AMZN FCF collapsed 71% YoY — $38.2B to $11.2B. Red line breach confirmed at AMZN. Watch MSFT and GOOG next quarterly filings for cascade confirmation.</div>
+          <div class="sig-name-elevated amber">TREASURY / WARSH (3D)</div>
+          <div class="sig-desc amber">Aug 5 refunding watch. $189B Q2 estimate — +$122B vs Feb. If supply increases while demand is already stressed at 30-yr 5%, yields spike rapidly. Warsh QT confirmation pending Senate hearing.</div>
         </div>
-        <div class="sig-state amber">AMBER</div>
-        <div class="sig-score amber">55</div>
+        <div class="sig-state amber">WATCH</div>
+        <div class="sig-score amber">25</div>
         <div class="sig-dir" style="color:var(--amber);">↑</div>
-        <div class="sig-metric amber">AMZN FCF $11.2B vs $38.2B</div>
-        <div class="sig-trigger amber">Big 4 FCF declines >15% QoQ</div>
+        <div class="sig-metric amber">$189B Q2 est — elevated</div>
+        <div class="sig-trigger amber">Refunding revision OR Warsh QT</div>
       </div>
+
     </div>
   </div>
 
   <!-- STABLE SIGNALS -->
   <div class="signal-section">
     <div class="section-bar">
-      <div class="section-lbl">STABLE SIGNALS — GREEN</div>
-      <div class="section-badge badge-stable">5 CLEAR</div>
+      <div class="section-lbl">STABLE SIGNALS — CLEAR</div>
+      <div class="section-badge badge-stable">3 CLEAR</div>
     </div>
     <div class="signal-list">
       <div class="list-header">
         <span></span><span>Signal + context</span><span style="text-align:center">State</span><span style="text-align:center">Score</span><span style="text-align:center">Dir</span><span>Key metric</span><span>Trigger threshold</span>
       </div>
+
       <div class="sig-row-compact">
         <div class="sig-dot green" style="margin-top:5px;"></div>
-        <div><div class="sig-name-compact">Cloud Deceleration</div><div class="sig-desc-compact">No 3-quarter deceleration pattern yet. Azure 40% / AWS 24% / GCP 28% YoY. Watching for sequential decel trend across three consecutive quarters.</div></div>
-        <div class="sig-state-compact">GREEN</div>
-        <div class="sig-score-compact">20</div>
-        <div class="sig-dir" style="color:var(--green);font-size:16px;text-align:center;">↓</div>
-        <div class="sig-metric-compact">Azure 40% / AWS 24% / GCP 28%</div>
-        <div class="sig-trigger-compact">Any below 30% YoY</div>
-      </div>
-      <div class="sig-row-compact">
-        <div class="sig-dot green" style="margin-top:5px;"></div>
-        <div><div class="sig-name-compact">OpenAI Revenue</div><div class="sig-desc-compact">Targeting $20-26B in 2026. Revenue vs $1.4T commitment structure under watch. No miss signal yet from public reporting.</div></div>
-        <div class="sig-state-compact">GREEN</div>
-        <div class="sig-score-compact">15</div>
-        <div class="sig-dir" style="color:var(--text-dim);font-size:16px;text-align:center;">→</div>
-        <div class="sig-metric-compact">Target $20-26B 2026</div>
-        <div class="sig-trigger-compact">Miss target by >20%</div>
-      </div>
-      <div class="sig-row-compact">
-        <div class="sig-dot green" style="margin-top:5px;"></div>
-        <div><div class="sig-name-compact">Debt Issuance</div><div class="sig-desc-compact">IG spread at 13bps — calm. Monitoring bond issuance acceleration quarterly. Well below 50bps trigger threshold.</div></div>
-        <div class="sig-state-compact">GREEN</div>
-        <div class="sig-score-compact">10</div>
-        <div class="sig-dir" style="color:var(--red);font-size:16px;text-align:center;">↑</div>
-        <div class="sig-metric-compact">IG spread 13bps — calm</div>
-        <div class="sig-trigger-compact">Spreads widen >50bps/qtr</div>
-      </div>
-      <div class="sig-row-compact">
-        <div class="sig-dot green" style="margin-top:5px;"></div>
-        <div><div class="sig-name-compact">Enterprise ROI</div><div class="sig-desc-compact">Only 29% of enterprises report significant ROI. Structural demand risk building slowly. Already at the 30% threshold.</div></div>
-        <div class="sig-state-compact">GREEN</div>
-        <div class="sig-score-compact">8</div>
-        <div class="sig-dir" style="color:var(--text-dim);font-size:16px;text-align:center;">→</div>
-        <div class="sig-metric-compact">29% report significant ROI</div>
-        <div class="sig-trigger-compact">ROI stalls below 30%</div>
-      </div>
-      <div class="sig-row-compact">
-        <div class="sig-dot green" style="margin-top:5px;"></div>
-        <div><div class="sig-name-compact">Infra Debt Stress</div><div class="sig-desc-compact">No rating actions on REITs or private credit. CoreWeave stable. No contagion signals from utilities, insurers, or pension funds.</div></div>
-        <div class="sig-state-compact">GREEN</div>
+        <div><div class="sig-name-compact">Labor Market (2A)</div><div class="sig-desc-compact">115K jobs / 4.3% unemployment — both clear. Next release Jun 5. Watch for trend deterioration not single-month noise. Two weak prints needed to confirm signal.</div></div>
+        <div class="sig-state-compact">CLEAR</div>
         <div class="sig-score-compact">5</div>
         <div class="sig-dir" style="color:var(--text-dim);font-size:16px;text-align:center;">→</div>
-        <div class="sig-metric-compact">No rating actions</div>
-        <div class="sig-trigger-compact">Rating action on REIT/credit</div>
+        <div class="sig-metric-compact">115K jobs / 4.3% unemp</div>
+        <div class="sig-trigger-compact">Jobs &lt;75K OR unemp ≥4.4%</div>
       </div>
+
+      <div class="sig-row-compact">
+        <div class="sig-dot green" style="margin-top:5px;"></div>
+        <div><div class="sig-name-compact">S&P Technical (2B)</div><div class="sig-desc-compact">S&P at 7,444 — well above 50-day MA. T1 fires on close below 50-day MA on above-average volume. 50-day MA currently around 5,620. Not remotely close.</div></div>
+        <div class="sig-state-compact">CLEAR</div>
+        <div class="sig-score-compact">5</div>
+        <div class="sig-dir" style="color:var(--text-dim);font-size:16px;text-align:center;">→</div>
+        <div class="sig-metric-compact">S&P 7,444 — well above MA</div>
+        <div class="sig-trigger-compact">S&P closes below 5,800</div>
+      </div>
+
+      <div class="sig-row-compact">
+        <div class="sig-dot green" style="margin-top:5px;"></div>
+        <div><div class="sig-name-compact">Lower High / Chart (3C)</div><div class="sig-desc-compact">S&P currently above Feb 6,147 ATH. Rally sequence not active. Fires if rally stalls below ATH and S&P breaks back below the 20-day MA with volume confirmation.</div></div>
+        <div class="sig-state-compact">CLEAR</div>
+        <div class="sig-score-compact">5</div>
+        <div class="sig-dir" style="color:var(--text-dim);font-size:16px;text-align:center;">→</div>
+        <div class="sig-metric-compact">Not active — S&P above ATH</div>
+        <div class="sig-trigger-compact">S&P sustained below 20-day MA after rally fails to hold</div>
+      </div>
+
     </div>
   </div>
 
 </main>
 <script>
-const SIGNALS=[{rag:'red',score:70},{rag:'amber',score:45},{rag:'amber',score:55},{rag:'green',score:20},{rag:'green',score:15},{rag:'green',score:10},{rag:'green',score:8},{rag:'green',score:5}];
-function calcComposite(){return Math.round(SIGNALS.reduce((a,s)=>a+s.score,0)/SIGNALS.length);}
-function cc(s){return s<25?'green':s<50?'amber':'red';}
+function calcGaugeArc(score){
+  const pct=Math.min(Math.max(score,0),100)/100;
+  if(pct<=0)return'M20 100 A80 80 0 0 1 20.1 100';
+  const angleDeg=180-pct*180;
+  const angleRad=angleDeg*Math.PI/180;
+  const ex=100+80*Math.cos(angleRad);
+  const ey=100-80*Math.sin(angleRad);
+  const largeArc=pct>0.5?1:0;
+  return`M20 100 A80 80 0 ${largeArc} 1 ${ex.toFixed(1)} ${ey.toFixed(1)}`;
+}
 
-function buildCharts(){
-  const bearData=[16,17,19,18,21,22,25,29];
-  const spxData=[55,58,56,62,66,70,73,78];
-  function makePts(data,w,h){
-    const mx=Math.max(...data),mn=Math.min(...data),n=data.length;
-    return data.map((v,i)=>((i/(n-1))*w)+','+(h-((v-mn)/(mx-mn||1))*(h-8)-4)).join(' ');
+// SPX: reads from Dash 5 locked override (manual — same source as Dash 5)
+// TNX: auto-fetch from FRED public CSV — no API key required
+async function fetchTnx(){
+  let d5={};
+  try{ d5=JSON.parse(localStorage.getItem('rooster_dash5_v1'))||{}; }catch(e){}
+  if(d5.tnx_ovr && d5.tnx_ovr.value){
+    const el=document.getElementById('mTnx');
+    if(el) el.textContent=parseFloat(d5.tnx_ovr.value).toFixed(2)+'%';
+    return;
   }
-
-  // Trend SVG — no box, just lines on transparent
-  const tSvg=document.getElementById('trendSvg');
-  const tPts=makePts(bearData,300,72);
-  tSvg.innerHTML=`<defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f5a623" stop-opacity="0.25"/><stop offset="100%" stop-color="#f5a623" stop-opacity="0"/></linearGradient></defs><polyline points="${tPts} 300,72 0,72" fill="url(#tg)" stroke="none"/><polyline points="${tPts}" fill="none" stroke="#f5a623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
-
-  // Divergence SVG — no box, transparent background, same height as trend
-  const dSvg=document.getElementById('divSvg');
-  const bPts=makePts(bearData,300,72);
-  const sPts=makePts(spxData,300,72);
-  dSvg.innerHTML=`<polyline points="${bPts}" fill="none" stroke="#f5a623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/><polyline points="${sPts}" fill="none" stroke="#4a9eff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>`;
-}
-
-function calcGaugeArc(score) {
-  // Arc goes from left (180deg, score 0) to right (0deg, score 100)
-  // SVG center: cx=100, cy=100, r=80, start point: M20 100
-  const pct = Math.min(Math.max(score, 0), 100) / 100;
-  const angleDeg = 180 - pct * 180;
-  const angleRad = angleDeg * Math.PI / 180;
-  const cx = 100, cy = 100, r = 80;
-  const ex = cx + r * Math.cos(angleRad);
-  const ey = cy - r * Math.sin(angleRad);
-  const largeArc = pct > 0.5 ? 1 : 0;
-  return `M20 100 A80 80 0 ${largeArc} 1 ${ex.toFixed(1)} ${ey.toFixed(1)}`;
-}
-
-function updateGauge(score){
-  const el=document.getElementById('gaugeNum');
-  el.textContent=score;
-  el.className='gauge-number '+cc(score);
-  const st=document.getElementById('gaugeStatus');
-  st.textContent=score<25?'NOMINAL':score<50?'EARLY WATCH':'ACTION REQUIRED';
-  st.className='gauge-status '+cc(score);
-  // Update gauge arc
-  const fill=document.getElementById('gaugeFill');
-  if(fill){
-    fill.setAttribute('d', calcGaugeArc(score));
-    const colors={green:'#00d4a0',amber:'#f5a623',red:'#ff4060'};
-    fill.setAttribute('stroke', colors[cc(score)]);
+  try{
+    const r=await fetch('https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10',{signal:AbortSignal.timeout(8000)});
+    if(!r.ok) throw new Error();
+    const txt=await r.text();
+    const rows=txt.trim().split('\n').slice(1);
+    for(let i=rows.length-1;i>=0;i--){
+      const v=parseFloat(rows[i].split(',')[1]);
+      if(!isNaN(v)){
+        const el=document.getElementById('mTnx');
+        if(el) el.textContent=v.toFixed(2)+'%';
+        return;
+      }
+    }
+  }catch(e){
+    const el=document.getElementById('mTnx');
+    if(el) el.textContent='—';
   }
 }
 
-const D2_STALE_DAYS = 95;
-
-function d2CheckStale(isoDate){
+const D4_STALE_DAYS=35;
+function d4CheckStale(isoDate){
   if(!isoDate) return true;
-  return Math.floor((new Date()-new Date(isoDate))/86400000) > D2_STALE_DAYS;
+  return Math.floor((new Date()-new Date(isoDate))/86400000)>D4_STALE_DAYS;
 }
 
-function loadLockedData(){
-  let d1={};
-  try{ d1=JSON.parse(localStorage.getItem('rooster_dash1_v1'))||{}; }catch(e){}
+function loadMacroLocked(){
+  let d5={};
+  try{ d5=JSON.parse(localStorage.getItem('rooster_dash5_v1'))||{}; }catch(e){}
 
-  const keyFields=['nvda-gm','capex-pct','azure-growth','hy-spread'];
-  const anyLocked=keyFields.some(k=>d1[k]&&d1[k].locked);
-  const anyStale=keyFields.some(k=>!d1[k]||d2CheckStale(d1[k]?.locked));
-
-  const banner=document.getElementById('d2StaleBanner');
+  // Stale banner check
+  const keyFields=['jobs','unemp','spx_ovr','tnx_ovr'];
+  const anyLocked=keyFields.some(k=>d5[k]&&d5[k].locked);
+  const anyStale=keyFields.some(k=>!d5[k]||d4CheckStale(d5[k]?.locked));
+  const banner=document.getElementById('d4StaleBanner');
   if(banner){
     if(!anyLocked){
       banner.style.cssText='display:flex;padding:8px 20px;font-family:var(--font-mono);font-size:12px;color:var(--red);border-bottom:1px solid rgba(255,64,96,0.3);background:rgba(255,64,96,0.05);';
-      banner.textContent='⚠ No Dash 1 data locked — open Dash 1 to enter signal values';
+      banner.textContent='⚠ No Dash 5 data locked — open Dash 5 to enter macro values';
     } else if(anyStale){
       banner.style.cssText='display:flex;padding:8px 20px;font-family:var(--font-mono);font-size:12px;color:var(--amber);border-bottom:1px solid rgba(245,166,35,0.3);background:rgba(245,166,35,0.05);';
-      banner.textContent='⚠ Some Dash 1 signals are stale — open Dash 1 to update';
+      banner.textContent='⚠ Some Dash 5 signals are stale — open Dash 5 to update';
     } else {
       banner.style.display='none';
     }
   }
 
-  const fields=['nvda-dcgrowth','nvda-gm','nvda-guidance','openai-rev','hy-spread','hy-volume','hy-ratio','fcf-combined','fcf-qoq','capex-rev','capex-pct','azure-growth','aws-growth','gcp-growth','btos-rate','dc-spread','orcl-cov'];
-  fields.forEach(key=>{
-    const el=document.getElementById(key);
-    if(el&&d1[key]&&d1[key].value){
-      el.textContent=d1[key].value;
-      if(d2CheckStale(d1[key].locked)) el.style.color='var(--amber)';
+  // Map Dash 5 keys to display elements — updated with new M05 keys
+  const map={
+    'jobs':        {id:'mJobs',    suffix:'K'},
+    'unemp':       {id:'mUnemp',   suffix:'%'},
+    'spx_ovr':     {id:'mSpx',     suffix:''},
+    'tnx_ovr':     {id:'mTnx',     suffix:'%'},
+    't30':         {id:'mT30',     suffix:'%'},
+    'm05_493_qtr': {id:'mBreadth', suffix:'%'},
+    'prodQ2':      {id:'mProd',    suffix:'%'},
+    'warsh':       {id:'mWarsh',   suffix:''},
+    'ma50':        {id:'mMa50',    suffix:''},
+    'ma20':        {id:'mMa20',    suffix:''},
+  };
+
+  Object.entries(map).forEach(([key,cfg])=>{
+    const el=document.getElementById(cfg.id);
+    if(!el||!d5[key]) return;
+    const val=d5[key].value;
+    if(val){
+      el.textContent=val+(cfg.suffix&&!val.includes(cfg.suffix)?cfg.suffix:'');
+      if(d4CheckStale(d5[key].locked)) el.style.color='var(--amber)';
     }
   });
 
-  const locked=fields.filter(k=>d1[k]&&d1[k].locked).length;
-  const dates=fields.filter(k=>d1[k]?.locked).map(k=>new Date(d1[k].locked)).sort((a,b)=>b-a);
+  // Update last-locked timestamp
+  const dates=Object.values(d5).filter(v=>v?.locked).map(v=>new Date(v.locked)).sort((a,b)=>b-a);
   const lu=document.getElementById('lastUpdated');
-  if(lu&&dates.length) lu.textContent='DATA: '+dates[0].toLocaleDateString('en-US',{month:'short',day:'numeric'})+' · '+locked+' fields locked';
-  else if(lu) lu.textContent='NO DASH 1 DATA — open Dash 1 first';
-  updateGauge(calcComposite());
+  if(lu&&dates.length) lu.textContent='DATA: '+dates[0].toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  else if(lu) lu.textContent='NO DASH 5 DATA — open Dash 5 first';
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
-  buildCharts();
-  loadLockedData();
+  loadMacroLocked();
+  fetchTnx();
+  const fill=document.getElementById('gaugeFill');
+  if(fill){
+    // Calculate gauge score from Dash 5 locked values
+    let d5={};
+    try{ d5=JSON.parse(localStorage.getItem('rooster_dash5_v1'))||{}; }catch(e){}
+    // Simple scoring: amber signals add 15, red add 40
+    // Read from Dash 5 composite if available, otherwise estimate from locked values
+    const d5comp = localStorage.getItem('rooster_dash5_composite');
+    const score  = d5comp ? parseInt(d5comp) : estimateMacroScore(d5);
+    const color  = score < 25 ? '#a78bfa' : score < 50 ? '#f5a623' : '#ff4060';
+    fill.setAttribute('d', calcGaugeArc(score));
+    fill.setAttribute('stroke', color);
+    const scoreEl = document.getElementById('gaugeScore');
+    if(scoreEl) scoreEl.textContent = score;
+  }
+  document.getElementById('lastUpdated').textContent='LOCAL — '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
 });
+
+function estimateMacroScore(d5){
+  // Estimate macro composite from known locked values
+  let score = 0;
+  const tnx = parseFloat(d5.tnx_ovr?.value);
+  const t30 = parseFloat(d5.t30?.value);
+  const jobs = parseFloat(d5.jobs?.value);
+  const unemp = parseFloat(d5.unemp?.value);
+  const prod = parseFloat(d5.prodQ2?.value);
+  const m05 = parseFloat(d5.m05_493_qtr?.value);
+  if(!isNaN(tnx) && tnx >= 4.60) score += tnx >= 4.80 ? 25 : 12;
+  if(!isNaN(t30) && t30 >= 5.00) score += 15;
+  if(!isNaN(jobs) && jobs < 100) score += jobs < 75 ? 25 : 10;
+  if(!isNaN(unemp) && unemp >= 4.2) score += unemp >= 4.4 ? 20 : 8;
+  if(!isNaN(prod) && prod < 1.5) score += 15;
+  if(!isNaN(m05) && m05 < 15) score += m05 < 8 ? 25 : 12;
+  return Math.min(100, score);
+}
 </script>
 
 <div class="thesis-overlay" id="thesisModal">
   <div class="thesis-modal">
     <button class="thesis-close" onclick="closeThesis()">✕</button>
-    <div class="thesis-title">🐓 AI BEAR HEAT MAP</div>
-    <div class="thesis-sub">SIGNAL VISUALIZATION · READS FROM DASH 1</div>
-    <p style="font-family:var(--font-body);font-size:15px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px;">This heat map visualizes the current RAG state and composite score of the eight AI Bear signals. All data is read directly from Dash 1 locked values. Open Dash 1 to update signals and enter new data.</p>
-    <p style="font-family:var(--font-body);font-size:13px;color:var(--text-dim);line-height:1.7;margin:0;">For the full AI signal thesis and infrastructure loop explanation — open Dash 1 and click THESIS.</p>
+    <div class="thesis-title">🌐 MACRO HEAT MAP</div>
+    <div class="thesis-sub">SIGNAL VISUALIZATION · READS FROM DASH 5</div>
+    <p style="font-family:var(--font-body);font-size:15px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px;">This heat map visualizes the current RAG state and composite score of the seven macro signals. All data is read directly from Dash 5 locked values. Open Dash 5 to update signals and enter new data.</p>
+    <p style="font-family:var(--font-body);font-size:13px;color:var(--text-dim);line-height:1.7;margin:0;">For the full macro thesis explanation — open Dash 5 and click THESIS.</p>
   </div>
 </div>
 <script>
@@ -465,4 +502,3 @@ document.getElementById('thesisModal').addEventListener('click', function(e){ if
 </script>
 
 </body>
-</html>
