@@ -441,8 +441,13 @@
       </div>
       <div class="input-group">
         <label class="input-label">⬡ S&P 50-Day MA · Barchart</label>
-        <input class="input-field" id="inp_ma50" type="number" placeholder="e.g. 5620">
+        <input class="input-field" id="inp_ma50" type="number" placeholder="e.g. 7174">
         <div class="lock-row"><button class="lock-btn" id="lock-ma50" onclick="toggleLock('ma50','inp_ma50')">✓ LOCK</button><span class="lock-stamp" id="stamp-ma50">Edit then LOCK to persist</span></div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">⬡ 50-DAY MA BREACH DAYS · Manual count</label>
+        <input class="input-field" id="inp_ma50_breach" type="number" min="0" max="30" placeholder="0 = no breach · days below MA">
+        <div class="lock-row"><button class="lock-btn" id="lock-ma50_breach" onclick="toggleLock('ma50_breach','inp_ma50_breach')">✓ LOCK</button><span class="lock-stamp" id="stamp-ma50_breach">Consecutive sessions SPX closed below 50-day MA — T2 requires 3+</span></div>
       </div>
       <div class="input-group">
         <label class="input-label">⬡ S&P 20-Day MA · Barchart</label>
@@ -543,11 +548,16 @@ const M5_STALE_DAYS = { weekly:9, monthly:35, quarterly:95, biweekly:16 };
 const M5_MODAL_FIELDS = [
   // TIER 1 — MARKET STRESS
   { key:'spx_ovr',  sig:'M02', label:'S&P 500 CURRENT',       cadence:'weekly',
-    eventDays:[1,2,3,4,5], // every trading day
+    eventDays:[1,2,3,4,5],
     method:'manual-link',
     url:'https://www.barchart.com/stocks/quotes/$SPX/technical-analysis',
-    instruction:'Barchart → $SPX Technical Analysis → current price shown at top of page. Same page as MA values — one visit gets all three numbers.',
+    instruction:'Barchart → $SPX Technical Analysis → current price shown at top of page.',
     hint:'e.g. 7405' },
+  { key:'ma50_breach', sig:'M02', label:'50-DAY MA BREACH DAYS', cadence:'weekly',
+    method:'manual-link',
+    url:'https://www.barchart.com/stocks/quotes/$SPX/technical-analysis',
+    instruction:'Count consecutive sessions SPX closed below 50-day MA. Enter 0 if above MA. T2 condition requires 3+ sessions. Current MA: 7,174.',
+    hint:'0' },
   { key:'ma50',     sig:'M02', label:'S&P 50-DAY MA',         cadence:'weekly',
     method:'manual-link',
     url:'https://www.barchart.com/stocks/quotes/$SPX/technical-analysis',
@@ -802,14 +812,6 @@ function m5RenderStep(stepIdx){
         <div style="font-family:var(--font-mono);font-size:14px;color:#999;">Advancing to next tier...</div>
       </div>`;
     setTimeout(() => m5AdvanceStep(), 1200);
-  } else if(tierStale === 0 && stepIdx === M5_TOTAL_STEPS - 1){
-    body.innerHTML = `
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:260px;gap:16px;">
-        <div style="font-size:56px;">✓</div>
-        <div style="font-family:var(--font-display);font-size:28px;letter-spacing:2px;color:#0F6E56;">ALL MACRO CURRENT</div>
-        <div style="font-family:var(--font-mono);font-size:14px;color:#999;">Entering dashboard...</div>
-      </div>`;
-    setTimeout(() => { m5EnterDash(); setTimeout(m5ShowSuccess, 200); }, 1200);
   }
 }
 
@@ -906,7 +908,8 @@ const M5_FIELDS = [
   {key:'jobs',    id:'inp_jobs',         label:'Jobs Added K'},
   {key:'unemp',   id:'inp_unemp',        label:'Unemployment %'},
   {key:'wage',    id:'inp_wage',         label:'Wage Growth MoM %'},
-  {key:'ma50',    id:'inp_ma50',         label:'50-Day MA'},
+  {key:'ma50',         id:'inp_ma50',         label:'50-Day MA'},
+  {key:'ma50_breach',  id:'inp_ma50_breach',  label:'50-Day MA Breach Days'},
   {key:'ma20',    id:'inp_ma20',         label:'20-Day MA'},
   {key:'t30',     id:'inp_t30',          label:'30-yr High %'},
   {key:'m05_493_qtr', id:'inp_m05_493_qtr', label:'S&P 493 Qtr EPS %'},
@@ -1138,25 +1141,35 @@ function updateSignals(){
     const f=(!isNaN(jobs)&&jobs<30)||(!isNaN(unemp)&&unemp>=4.4);
     const w=(!isNaN(jobs)&&jobs<75)||(!isNaN(unemp)&&unemp>=4.35);
     const rag=f?'red':w?'amber':'green';
-    setDot('dot-m01', rag);
+    setDot('dot-m01', rag); setCard('card-1a', rag);
   }
 
-  // M02 S&P Technical
+  // M02 S&P Technical — T2 framework requires SUSTAINED breach 3+ consecutive sessions
+  // Single day below MA = yellow (watch). 3+ consecutive days = amber (T2 condition active).
+  // Human enters breach day count in 'ma50_breach' field (0 = no breach, 1/2/3+ = days)
   if(spx&&!isNaN(ma50)){
-    const rag=spx<ma50?'amber':spx<(ma50*1.05)?'yellow':'green';
-    setDot('dot-m02', rag);
+    let d5={}; try{d5=JSON.parse(localStorage.getItem('rooster_dash5_v1'))||{};}catch(e){}
+    const breachDays = parseInt(d5['ma50_breach']?.value) || 0;
+    const belowMA    = spx < ma50;
+    let rag = 'green';
+    if(belowMA && breachDays >= 3) rag = 'amber';        // T2 condition active
+    else if(belowMA && breachDays >= 1) rag = 'yellow';  // watching
+    else if(belowMA) rag = 'yellow';                     // just crossed — watch
+    setDot('dot-m02', rag); setCard('card-2a', rag);
+    // Update distance display
+    if(!isNaN(ma50)){ const d=Math.round(spx-ma50); setVal('m02-dist',(d>0?'+':'')+d+' pts · '+(breachDays>0?breachDays+'d breach':'above MA')); }
   }
 
   // M03 Bond Market
   if(tnx){
     const rag=tnx>=4.80?'red':tnx>=4.60?'amber':t30>=5?'yellow':'green';
-    setDot('dot-m03', rag);
+    setDot('dot-m03', rag); setCard('card-2b', rag);
   }
 
   // M04 Productivity
   if(!isNaN(prodQ2)){
     const rag=prodQ2<1.5?'red':'green';
-    setDot('dot-m04', rag);
+    setDot('dot-m04', rag); setCard('card-3a', rag);
   }
 
   // M05 Earnings Breadth — trajectory-based RAG
@@ -1178,13 +1191,21 @@ function updateSignals(){
   // M07 Warsh
   if(warsh){
     const rag=warsh.toUpperCase().includes('FIRE')?'red':'amber';
-    setDot('dot-m07', rag);
+    setDot('dot-m07', rag); setCard('card-3c', rag);
+  }
+
+  // M06 Lower High — based on SPX vs MA20
+  if(spx && !isNaN(ma20)){
+    const rag = spx < ma20 ? 'amber' : 'green';
+    setCard('card-2c', rag);
   }
 
   // Update Macro composite header
   const macroScore = calcMacroComposite(jobs,unemp,tnx,t30,b493,prodQ2,warsh,spx,ma50);
   const mEl = document.getElementById('macroComposite');
   if(mEl){ mEl.textContent = macroScore; mEl.className = 'composite-score '+cc(macroScore); }
+  // Save composite so Dash 4 heat map can read it
+  try{ localStorage.setItem('rooster_dash5_composite', macroScore); }catch(e){}
 
   document.getElementById('lastUpdated').textContent = 'UPDATED: '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
 }
