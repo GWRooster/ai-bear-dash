@@ -802,6 +802,14 @@ function m5RenderStep(stepIdx){
         <div style="font-family:var(--font-mono);font-size:14px;color:#999;">Advancing to next tier...</div>
       </div>`;
     setTimeout(() => m5AdvanceStep(), 1200);
+  } else if(tierStale === 0 && stepIdx === M5_TOTAL_STEPS - 1){
+    body.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:260px;gap:16px;">
+        <div style="font-size:56px;">✓</div>
+        <div style="font-family:var(--font-display);font-size:28px;letter-spacing:2px;color:#0F6E56;">ALL MACRO CURRENT</div>
+        <div style="font-family:var(--font-mono);font-size:14px;color:#999;">Entering dashboard...</div>
+      </div>`;
+    setTimeout(() => { m5EnterDash(); setTimeout(m5ShowSuccess, 200); }, 1200);
   }
 }
 
