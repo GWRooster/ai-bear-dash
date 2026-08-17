@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DASH 2 — AI HEAT MAP</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--surface:#16161f;--surface2:#0e0e16;--border:#2a2a3e;--text-primary:#ffffff;--text-secondary:#d8d8f0;--text-dim:#a8a8c8;--green:#00d4a0;--green-dim:rgba(0,212,160,0.12);--amber:#f5a623;--amber-dim:rgba(245,166,35,0.12);--red:#ff4060;--red-dim:rgba(255,64,96,0.12);--yellow:#f9e040;--yellow-dim:rgba(249,224,64,0.12);--blue:#4a9eff;--blue-dim:rgba(74,158,255,0.12);--purple:#a78bfa;--purple-dim:rgba(167,139,250,0.12);--font-display:'Bebas Neue',sans-serif;--font-mono:'IBM Plex Mono',monospace;--font-body:'IBM Plex Sans',sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text-primary);font-family:var(--font-body);font-size:17px;min-height:100vh;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:999;}
+.header{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;}
+.header-left{display:flex;align-items:baseline;gap:16px;}
+.dash-id{font-family:var(--font-display);font-size:28px;letter-spacing:3px;}
+.dash-sub{font-family:var(--font-mono);font-size:12px;color:var(--text-secondary);letter-spacing:2px;text-transform:uppercase;}
+.last-updated{font-family:var(--font-mono);font-size:12px;color:var(--text-dim);letter-spacing:1px;}
+.nav-bar{display:flex;padding:0 28px;border-bottom:1px solid var(--border);background:var(--bg);overflow-x:auto;}
+.nav-link{font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:10px 18px;color:var(--text-dim);text-decoration:none;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;}
+.nav-link:hover{color:var(--text-secondary);}
+.nav-link.active{color:var(--text-primary);border-bottom-color:var(--purple);}
+.main{padding:24px 28px;max-width:1500px;margin:0 auto;}
+
+.hero{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--purple);padding:28px;margin-bottom:24px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 100%,rgba(167,139,250,0.05) 0%,transparent 70%);pointer-events:none;}
+.hero-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:32px;align-items:start;}
+.hero-label{font-family:var(--font-mono);font-size:12px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:12px;}
+
+.metric-table{width:100%;}
+.metric-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-family:var(--font-mono);font-size:14px;}
+.metric-row:last-child{border-bottom:none;}
+.metric-lbl{color:var(--text-dim);}
+.metric-val{font-weight:500;}
+.metric-val.green{color:var(--green);}
+.metric-val.amber{color:var(--amber);}
+.metric-val.red{color:var(--red);}
+.metric-val.yellow{color:var(--yellow);}
+.metric-val.neutral{color:var(--text-secondary);}
+
+.gauge-wrap{position:relative;width:200px;height:112px;}
+.gauge-svg{width:100%;height:100%;}
+.gauge-score-display{position:absolute;bottom:0;left:50%;transform:translateX(-50%);text-align:center;}
+.gauge-number{font-family:var(--font-display);font-size:52px;line-height:1;transition:color 0.5s;}
+.gauge-number.purple{color:var(--purple);}
+.gauge-number.amber{color:var(--amber);}
+.gauge-number.red{color:var(--red);}
+.gauge-sub{font-family:var(--font-mono);font-size:12px;color:var(--text-dim);letter-spacing:2px;text-align:center;margin-top:6px;}
+.gauge-status{font-family:var(--font-display);font-size:17px;letter-spacing:3px;text-align:center;margin-top:4px;}
+.gauge-status.purple{color:var(--purple);}
+.gauge-status.amber{color:var(--amber);}
+.gauge-status.red{color:var(--red);}
+
+.sig-counts{display:flex;gap:8px;margin-top:18px;}
+.sig-c{display:flex;flex-direction:column;align-items:center;padding:8px 10px;border:1px solid var(--border);background:var(--surface2);min-width:46px;}
+.sig-c-num{font-family:var(--font-display);font-size:24px;line-height:1;}
+.sig-c-num.green{color:var(--green);}
+.sig-c-num.amber{color:var(--amber);}
+.sig-c-num.yellow{color:var(--yellow);}
+.sig-c-num.red{color:var(--red);}
+.sig-c-num.blue{color:var(--blue);}
+.sig-c-num.dim{color:var(--text-dim);}
+.sig-c-lbl{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-top:2px;}
+
+.history-table{width:100%;}
+.hist-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-family:var(--font-mono);font-size:13px;}
+.hist-row:last-child{border-bottom:none;}
+.hist-lbl{color:var(--text-dim);}
+.hist-val{color:var(--text-secondary);}
+.hist-val.purple{color:var(--purple);}
+
+.signal-section{margin-bottom:24px;}
+.section-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.section-lbl{font-family:var(--font-mono);font-size:11px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;border-left:2px solid var(--purple);padding-left:10px;}
+.section-badge{font-family:var(--font-mono);font-size:11px;padding:3px 10px;border:1px solid;border-radius:2px;}
+.badge-elevated{color:var(--amber);border-color:rgba(245,166,35,0.4);background:var(--amber-dim);}
+.badge-stable{color:var(--green);border-color:rgba(0,212,160,0.4);background:var(--green-dim);}
+
+.signal-list{background:var(--surface);border:1px solid var(--border);overflow:hidden;}
+.list-header{display:grid;grid-template-columns:16px 2fr 80px 60px 44px 1.2fr 150px;gap:10px;padding:8px 20px;background:var(--surface2);font-family:var(--font-mono);font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;align-items:center;}
+
+.sig-row-elevated{display:grid;grid-template-columns:16px 2fr 80px 60px 44px 1.2fr 150px;gap:10px;padding:14px 20px;border-top:1px solid var(--border);align-items:start;}
+.sig-row-elevated.amber-row{background:linear-gradient(135deg,rgba(245,166,35,0.08),rgba(245,166,35,0.03));}
+.sig-row-elevated.yellow-row{background:linear-gradient(135deg,rgba(249,224,64,0.08),rgba(249,224,64,0.03));}
+.sig-row-elevated.blue-row{background:linear-gradient(135deg,rgba(74,158,255,0.08),rgba(74,158,255,0.03));}
+.sig-row-elevated.red-row{background:linear-gradient(135deg,rgba(255,64,96,0.1),rgba(255,64,96,0.03));}
+
+.sig-dot{border-radius:50%;flex-shrink:0;margin-top:4px;}
+.sig-dot.amber{width:11px;height:11px;background:var(--amber);box-shadow:0 0 6px var(--amber);}
+.sig-dot.yellow{width:11px;height:11px;background:var(--yellow);box-shadow:0 0 5px var(--yellow);}
+.sig-dot.blue{width:11px;height:11px;background:var(--blue);}
+.sig-dot.red{width:11px;height:11px;background:var(--red);box-shadow:0 0 8px var(--red);}
+.sig-dot.green{width:9px;height:9px;background:var(--green);box-shadow:0 0 4px var(--green);}
+
+.sig-name-elevated{font-family:var(--font-display);font-size:18px;letter-spacing:1px;margin-bottom:4px;line-height:1;}
+.sig-name-elevated.amber{color:var(--amber);}
+.sig-name-elevated.yellow{color:var(--yellow);}
+.sig-name-elevated.blue{color:var(--blue);}
+.sig-name-elevated.red{color:var(--red);}
+.sig-desc{font-family:var(--font-body);font-size:13px;line-height:1.6;}
+.sig-desc.amber{color:rgba(245,166,35,0.85);}
+.sig-desc.yellow{color:rgba(249,224,64,0.8);}
+.sig-desc.blue{color:rgba(74,158,255,0.85);}
+.sig-desc.red{color:rgba(255,64,96,0.9);}
+
+.sig-state{font-family:var(--font-mono);font-size:12px;font-weight:500;text-align:center;padding-top:3px;}
+.sig-state.amber{color:var(--amber);}
+.sig-state.yellow{color:var(--yellow);}
+.sig-state.blue{color:var(--blue);}
+.sig-state.red{color:var(--red);}
+
+.sig-score{font-family:var(--font-display);font-size:24px;text-align:center;}
+.sig-score.amber{color:var(--amber);}
+.sig-score.yellow{color:var(--yellow);}
+.sig-score.blue{color:var(--blue);}
+.sig-score.red{color:var(--red);}
+
+.sig-dir{font-size:18px;text-align:center;}
+.sig-metric{font-family:var(--font-mono);font-size:13px;padding-top:3px;}
+.sig-metric.amber{color:rgba(245,166,35,0.9);}
+.sig-metric.yellow{color:rgba(249,224,64,0.85);}
+.sig-metric.blue{color:rgba(74,158,255,0.9);}
+.sig-metric.red{color:rgba(255,64,96,0.95);}
+.sig-trigger{font-family:var(--font-mono);font-size:12px;padding-top:3px;}
+.sig-trigger.amber{color:rgba(245,166,35,0.7);}
+.sig-trigger.yellow{color:rgba(249,224,64,0.65);}
+.sig-trigger.blue{color:rgba(74,158,255,0.7);}
+.sig-trigger.red{color:rgba(255,64,96,0.8);}
+
+.sig-row-compact{display:grid;grid-template-columns:16px 2fr 80px 60px 44px 1.2fr 150px;gap:10px;padding:12px 20px;border-top:1px solid rgba(255,255,255,0.04);align-items:start;}
+.sig-name-compact{font-family:var(--font-body);font-size:15px;color:var(--text-primary);margin-bottom:2px;}
+.sig-desc-compact{font-family:var(--font-body);font-size:12px;color:var(--text-dim);line-height:1.5;}
+.sig-state-compact{font-family:var(--font-mono);font-size:11px;color:var(--green);text-align:center;padding-top:3px;}
+.sig-score-compact{font-family:var(--font-display);font-size:18px;color:var(--green);text-align:center;}
+.sig-metric-compact{font-family:var(--font-mono);font-size:12px;color:var(--text-dim);padding-top:3px;}
+.sig-trigger-compact{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);padding-top:3px;}
+
+.freshness-badge { font-family:var(--font-mono); font-size:9px; letter-spacing:0.5px; padding:2px 6px; border-radius:2px; text-transform:uppercase; display:inline-block; white-space:nowrap; margin-left:8px; vertical-align:middle; }
+.freshness-badge.current { color:var(--green); border:1px solid rgba(0,212,160,0.4); background:var(--green-dim); }
+.freshness-badge.pending { color:var(--blue); border:1px solid rgba(74,158,255,0.4); background:var(--blue-dim); }
+.freshness-badge.stale, .freshness-badge.never { color:var(--red); border:1px solid rgba(255,64,96,0.5); background:var(--red-dim); animation:stale-pulse-d2 1.6s ease-in-out infinite; }
+@keyframes stale-pulse-d2 { 0%,100%{ opacity:1; } 50%{ opacity:0.35; } }
+
+@media(max-width:1200px){.hero-grid{grid-template-columns:1fr}.list-header,.sig-row-elevated,.sig-row-compact{grid-template-columns:16px 2fr 70px 50px 40px 1fr}.main{padding:16px}}
+@media(max-width:768px){.header{flex-wrap:wrap;gap:12px}.nav-link{padding:8px 10px;font-size:10px}}
+
+.thesis-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.82); z-index:8000; align-items:flex-start; justify-content:center; overflow-y:auto; padding:40px 16px 60px; }
+.thesis-overlay.open { display:flex; }
+.thesis-modal { background:var(--surface); border:1px solid var(--border); width:100%; max-width:860px; padding:32px; position:relative; }
+.thesis-close { position:absolute; top:16px; right:20px; background:none; border:none; color:var(--text-dim); font-size:20px; cursor:pointer; font-family:var(--font-mono); }
+.thesis-close:hover { color:var(--text-primary); }
+.thesis-title { font-family:var(--font-display); font-size:26px; letter-spacing:2px; color:var(--text-primary); margin-bottom:6px; }
+.thesis-sub { font-family:var(--font-mono); font-size:11px; color:var(--text-dim); letter-spacing:1px; margin-bottom:28px; }
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-left">
+    <div class="dash-id">DASH 02</div>
+    <div class="dash-sub">AI HEAT MAP — SIGNAL SEVERITY INDEX</div>
+  </div>
+  <div class="last-updated" id="lastUpdated">LOADING...</div>
+</header>
+<nav class="nav-bar">
+  <a href="dash1_ai_signals.html" class="nav-link">AI SIGNALS</a>
+  <a href="dash2_ai_heatmap.html" class="nav-link active">AI HEAT MAP</a>
+  <a href="dash3_decision.html" class="nav-link">DECISION ENGINE</a>
+  <a href="dash4_macro_heatmap.html" class="nav-link">MACRO HEAT MAP</a>
+  <a href="dash5_macro_signals.html" class="nav-link">MACRO SIGNALS</a>
+  <a href="dash_summary.html" class="nav-link">SUMMARY</a>
+  <button onclick="openThesis()" style="font-family:var(--font-mono);font-size:12px;letter-spacing:2px;padding:6px 14px;border:1px solid rgba(245,166,35,0.4);color:var(--amber);background:transparent;cursor:pointer;margin-left:auto;" onmouseover="this.style.background='var(--amber-dim)'" onmouseout="this.style.background='transparent'">THESIS</button>
+</nav>
+<div id="d2StaleBanner" style="display:none;"></div>
+<main class="main">
+
+  <div class="hero">
+    <div class="hero-grid">
+
+      <div>
+        <div class="hero-label">KEY AI METRICS</div>
+        <div class="metric-table">
+          <div class="metric-row"><span class="metric-lbl">NVDA GROSS MARGIN</span><span class="metric-val neutral" id="mGm">—</span></div>
+          <div class="metric-row"><span class="metric-lbl">OPENAI RUN RATE</span><span class="metric-val neutral" id="mOpenai">—</span></div>
+          <div class="metric-row"><span class="metric-lbl">HYPERSCALER IG SPREAD</span><span class="metric-val neutral" id="mSpread">—</span></div>
+          <div class="metric-row"><span class="metric-lbl">BIG 4 COMBINED FCF</span><span class="metric-val neutral" id="mFcf">—</span></div>
+          <div class="metric-row"><span class="metric-lbl">BIG TECH CAPEX/REV</span><span class="metric-val neutral" id="mCapex">—</span></div>
+          <div class="metric-row"><span class="metric-lbl">AWS AI YoY GROWTH</span><span class="metric-val neutral" id="mAws">—</span></div>
+          <div class="metric-row"><span class="metric-lbl">ORACLE CAPEX COVERAGE</span><span class="metric-val neutral" id="mOrcl">—</span></div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;align-items:center;">
+        <div class="hero-label" style="text-align:center;">AI COMPOSITE SEVERITY</div>
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 200 110" fill="none">
+            <path d="M20 100 A80 80 0 0 1 180 100" stroke="#2a2a3e" stroke-width="12" fill="none" stroke-linecap="round"/>
+            <path d="M20 100 A80 80 0 0 1 60 35" stroke="rgba(0,212,160,0.25)" stroke-width="12" fill="none" stroke-linecap="butt"/>
+            <path d="M60 35 A80 80 0 0 1 140 35" stroke="rgba(245,166,35,0.25)" stroke-width="12" fill="none" stroke-linecap="butt"/>
+            <path d="M140 35 A80 80 0 0 1 180 100" stroke="rgba(255,64,96,0.25)" stroke-width="12" fill="none" stroke-linecap="butt"/>
+            <path d="M20 100 A80 80 0 0 1 20 100" stroke="#a78bfa" stroke-width="12" fill="none" stroke-linecap="round" id="gaugeFill" opacity="0.9"/>
+            <text x="14" y="118" font-family="monospace" font-size="8" fill="#a8a8c8">0</text>
+            <text x="92" y="10" font-family="monospace" font-size="8" fill="#a8a8c8">50</text>
+            <text x="178" y="118" font-family="monospace" font-size="8" fill="#a8a8c8">100</text>
+          </svg>
+          <div class="gauge-score-display">
+            <div class="gauge-number purple" id="gaugeScore">—</div>
+          </div>
+        </div>
+        <div class="gauge-sub">/ 100 AI SEVERITY</div>
+        <div class="gauge-status purple" id="gaugeStatus">NO DATA</div>
+        <div class="hero-label" style="margin-top:18px;text-align:center;">SIGNAL DISTRIBUTION</div>
+        <div class="sig-counts" id="sigCounts"></div>
+      </div>
+
+      <div>
+        <div class="hero-label">AI COMPOSITE HISTORY</div>
+        <div class="history-table">
+          <div class="hist-row"><span class="hist-lbl">CURRENT</span><span class="hist-val purple" id="histCurrent">—</span></div>
+          <div class="hist-row"><span class="hist-lbl">1 WEEK AGO</span><span class="hist-val">—</span></div>
+          <div class="hist-row"><span class="hist-lbl">1 MONTH AGO</span><span class="hist-val">—</span></div>
+          <div class="hist-row"><span class="hist-lbl">DIRECTION</span><span class="hist-val">NO HISTORY LOGGED</span></div>
+          <div class="hist-row" style="border-bottom:none;"><span class="hist-lbl">SIGNALS TRACKED</span><span class="hist-val">8 (SIG01–SIG08)</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="signal-section" id="elevatedSection">
+    <div class="section-bar">
+      <div class="section-lbl">ELEVATED SIGNALS — AMBER · WATCH · PENDING · FIRED</div>
+      <div class="section-badge badge-elevated" id="elevatedBadge">0 ACTIVE</div>
+    </div>
+    <div class="signal-list">
+      <div class="list-header">
+        <span></span><span>Signal + context</span><span style="text-align:center">State</span><span style="text-align:center">Score</span><span style="text-align:center">Dir</span><span>Key metric</span><span>Trigger threshold</span>
+      </div>
+      <div id="elevatedRows"></div>
+    </div>
+  </div>
+
+  <div class="signal-section" id="stableSection">
+    <div class="section-bar">
+      <div class="section-lbl">STABLE SIGNALS — CLEAR</div>
+      <div class="section-badge badge-stable" id="stableBadge">0 CLEAR</div>
+    </div>
+    <div class="signal-list">
+      <div class="list-header">
+        <span></span><span>Signal + context</span><span style="text-align:center">State</span><span style="text-align:center">Score</span><span style="text-align:center">Dir</span><span>Key metric</span><span>Trigger threshold</span>
+      </div>
+      <div id="stableRows"></div>
+    </div>
+  </div>
+
+</main>
+
+<div class="thesis-overlay" id="thesisModal">
+  <div class="thesis-modal">
+    <button class="thesis-close" onclick="closeThesis()">✕</button>
+    <div class="thesis-title">🤖 AI HEAT MAP</div>
+    <div class="thesis-sub">SIGNAL VISUALIZATION · READS DIRECTLY FROM DASH 1</div>
+    <p style="font-family:var(--font-body);font-size:15px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px;">This heat map renders the RAG state and composite score exactly as last computed on Dash 1 — it does not recompute thresholds independently, so it can never drift out of sync with Dash 1's own scoring. Open Dash 1 to enter or update the underlying values; this page updates the moment a field is locked there.</p>
+    <p style="font-family:var(--font-body);font-size:13px;color:var(--text-dim);line-height:1.7;margin:0;">For the full AI infrastructure-loop thesis explanation, open Dash 1.</p>
+  </div>
+</div>
+
+<script>
+function openThesis(){ document.getElementById('thesisModal').classList.add('open'); document.body.style.overflow='hidden'; }
+function closeThesis(){ document.getElementById('thesisModal').classList.remove('open'); document.body.style.overflow=''; }
+document.getElementById('thesisModal').addEventListener('click', function(e){ if(e.target===this) closeThesis(); });
+
+function calcGaugeArc(score){
+  const pct=Math.min(Math.max(score,0),100)/100;
+  if(pct<=0)return'M20 100 A80 80 0 0 1 20.1 100';
+  const angleDeg=180-pct*180;
+  const angleRad=angleDeg*Math.PI/180;
+  const ex=100+80*Math.cos(angleRad);
+  const ey=100-80*Math.sin(angleRad);
+  const largeArc=pct>0.5?1:0;
+  return`M20 100 A80 80 0 ${largeArc} 1 ${ex.toFixed(1)} ${ey.toFixed(1)}`;
+}
+function cc(s){ return s<25?'purple':s<50?'amber':'red'; }
+
+const D2_STALE_DAYS=35;
+function d2CheckStale(isoDate){
+  if(!isoDate) return true;
+  return Math.floor((new Date()-new Date(isoDate))/86400000)>D2_STALE_DAYS;
+}
+
+const RAG_LABEL = { green:'CLEAR', blue:'PENDING', yellow:'FLAG', amber:'WATCH', red:'FIRED' };
+const RAG_SCORE = { green:5, blue:10, yellow:25, amber:45, red:85 };
+const RAG_DIR   = { green:'→', blue:'→', yellow:'↑', amber:'↑', red:'↑' };
+
+// Signal metadata mirrors Dash 1's SIG01–SIG08 cards exactly — descriptions/
+// triggers are static reference text, state + metric values are read live.
+const SIGNALS = [
+  { id:'SIG01', name:'NVIDIA FORWARD GUIDANCE',
+    desc:'NVDA sees the entire capex loop before anyone else. Hyperscalers order GPUs 12–18 months out. A guidance cut or margin compression means they are pulling back orders — the loop starts to starve at the source.',
+    trigger:'WATCH: Guidance cut OR gross margin compression >300bps. RED: order cancellations or hyperscaler capex pullback in earnings commentary.',
+    metric:d=>{ const gm=d['nvda-gm']?.value, gr=d['nvda-dcgrowth']?.value; return (gm!=null?'GM '+gm+'%':'GM —')+' / '+(gr!=null?'DC rev '+gr+'%':'DC rev —'); } },
+  { id:'SIG02', name:'OPENAI REVENUE vs COMMITMENT',
+    desc:'OpenAI is the structural epicenter of the loop. It has committed over $1.4 trillion in infrastructure contracts funded by companies that are simultaneously its investors. If OpenAI misses revenue targets, the entire capital recycling chain reprices.',
+    trigger:'WATCH: annualized run-rate below $16.6B (miss $20B target by >20%). RED: below $13.3B (>33% miss).',
+    metric:d=>{ const r=d['openai-rev']?.value; return r!=null?('$'+r+'B/mo run rate'):'No data locked'; } },
+  { id:'SIG03', name:'HYPERSCALER DEBT ISSUANCE',
+    desc:'Hyperscalers initially funded AI capex from internal cash flow. When that self-financing capacity exhausts, they move to debt markets. Accelerating bond issuance signals internally generated cash is no longer sufficient.',
+    trigger:'WATCH: IG spreads widen >50bps in a quarter. RED: any hyperscaler issues >$30B in a single quarter.',
+    metric:d=>{ const s=d['hy-spread']?.value, v=d['hy-volume']?.value; return (s!=null?s+'bps':'—')+' spread / '+(v!=null?'$'+v+'B issued':'—'); } },
+  { id:'SIG04', name:'FREE CASH FLOW COMPRESSION',
+    desc:'FCF is the self-financing engine. As capex accelerates beyond revenue growth, FCF margins compress. This is the most reliable leading indicator because it is reported quarterly and directly tests whether the build rate is sustainable.',
+    trigger:'WATCH: any Big 4 QoQ FCF decline >15%, or combined FCF below $270B. RED: combined FCF below $250B annualized.',
+    metric:d=>{ const f=d['fcf-combined']?.value, q=d['fcf-qoq']?.value; return (f!=null?'$'+f+'B TTM':'—')+' / '+(q!=null?q+'% QoQ':'—'); } },
+  { id:'SIG05', name:'CAPEX-TO-REVENUE EXPANSION',
+    desc:'Premium valuations were assigned to asset-light businesses. As capex share of revenue rises, the valuation multiple compression argument becomes structural, not cyclical.',
+    trigger:'WATCH: Big 4 aggregate capex/revenue exceeds 25%. RED: exceeds 55%.',
+    metric:d=>{ const c=d['capex-pct']?.value; return c!=null?(c+'% of revenue'):'No data locked'; } },
+  { id:'SIG06', name:'CLOUD REVENUE DECELERATION',
+    desc:'Cloud AI revenue growth rate is the most visible and tradable quarterly signal. Sequential deceleration confirms demand is not absorbing supply at the rate required to justify infrastructure investment.',
+    trigger:'WATCH: any hyperscaler AI growth below 35% YoY. RED: any segment drops below 30% YoY.',
+    metric:d=>{ const a=d['azure-growth']?.value, w=d['aws-growth']?.value, g=d['gcp-growth']?.value; return 'Azure '+(a??'—')+'% / AWS '+(w??'—')+'% / GCP '+(g??'—')+'%'; } },
+  { id:'SIG07', name:'ENTERPRISE ROI REALIZATION',
+    desc:'Demand-side signal. If enterprise-reported AI ROI stalls or declines, enterprise AI budgets stop growing, removing the demand justification for the entire infrastructure build.',
+    trigger:'WATCH: BTOS adoption rate below 19% (stalling vs. baseline). RED: below 15%.',
+    metric:d=>{ const b=d['btos-rate']?.value; return b!=null?(b+'% adoption (BTOS)'):'No data locked'; } },
+  { id:'SIG08', name:'INFRASTRUCTURE DEBT STRESS',
+    desc:'The contagion vector. Risk has migrated from tech balance sheets into utilities, insurers, data center REITs, private credit, and pensions. When these entities reprice, contagion broadens rapidly beyond the tech sector.',
+    trigger:'WATCH: Oracle capex coverage below 1.0x. RED: below 0.8x, or data-center spread signals "stress"/"fire".',
+    metric:d=>{ const o=d['orcl-cov']?.value, s=d['dc-spread']?.value; return (o!=null?o+'x coverage':'—')+(s?' / '+s:''); } },
+];
+
+function loadD1(){ try{ return JSON.parse(localStorage.getItem('rooster_dash1_v1'))||{}; }catch(e){ return {}; } }
+function loadD1States(){ try{ return JSON.parse(localStorage.getItem('rooster_dash1_states'))||{states:[]}; }catch(e){ return {states:[]}; } }
+
+const FRESH_TEXT = { never:'NO DATA', stale:'UPDATE DUE', pending:'PENDING', current:'CURRENT' };
+function freshnessBadge(staleState, staleLabel){
+  if(!staleState) return '';
+  const text = FRESH_TEXT[staleState] || 'CURRENT';
+  const title = staleLabel ? ` title="${String(staleLabel).replace(/"/g,'&quot;')}"` : '';
+  return `<span class="freshness-badge ${staleState}"${title}>${text}</span>`;
+}
+
+function renderRow(sig, rag, staleState, staleLabel){
+  const label = RAG_LABEL[rag] || 'CLEAR';
+  const score = RAG_SCORE[rag] ?? 5;
+  const dir   = RAG_DIR[rag] || '→';
+  const d1    = loadD1();
+  const metricText = sig.metric(d1);
+  const badge = freshnessBadge(staleState, staleLabel);
+  if(rag === 'green'){
+    return `<div class="sig-row-compact">
+      <div class="sig-dot green" style="margin-top:5px;"></div>
+      <div><div class="sig-name-compact">${sig.name}${badge}</div><div class="sig-desc-compact">${sig.desc}</div></div>
+      <div class="sig-state-compact">${label}</div>
+      <div class="sig-score-compact">${score}</div>
+      <div class="sig-dir" style="color:var(--text-dim);font-size:16px;text-align:center;">${dir}</div>
+      <div class="sig-metric-compact">${metricText}</div>
+      <div class="sig-trigger-compact">${sig.trigger}</div>
+    </div>`;
+  }
+  return `<div class="sig-row-elevated ${rag}-row">
+    <div class="sig-dot ${rag}" style="margin-top:5px;"></div>
+    <div>
+      <div class="sig-name-elevated ${rag}">${sig.name}${badge}</div>
+      <div class="sig-desc ${rag}">${sig.desc}</div>
+    </div>
+    <div class="sig-state ${rag}">${label}</div>
+    <div class="sig-score ${rag}">${score}</div>
+    <div class="sig-dir" style="color:var(--${rag});">${dir}</div>
+    <div class="sig-metric ${rag}">${metricText}</div>
+    <div class="sig-trigger ${rag}">${sig.trigger}</div>
+  </div>`;
+}
+
+function render(){
+  const d1 = loadD1();
+  const stateData = loadD1States();
+  const stateMap = {};
+  (stateData.states||[]).forEach(s=>{ stateMap[s.id]=s; });
+
+  const keyFields=['nvda-gm','openai-rev','hy-spread','fcf-combined'];
+  const anyLocked=keyFields.some(k=>d1[k]&&d1[k].locked);
+  const anyStale=keyFields.some(k=>!d1[k]||d2CheckStale(d1[k]?.locked));
+  const banner=document.getElementById('d2StaleBanner');
+  if(!anyLocked){
+    banner.style.cssText='display:flex;padding:8px 20px;font-family:var(--font-mono);font-size:12px;color:var(--red);border-bottom:1px solid rgba(255,64,96,0.3);background:rgba(255,64,96,0.05);';
+    banner.textContent='⚠ No Dash 1 data locked — open Dash 1 to enter AI signal values';
+  } else if(anyStale){
+    banner.style.cssText='display:flex;padding:8px 20px;font-family:var(--font-mono);font-size:12px;color:var(--amber);border-bottom:1px solid rgba(245,166,35,0.3);background:rgba(245,166,35,0.05);';
+    banner.textContent='⚠ Some Dash 1 signals are stale (35+ days since locked) — open Dash 1 to update';
+  } else {
+    banner.style.display='none';
+  }
+
+  const map = {
+    'nvda-gm':      { id:'mGm',     fmt:v=>v+'%' },
+    'openai-rev':   { id:'mOpenai', fmt:v=>'$'+v+'B/mo' },
+    'hy-spread':    { id:'mSpread', fmt:v=>v+'bps' },
+    'fcf-combined': { id:'mFcf',    fmt:v=>'$'+v+'B' },
+    'capex-pct':    { id:'mCapex',  fmt:v=>v+'%' },
+    'aws-growth':   { id:'mAws',    fmt:v=>v+'%' },
+    'orcl-cov':     { id:'mOrcl',   fmt:v=>v+'x' },
+  };
+  Object.entries(map).forEach(([key,cfg])=>{
+    const el=document.getElementById(cfg.id);
+    if(!el) return;
+    const rec=d1[key];
+    if(rec && rec.value){
+      el.textContent = cfg.fmt(rec.value);
+      el.className = 'metric-val ' + (d2CheckStale(rec.locked) ? 'amber' : 'neutral');
+    }
+  });
+
+  const comp = localStorage.getItem('rooster_dash1_composite');
+  const score = comp !== null ? parseInt(comp) : null;
+  const gaugeEl = document.getElementById('gaugeScore');
+  const statusEl = document.getElementById('gaugeStatus');
+  const fill = document.getElementById('gaugeFill');
+  const histEl = document.getElementById('histCurrent');
+  if(score !== null){
+    gaugeEl.textContent = score;
+    gaugeEl.className = 'gauge-number ' + cc(score);
+    statusEl.textContent = score<25 ? 'SYSTEM NOMINAL' : score<50 ? 'ELEVATED' : 'ACTION REQUIRED';
+    statusEl.className = 'gauge-status ' + cc(score);
+    fill.setAttribute('d', calcGaugeArc(score));
+    fill.setAttribute('stroke', score<25?'#a78bfa':score<50?'#f5a623':'#ff4060');
+    histEl.textContent = score;
+  } else {
+    gaugeEl.textContent = '—';
+    statusEl.textContent = 'NO DATA — OPEN DASH 1';
+  }
+
+  const counts = { green:0, blue:0, yellow:0, amber:0, red:0 };
+  const elevatedRows = [];
+  const stableRows = [];
+  SIGNALS.forEach(sig=>{
+    const st  = stateMap[sig.id];
+    const rag = (st && st.rag) || 'green';
+    counts[rag] = (counts[rag]||0) + 1;
+    (rag==='green' ? stableRows : elevatedRows).push(renderRow(sig, rag, st && st.staleState, st && st.staleLabel));
+  });
+  document.getElementById('elevatedRows').innerHTML = elevatedRows.join('') || '<div style="padding:20px;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);">No elevated signals.</div>';
+  document.getElementById('stableRows').innerHTML = stableRows.join('') || '<div style="padding:20px;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);">No stable signals.</div>';
+  document.getElementById('elevatedBadge').textContent = elevatedRows.length + ' ACTIVE';
+  document.getElementById('stableBadge').textContent = stableRows.length + ' CLEAR';
+
+  document.getElementById('sigCounts').innerHTML = `
+    <div class="sig-c"><div class="sig-c-num green">${counts.green}</div><div class="sig-c-lbl">CLEAR</div></div>
+    <div class="sig-c"><div class="sig-c-num amber">${counts.amber}</div><div class="sig-c-lbl">WATCH</div></div>
+    <div class="sig-c"><div class="sig-c-num yellow">${counts.yellow}</div><div class="sig-c-lbl">FLAG</div></div>
+    <div class="sig-c"><div class="sig-c-num blue">${counts.blue}</div><div class="sig-c-lbl">PEND</div></div>
+    <div class="sig-c"><div class="sig-c-num red">${counts.red}</div><div class="sig-c-lbl">FIRED</div></div>`;
+
+  const dates=Object.values(d1).filter(v=>v?.locked).map(v=>new Date(v.locked)).sort((a,b)=>b-a);
+  const lu=document.getElementById('lastUpdated');
+  if(dates.length) lu.textContent='DATA: '+dates[0].toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  else lu.textContent='NO DASH 1 DATA — open Dash 1 first';
+}
+
+document.addEventListener('DOMContentLoaded', render);
+</script>
+</body>
+</html>
